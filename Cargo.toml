@@ -13,7 +13,8 @@ fs2 = "0.4.3"
 log = "0.4"
 regex = "1"
 libc = "0.2.42"
-structopt = "0.2.12"
+#structopt = "0.2.12"
+clap = "2.32.0"
 
 [dependencies.config]
 version = "0.9"

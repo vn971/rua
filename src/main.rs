@@ -9,7 +9,7 @@ extern crate fs2;
 extern crate libc;
 extern crate regex;
 #[macro_use] extern crate log;
-#[macro_use] extern crate structopt;
+extern crate clap;
 
 mod parse_opts;
 
@@ -24,7 +24,7 @@ use std::fs::OpenOptions;
 use std::fs;
 use std::io::Write;
 use std::io;
-use std::os::unix::io::IntoRawFd;
+use std::os::unix::io::AsRawFd;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -56,10 +56,10 @@ fn assert_command_success(command: &Output) {
 }
 
 
-/// Only run this function once
-fn allocate_seccomp_fd() -> i32 {
-	let file = File::open("/home/vasya/.jails/seccomp.bpf").unwrap();
-	let file_descriptor = file.into_raw_fd();
+/// Opens file without CLOEXEC option, to be inheritable by child processes (bwrap)
+fn seccomp_file_inheritable(dirs: &ProjectDirs) -> File {
+	let file = File::open(dirs.config_dir().join("seccomp.bpf")).unwrap();
+	let file_descriptor = file.as_raw_fd();
 	let flags = unsafe { fcntl(file_descriptor, F_GETFD) };
 	if flags == -1 {
 		panic!("cannot get seccomp fd flags");
@@ -68,24 +68,24 @@ fn allocate_seccomp_fd() -> i32 {
 	if unsafe { fcntl(file_descriptor, F_SETFD, flags) } == -1 {
 		panic!("cannot set seccomp fd flags");
 	}
-	file_descriptor
+	file
 }
 
-fn wrap_yes_internet(dirs: &ProjectDirs, user_dirs: &UserDirs, seccomp_fd: i32) -> Command {
+fn wrap_yes_internet(dirs: &ProjectDirs, user_dirs: &UserDirs) -> Command {
 	let mut command = Command::new("nice");
 	command.args(&["-n19"]);
 	command.args(&["ionice", "-c", "idle"]);
 	command.args(&["bwrap", "--unshare-user", "--unshare-ipc", "--unshare-pid", "--unshare-uts", "--unshare-cgroup"]);
 	command.args(&["--new-session", "--die-with-parent"]);
-	command.args(&["--seccomp", &seccomp_fd.to_string()]);
 	command.args(&["--ro-bind", "/", "/"]);
+	command.args(&["--dev", "/dev"]);
 	command.args(&["--tmpfs", "/tmp"]);
 	command.args(&["--tmpfs", user_dirs.home_dir().to_str().unwrap()]);
 	command.args(&["--ro-bind", dirs.config_dir().to_str().unwrap(), dirs.config_dir().to_str().unwrap()]);
 	command
 }
-fn wrap_no_internet(dirs: &ProjectDirs, user_dirs: &UserDirs, seccomp_fd: i32) -> Command {
-	let mut command = wrap_yes_internet(dirs, user_dirs, seccomp_fd);
+fn wrap_no_internet(dirs: &ProjectDirs, user_dirs: &UserDirs) -> Command {
+	let mut command = wrap_yes_internet(dirs, user_dirs);
 	command.args(&["--unshare-net"]);
 	command
 }
@@ -106,7 +106,7 @@ fn download(name: &str, dirs: &ProjectDirs) {
 			Does this package really exist in AUR?", name);
 		loop {
 			let mut string = String::new();
-			eprint!("Downloaded {}. Show PKGBUILD? Y=yes, I=run shell to inspect, O=ok, use the file ", name);
+			eprint!("Downloaded {}. Show PKGBUILD? Y=yes, I=run shell to inspect, O=ok, use the file: ", name);
 			io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 			let string = string.trim().to_lowercase();
 
@@ -123,28 +123,35 @@ fn download(name: &str, dirs: &ProjectDirs) {
 	}
 }
 
-fn get_deps(name: &str, dirs: &ProjectDirs, user_dirs: &UserDirs, seccomp_fd: i32) -> Vec<String> {
+fn get_deps(name: &str, dirs: &ProjectDirs, user_dirs: &UserDirs) -> Vec<String> {
 	let dir = dirs.cache_dir().join("build").join(name);
 	let dir = dir.to_str().unwrap();
 	env::set_current_dir(dir).unwrap();
-	let mut command = wrap_no_internet(dirs, user_dirs, seccomp_fd);
+	let mut command = wrap_no_internet(dirs, user_dirs);
+	let seccomp_file = seccomp_file_inheritable(dirs);
+	command.args(&["--seccomp", &seccomp_file.as_raw_fd().to_string()]);
 	command.args(&["--ro-bind", dir, dir]);
 	command.args(&["bash", "--restricted", dirs.config_dir().join("get_deps.sh").to_str().unwrap()]);
-	let command = command.output().unwrap();
-	assert_command_success(&command);
+	let command = command.status().unwrap();
+	assert!(command.success(), "Failed to extract dependencies");
 	String::from_utf8_lossy(&command.stdout).trim().split(' ').map(|s| s.to_string()).collect()
 }
 
-fn download_sources(dirs: &ProjectDirs, user_dirs: &UserDirs, seccomp_fd: i32) {
-	let mut command = wrap_yes_internet(dirs, user_dirs, seccomp_fd);
-	command.args(&["--ro-bind", ".", "."]);
+fn download_sources(dirs: &ProjectDirs, user_dirs: &UserDirs) {
+	let current_dir = env::current_dir().unwrap();
+	let current_dir = current_dir.to_str().unwrap();
+	let mut command = wrap_yes_internet(dirs, user_dirs);
+	let seccomp_file = seccomp_file_inheritable(dirs);
+	command.args(&["--seccomp", &seccomp_file.as_raw_fd().to_string()]);
+	command.args(&["--bind", current_dir, current_dir]);
 	command.args(&["makepkg", "--noprepare", "--nobuild"]);
-	command.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+	let command = command.status().unwrap();
+	assert!(command.success(), "Failed to download PKGBUILD sources");
 }
 
-fn build_here(dirs: &ProjectDirs, user_dirs: &UserDirs, seccomp_fd: i32) {
-	env::set_var("PKGDEST", Path::new("target").canonicalize().unwrap());
-	download_sources(dirs, user_dirs, seccomp_fd);
+fn jail_build(dirs: &ProjectDirs, user_dirs: &UserDirs) {
+	env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
+	download_sources(dirs, user_dirs);
 }
 
 
@@ -164,16 +171,21 @@ fn main() {
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua").unwrap();
 	let user_dirs = UserDirs::new().unwrap();
 	std::fs::create_dir_all(dirs.cache_dir().join("build")).unwrap();
-	env::set_current_dir(dirs.cache_dir().join("build")).unwrap();
 	std::fs::create_dir_all(dirs.config_dir()).unwrap();
 	ensure_file(&dirs.config_dir().join("get_deps.sh"), include_bytes!("../res/get_deps.sh"));
 	ensure_file(&dirs.config_dir().join("seccomp.bpf"), include_bytes!("../res/seccomp.bpf"));
-	let seccomp_fd = allocate_seccomp_fd();
 
 	let opts = parse_opts::parse_opts();
-//	if (opts.build_target)
-	let target = env::args().nth(1).expect("Upecified target package (1-st argument)");
-	download(&target, &dirs);
-	let deps = get_deps(&target, &dirs, &user_dirs, seccomp_fd);
-	info!("deps: {:?}", deps);
+	if let Some(matches) = opts.subcommand_matches("install") {
+		let target = matches.value_of("TARGET").unwrap();
+		download(&target, &dirs);
+		let deps = get_deps(&target, &dirs, &user_dirs);
+		debug!("deps: {:?}", deps);
+		env::set_current_dir(dirs.cache_dir().join("build").join(target)).unwrap();
+		jail_build(&dirs, &user_dirs);
+	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
+		let target_dir = matches.value_of("DIR").unwrap_or(".");
+		env::set_current_dir(target_dir).expect(format!("directory {} not accessible", target_dir).as_str());
+		jail_build(&dirs, &user_dirs);
+	}
 }

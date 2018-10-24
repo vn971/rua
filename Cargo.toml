@@ -1,0 +1,25 @@
+[package]
+name = "rua"
+description = "AUR builder written in Rust"
+version = "0.1.0"
+authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
+
+
+[dependencies]
+chrono = "0.4"
+directories = "1.0"
+env_logger = "0.5.13"
+fs2 = "0.4.3"
+log = "0.4"
+regex = "1"
+libc = "0.2.42"
+structopt = "0.2.12"
+
+[dependencies.config]
+version = "0.9"
+default-features = false
+features = ["toml"]
+
+
+[profile.release]
+lto = true

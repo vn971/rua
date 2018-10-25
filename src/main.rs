@@ -26,6 +26,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::process::Output;
 use std::process::Stdio;
+use std::fs::Permissions;
 
 fn ensure_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
@@ -40,9 +41,7 @@ fn ensure_file(path: &PathBuf, content: &[u8]) {
 
 fn ensure_script(path: &PathBuf, content: &[u8]) {
 	ensure_file(path, content);
-	let mut perms = fs::metadata(&path).unwrap().permissions();
-	perms.set_mode(0o755);
-	fs::set_permissions(path, perms).unwrap();
+	fs::set_permissions(path, Permissions::from_mode(0o755)).unwrap();
 }
 
 
@@ -150,7 +149,8 @@ fn main() {
 	std::fs::create_dir_all(dirs.cache_dir().join("build")).unwrap();
 	std::fs::create_dir_all(dirs.config_dir()).unwrap();
 	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
-	ensure_file(&dirs.config_dir().join("get_deps.sh"), include_bytes!("../res/get_deps.sh"));
+	ensure_file(&dirs.config_dir().join("seccomp.bpf"), include_bytes!("../res/seccomp.bpf"));
+	ensure_script(&dirs.config_dir().join("get_deps.sh"), include_bytes!("../res/get_deps.sh"));
 	ensure_script(&dirs.config_dir().join("wrap_no_internet.sh"), include_bytes!("../res/wrap_no_internet.sh"));
 	ensure_script(&dirs.config_dir().join("wrap_yes_internet.sh"), include_bytes!("../res/wrap_yes_internet.sh"));
 

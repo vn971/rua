@@ -6,7 +6,6 @@ extern crate config;
 extern crate directories;
 extern crate env_logger;
 extern crate fs2;
-extern crate libc;
 extern crate regex;
 #[macro_use] extern crate log;
 extern crate clap;
@@ -15,22 +14,18 @@ mod parse_opts;
 
 use chrono::Utc;
 use directories::ProjectDirs;
-use directories::UserDirs;
-use libc::{ fcntl, F_GETFD, FD_CLOEXEC, F_SETFD };
 use regex::Regex;
 use std::env;
-use std::fs::File;
 use std::fs::OpenOptions;
 use std::fs;
 use std::io::Write;
 use std::io;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Output;
 use std::process::Stdio;
-
 
 fn ensure_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
@@ -38,11 +33,16 @@ fn ensure_env(key: &str, value: &str) {
 	}
 }
 
-fn ensure_file(filename: &PathBuf, content: &[u8]) {
-	if Path::new(&filename).exists() == false {
-		let mut file = OpenOptions::new().create(true).write(true).open(filename).unwrap();
-		file.write_all(content).unwrap();
-	}
+fn ensure_file(path: &PathBuf, content: &[u8]) {
+	let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path).unwrap();
+	file.write_all(content).unwrap();
+}
+
+fn ensure_script(path: &PathBuf, content: &[u8]) {
+	ensure_file(path, content);
+	let mut perms = fs::metadata(&path).unwrap().permissions();
+	perms.set_mode(0o755);
+	fs::set_permissions(path, perms).unwrap();
 }
 
 
@@ -56,38 +56,11 @@ fn assert_command_success(command: &Output) {
 }
 
 
-/// Opens file without CLOEXEC option, to be inheritable by child processes (bwrap)
-fn seccomp_file_inheritable(dirs: &ProjectDirs) -> File {
-	let file = File::open(dirs.config_dir().join("seccomp.bpf")).unwrap();
-	let file_descriptor = file.as_raw_fd();
-	let flags = unsafe { fcntl(file_descriptor, F_GETFD) };
-	if flags == -1 {
-		panic!("cannot get seccomp fd flags");
-	}
-	let flags = flags & !FD_CLOEXEC;
-	if unsafe { fcntl(file_descriptor, F_SETFD, flags) } == -1 {
-		panic!("cannot set seccomp fd flags");
-	}
-	file
+fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
+	Command::new(dirs.config_dir().join("wrap_yes_internet.sh"))
 }
-
-fn wrap_yes_internet(dirs: &ProjectDirs, user_dirs: &UserDirs) -> Command {
-	let mut command = Command::new("nice");
-	command.args(&["-n19"]);
-	command.args(&["ionice", "-c", "idle"]);
-	command.args(&["bwrap", "--unshare-user", "--unshare-ipc", "--unshare-pid", "--unshare-uts", "--unshare-cgroup"]);
-	command.args(&["--new-session", "--die-with-parent"]);
-	command.args(&["--ro-bind", "/", "/"]);
-	command.args(&["--dev", "/dev"]);
-	command.args(&["--tmpfs", "/tmp"]);
-	command.args(&["--tmpfs", user_dirs.home_dir().to_str().unwrap()]);
-	command.args(&["--ro-bind", dirs.config_dir().to_str().unwrap(), dirs.config_dir().to_str().unwrap()]);
-	command
-}
-fn wrap_no_internet(dirs: &ProjectDirs, user_dirs: &UserDirs) -> Command {
-	let mut command = wrap_yes_internet(dirs, user_dirs);
-	command.args(&["--unshare-net"]);
-	command
+fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
+	Command::new(dirs.config_dir().join("wrap_no_internet.sh"))
 }
 
 fn download(name: &str, dirs: &ProjectDirs) {
@@ -123,35 +96,40 @@ fn download(name: &str, dirs: &ProjectDirs) {
 	}
 }
 
-fn get_deps(name: &str, dirs: &ProjectDirs, user_dirs: &UserDirs) -> Vec<String> {
+fn get_deps(name: &str, dirs: &ProjectDirs) -> Vec<String> {
 	let dir = dirs.cache_dir().join("build").join(name);
 	let dir = dir.to_str().unwrap();
 	env::set_current_dir(dir).unwrap();
-	let mut command = wrap_no_internet(dirs, user_dirs);
-	let seccomp_file = seccomp_file_inheritable(dirs);
-	command.args(&["--seccomp", &seccomp_file.as_raw_fd().to_string()]);
+	let mut command = wrap_no_internet(dirs);
 	command.args(&["--ro-bind", dir, dir]);
 	command.args(&["bash", "--restricted", dirs.config_dir().join("get_deps.sh").to_str().unwrap()]);
-	let command = command.status().unwrap();
-	assert!(command.success(), "Failed to extract dependencies");
+	let command = command.stderr(Stdio::inherit()).output().unwrap();
 	String::from_utf8_lossy(&command.stdout).trim().split(' ').map(|s| s.to_string()).collect()
 }
 
-fn download_sources(dirs: &ProjectDirs, user_dirs: &UserDirs) {
+fn download_sources(dirs: &ProjectDirs) {
 	let current_dir = env::current_dir().unwrap();
 	let current_dir = current_dir.to_str().unwrap();
-	let mut command = wrap_yes_internet(dirs, user_dirs);
-	let seccomp_file = seccomp_file_inheritable(dirs);
-	command.args(&["--seccomp", &seccomp_file.as_raw_fd().to_string()]);
+	let mut command = wrap_yes_internet(dirs);
 	command.args(&["--bind", current_dir, current_dir]);
 	command.args(&["makepkg", "--noprepare", "--nobuild"]);
 	let command = command.status().unwrap();
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 }
 
-fn jail_build(dirs: &ProjectDirs, user_dirs: &UserDirs) {
+fn do_build(dirs: &ProjectDirs) {
+	let dir = env::current_dir().unwrap();
+	let mut command = wrap_no_internet(dirs);
+	command.args(&["--bind", dir.to_str().unwrap(), dir.to_str().unwrap()]);
+	command.args(&["makepkg", "--force"]);
+	let command = command.status().unwrap();
+	assert!(command.success(), "Failed to download PKGBUILD sources");
+}
+
+fn jail_build(dirs: &ProjectDirs) {
 	env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
-	download_sources(dirs, user_dirs);
+	download_sources(dirs);
+	do_build(dirs);
 }
 
 
@@ -169,23 +147,24 @@ fn main() {
 	info!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua").unwrap();
-	let user_dirs = UserDirs::new().unwrap();
 	std::fs::create_dir_all(dirs.cache_dir().join("build")).unwrap();
 	std::fs::create_dir_all(dirs.config_dir()).unwrap();
+	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
 	ensure_file(&dirs.config_dir().join("get_deps.sh"), include_bytes!("../res/get_deps.sh"));
-	ensure_file(&dirs.config_dir().join("seccomp.bpf"), include_bytes!("../res/seccomp.bpf"));
+	ensure_script(&dirs.config_dir().join("wrap_no_internet.sh"), include_bytes!("../res/wrap_no_internet.sh"));
+	ensure_script(&dirs.config_dir().join("wrap_yes_internet.sh"), include_bytes!("../res/wrap_yes_internet.sh"));
 
 	let opts = parse_opts::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {
 		let target = matches.value_of("TARGET").unwrap();
 		download(&target, &dirs);
-		let deps = get_deps(&target, &dirs, &user_dirs);
+		let deps = get_deps(&target, &dirs);
 		debug!("deps: {:?}", deps);
 		env::set_current_dir(dirs.cache_dir().join("build").join(target)).unwrap();
-		jail_build(&dirs, &user_dirs);
+		jail_build(&dirs);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("DIR").unwrap_or(".");
 		env::set_current_dir(target_dir).expect(format!("directory {} not accessible", target_dir).as_str());
-		jail_build(&dirs, &user_dirs);
+		jail_build(&dirs);
 	}
 }

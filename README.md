@@ -1,5 +1,7 @@
 ## RUA
 
+Work In Progress! No official announcement has been made yet.
+
 RUA is a build tool for ArchLinux, AUR. It's unique properties are:
 
 * It's written in Rust

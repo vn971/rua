@@ -8,6 +8,16 @@ RUA is a build tool for ArchLinux, AUR. It's unique properties are:
 * * PKGBUILD script is run under seccomp rules
 * * Filesystem is read-only except the build dir
 * * etc
+* It fetches dependencies recursively before building
+* * saving your time by exiting early in case of missing packages
+* * minimizing user interaction (verify all PKGBUILD-s once, build everything later)
+
+
+## Install
+* Install dependencies: `pacman -S --needed --asdeps bubblewrap`
+* Build with Rust/cargo: `cargo install rua`
+
+TODO: make AUR package :-)
 
 ## Safety
 It's still **not safe** to install arbitrary packages from AUR, even inside this jail:

@@ -1,7 +1,7 @@
 [package]
 name = "rua"
 description = "AUR builder written in Rust"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 
 

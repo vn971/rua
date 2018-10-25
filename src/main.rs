@@ -59,8 +59,7 @@ fn main() {
 	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
 	ensure_file(&dirs.config_dir().join("seccomp.bpf"), include_bytes!("../res/seccomp.bpf"));
 	ensure_script(&dirs.config_dir().join("get_deps.sh"), include_bytes!("../res/get_deps.sh"));
-	ensure_script(&dirs.config_dir().join("wrap_no_internet.sh"), include_bytes!("../res/wrap_no_internet.sh"));
-	ensure_script(&dirs.config_dir().join("wrap_yes_internet.sh"), include_bytes!("../res/wrap_yes_internet.sh"));
+	ensure_script(&dirs.config_dir().join("wrap.sh"), include_bytes!("../res/wrap.sh"));
 
 	let opts = parse_opts::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {

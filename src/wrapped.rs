@@ -1,3 +1,5 @@
+// Commands that are run inside "bubblewrap" jail
+
 use directories::ProjectDirs;
 use regex::Regex;
 use std::env;
@@ -10,10 +12,12 @@ use std::process::Stdio;
 
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
-	Command::new(dirs.config_dir().join("wrap_yes_internet.sh"))
+	Command::new(dirs.config_dir().join("wrap.sh"))
 }
 fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
-	Command::new(dirs.config_dir().join("wrap_no_internet.sh"))
+	let mut command = Command::new(dirs.config_dir().join("wrap.sh"));
+	command.arg("--unshare-net");
+	command
 }
 
 pub fn get_deps(name: &str, dirs: &ProjectDirs) -> Vec<String> {

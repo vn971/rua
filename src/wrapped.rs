@@ -9,10 +9,10 @@ use std::process::Output;
 use std::process::Stdio;
 
 
-pub fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
+fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 	Command::new(dirs.config_dir().join("wrap_yes_internet.sh"))
 }
-pub fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
+fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
 	Command::new(dirs.config_dir().join("wrap_no_internet.sh"))
 }
 
@@ -27,7 +27,7 @@ pub fn get_deps(name: &str, dirs: &ProjectDirs) -> Vec<String> {
 	String::from_utf8_lossy(&command.stdout).trim().split(' ').map(|s| s.to_string()).collect()
 }
 
-pub fn download_sources(dirs: &ProjectDirs) {
+fn download_sources(dirs: &ProjectDirs) {
 	let current_dir = env::current_dir().unwrap();
 	let current_dir = current_dir.to_str().unwrap();
 	let mut command = wrap_yes_internet(dirs);
@@ -37,7 +37,7 @@ pub fn download_sources(dirs: &ProjectDirs) {
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 }
 
-pub fn do_build(dirs: &ProjectDirs) {
+fn do_build(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap();
 	let mut command = wrap_no_internet(dirs);
 	command.args(&["--bind", dir.to_str().unwrap(), dir.to_str().unwrap()]);
@@ -46,10 +46,11 @@ pub fn do_build(dirs: &ProjectDirs) {
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 }
 
-pub fn jail_build(dirs: &ProjectDirs) {
+pub fn jail_build(dir: &str, project_dirs: &ProjectDirs) {
+	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
 	env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
-	download_sources(dirs);
-	do_build(dirs);
+	download_sources(project_dirs);
+	do_build(project_dirs);
 }
 
 
@@ -62,7 +63,9 @@ fn assert_command_success(command: &Output) {
 	);
 }
 
-pub fn download(name: &str, dirs: &ProjectDirs) {
+
+
+pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 	let valid_name_regexp = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
 	assert!(valid_name_regexp.is_match(name), "unexpected package name {}", name);
 	// TODO: download new version, with some caching

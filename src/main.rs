@@ -64,10 +64,7 @@ fn main() {
 	let opts = parse_opts::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {
 		let target = matches.value_of("TARGET").unwrap();
-		wrapped::download_if_absent(&target, &dirs);
-		let deps = wrapped::get_deps(&target, &dirs);
-		debug!("deps: {:?}", deps); // TODO: build those deps!
-		wrapped::jail_build(dirs.cache_dir().join("build").join(target).to_str().unwrap(), &dirs);
+		wrapped::install(target, &dirs);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("DIR").unwrap_or(".");
 		wrapped::jail_build(target_dir, &dirs);

@@ -9,11 +9,14 @@ use std::path::Path;
 use std::process::Command;
 use std::process::Output;
 use std::process::Stdio;
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 	Command::new(dirs.config_dir().join("wrap.sh"))
 }
+
 fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
 	let mut command = Command::new(dirs.config_dir().join("wrap.sh"));
 	command.arg("--unshare-net");
@@ -67,6 +70,68 @@ fn assert_command_success(command: &Output) {
 	);
 }
 
+//struct PacmanState {
+//	installed: bool,
+//	installable: bool,
+//}
+
+fn is_package_installed_installable(package: &str) -> (bool, bool) {
+	let command = Command::new("pacman").arg("-Qi").arg(&package)
+		.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap();
+	if command.success() {
+		(true, true)
+	} else {
+		let command = Command::new("pacman").arg("-Si").arg(&package)
+			.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap();
+		(false, command.success())
+	}
+}
+
+
+fn prefetch_aur(target: &str, dirs: &ProjectDirs,
+	package_ii: &mut HashMap<String, (bool, bool)>,
+	pacman_deps: &mut HashSet<String>,
+) {
+	download_if_absent(&target, &dirs);
+	let deps = get_deps(&target, &dirs);
+	// info!("package {} has dependencies: {:?}", target, &deps);
+	for dep in deps {
+		let ii = is_package_installed_installable(dep.as_str());
+		package_ii.insert(dep.to_string(), ii);
+		// eprintln!("dependency {}, installed={}, pacman-installable: {}", &dep, ii.0, ii.1);
+		if ii == (false, true) {
+			pacman_deps.insert(dep.to_string());
+		} else if ii == (false, false) {
+			eprintln!("{} depends on AUR package {}. Trying to fetch it...", target, &dep);
+			prefetch_aur(&dep, dirs, package_ii, pacman_deps);
+		}
+	}
+}
+
+pub fn install(target: &str, dirs: &ProjectDirs) {
+	let mut package_ii: HashMap<String, (bool, bool)> = HashMap::new();
+	let mut pacman_deps = HashSet::new();
+	prefetch_aur(target, dirs, &mut package_ii, &mut pacman_deps);
+	if !pacman_deps.is_empty() {
+		let mut pacman_deps = pacman_deps.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+		pacman_deps.sort_unstable();
+		loop {
+			eprintln!("To install {} and its dependencies, you need to install the following pacman packages:", target);
+			eprintln!("pacman -S --needed --asdeps {}", pacman_deps.join(" "));
+			eprint!("Please install them, then press Enter.");
+			io::stdin().read_line(&mut String::new()).expect("RUA requires console to ask confirmation.");
+
+			for dep in pacman_deps {
+				if is_package_installed_installable(&dep).0 == false {
+					continue
+				}
+			}
+			break;
+		}
+	}
+
+//	jail_build(dirs.cache_dir().join("build").join(target).to_str().unwrap(), &dirs);
+}
 
 
 pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {

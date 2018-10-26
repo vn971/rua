@@ -70,10 +70,40 @@ fn assert_command_success(command: &Output) {
 	);
 }
 
-//struct PacmanState {
-//	installed: bool,
-//	installable: bool,
-//}
+
+fn download_if_absent(name: &str, dirs: &ProjectDirs) {
+	let valid_name_regexp = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
+	assert!(valid_name_regexp.is_match(name), "unexpected package name {}", name);
+	// TODO: download new version, with some caching
+	if !Path::new(&dirs.cache_dir().join("build").join(name)).exists() {
+		env::set_current_dir(dirs.cache_dir().join("build")).unwrap();
+		let dir = format!("{}.tmp", name);
+		fs::remove_dir_all(&dir).ok();
+		let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
+		let command = Command::new("git").args(&["clone", &git_http_ref, &dir]).output().unwrap();
+		assert_command_success(&command);
+		env::set_current_dir(&dir).unwrap();
+		assert!(Path::new("PKGBUILD").exists(), "PKGBUILD not found for package {}. \
+			Does this package really exist in AUR?", name);
+		loop {
+			eprint!("Downloaded {}. Show PKGBUILD? Y=yes, I=run shell to inspect, O=ok, use the file: ", name);
+			let mut string = String::new();
+			io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
+			let string = string.trim().to_lowercase();
+
+			if string == "y" {
+				Command::new("less").arg("PKGBUILD").status().ok();
+			} else if string == "i" {
+				Command::new(env::var("SHELL").unwrap_or("bash".to_string())).status().ok();
+			} else if string == "o" {
+				break;
+			}
+		}
+		env::set_current_dir("..").unwrap();
+		fs::rename(dir, name).unwrap();
+	}
+}
+
 
 fn is_package_installed_installable(package: &str) -> (bool, bool) {
 	let command = Command::new("pacman").arg("-Qi").arg(&package)
@@ -91,19 +121,46 @@ fn is_package_installed_installable(package: &str) -> (bool, bool) {
 fn prefetch_aur(target: &str, dirs: &ProjectDirs,
 	package_ii: &mut HashMap<String, (bool, bool)>,
 	pacman_deps: &mut HashSet<String>,
+	aur_deps: &mut HashSet<String>,
 ) {
+	aur_deps.insert(target.to_string());
 	download_if_absent(&target, &dirs);
 	let deps = get_deps(&target, &dirs);
-	// info!("package {} has dependencies: {:?}", target, &deps);
+	debug!("package {} has dependencies: {:?}", target, &deps);
 	for dep in deps {
 		let ii = is_package_installed_installable(dep.as_str());
 		package_ii.insert(dep.to_string(), ii);
-		// eprintln!("dependency {}, installed={}, pacman-installable: {}", &dep, ii.0, ii.1);
+		trace!("dependency {}, installed={}, pacman-installable: {}", &dep, ii.0, ii.1);
 		if ii == (false, true) {
 			pacman_deps.insert(dep.to_string());
 		} else if ii == (false, false) {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", target, &dep);
-			prefetch_aur(&dep, dirs, package_ii, pacman_deps);
+			prefetch_aur(&dep, dirs, package_ii, pacman_deps, aur_deps);
+		}
+	}
+}
+
+
+fn ensure_pacman_packages_installed(pacman_deps: &mut HashSet<String>) {
+	while !pacman_deps.is_empty() {
+		let mut deps_list = pacman_deps.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+		deps_list.sort_unstable();
+		eprintln!("Pacman dependencies need to be installed:");
+		eprintln!("\n    pacman -S --needed --asdeps {}\n", deps_list.join(" "));
+		eprint!("Enter S to `sudo` install it, or install manually and press M when done: ");
+		let mut string = String::new();
+		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
+		let string = string.trim().to_lowercase();
+
+		if string == "s" {
+			Command::new("sudo").arg("pacman").arg("-S").arg("--needed").arg("--asdeps")
+				.args(&deps_list).status().ok();
+		}
+
+		for dep in &deps_list {
+			if is_package_installed_installable(&dep).0 {
+				pacman_deps.remove(dep);
+			}
 		}
 	}
 }
@@ -111,58 +168,10 @@ fn prefetch_aur(target: &str, dirs: &ProjectDirs,
 pub fn install(target: &str, dirs: &ProjectDirs) {
 	let mut package_ii: HashMap<String, (bool, bool)> = HashMap::new();
 	let mut pacman_deps = HashSet::new();
-	prefetch_aur(target, dirs, &mut package_ii, &mut pacman_deps);
-	if !pacman_deps.is_empty() {
-		let mut pacman_deps = pacman_deps.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-		pacman_deps.sort_unstable();
-		loop {
-			eprintln!("To install {} and its dependencies, you need to install the following pacman packages:", target);
-			eprintln!("pacman -S --needed --asdeps {}", pacman_deps.join(" "));
-			eprint!("Please install them, then press Enter.");
-			io::stdin().read_line(&mut String::new()).expect("RUA requires console to ask confirmation.");
-
-			for dep in pacman_deps {
-				if is_package_installed_installable(&dep).0 == false {
-					continue
-				}
-			}
-			break;
-		}
-	}
-
-//	jail_build(dirs.cache_dir().join("build").join(target).to_str().unwrap(), &dirs);
-}
-
-
-pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
-	let valid_name_regexp = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
-	assert!(valid_name_regexp.is_match(name), "unexpected package name {}", name);
-	// TODO: download new version, with some caching
-	if !Path::new(&dirs.cache_dir().join("build").join(name)).exists() {
-		env::set_current_dir(dirs.cache_dir().join("build")).unwrap();
-		let dir = format!("{}.tmp", name);
-		fs::remove_dir_all(&dir).ok();
-		let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
-		let command = Command::new("git").args(&["clone", &git_http_ref, &dir]).output().unwrap();
-		assert_command_success(&command);
-		env::set_current_dir(&dir).unwrap();
-		assert!(Path::new("PKGBUILD").exists(), "PKGBUILD not found for package {}. \
-			Does this package really exist in AUR?", name);
-		loop {
-			let mut string = String::new();
-			eprint!("Downloaded {}. Show PKGBUILD? Y=yes, I=run shell to inspect, O=ok, use the file: ", name);
-			io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
-			let string = string.trim().to_lowercase();
-
-			if string == "y" {
-				Command::new("less").arg("PKGBUILD").status().ok();
-			} else if string == "i" {
-				Command::new(env::var("SHELL").unwrap_or("bash".to_string())).status().ok();
-			} else if string == "o" {
-				break;
-			}
-		}
-		env::set_current_dir("..").unwrap();
-		fs::rename(dir, name).unwrap();
+	let mut aur_deps = HashSet::new();
+	prefetch_aur(target, dirs, &mut package_ii, &mut pacman_deps, &mut aur_deps);
+	ensure_pacman_packages_installed(&mut pacman_deps);
+	for dep in aur_deps {
+		jail_build(dirs.cache_dir().join("build").join(dep).to_str().unwrap(), &dirs);
 	}
 }

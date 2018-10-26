@@ -5,7 +5,7 @@ set -euET -o pipefail
 depends=()
 makedepends=()
 
-# This happens after user confirmation,
+# This happens after user review of this file,
 # on a read-only filesystem, with seccomp rules and no internet access
 source PKGBUILD
 

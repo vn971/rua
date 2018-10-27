@@ -2,13 +2,13 @@
 
 Work In Progress! No official announcement has been made yet.
 
-RUA is a build tool for ArchLinux, AUR. It's unique features are:
+RUA is a build tool for ArchLinux, AUR.
 
 * TODO: It will never allow you install SUID files
 * TODO: It shows you file list preview before installing.
 * It fetches all dependencies (recursively) before building
-* * saving your time by exiting early in case of missing packages
 * * minimizing user interaction (verify all PKGBUILD-s once, build everything later)
+* * saving your time by exiting early in case of missing packages
 * It uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
 * * No internet access is given to PKGBUILD when building packages
 * * PKGBUILD script is run under seccomp rules

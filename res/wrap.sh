@@ -1,6 +1,4 @@
 #!/bin/bash -euET
-{
-set -o pipefail
 
 exec nice -n19 \
 	ionice -c idle \
@@ -14,6 +12,3 @@ exec nice -n19 \
 	--ro-bind "$PWD" "$PWD" \
 	--seccomp 3 \
 	"$@" 3< "$RUA_CONFIG_DIR/seccomp.bpf"
-
-exit
-}

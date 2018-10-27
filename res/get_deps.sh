@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-set -euET -o pipefail
+#!/bin/bash
 {
 
 depends=()

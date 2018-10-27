@@ -151,12 +151,10 @@ fn ensure_pacman_packages_installed(pacman_deps: &mut HashSet<String>) {
 		let mut string = String::new();
 		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 		let string = string.trim().to_lowercase();
-
 		if string == "s" {
 			Command::new("sudo").arg("pacman").arg("-S").arg("--needed").arg("--asdeps")
 				.args(&deps_list).status().ok();
 		}
-
 		for dep in &deps_list {
 			if is_package_installed_installable(&dep).0 {
 				pacman_deps.remove(dep);

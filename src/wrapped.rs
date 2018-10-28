@@ -44,7 +44,7 @@ fn download_sources(dirs: &ProjectDirs) {
 }
 
 
-fn do_build(dirs: &ProjectDirs) {
+fn build_offline(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap();
 	let command = wrap_no_internet(dirs)
 		.args(&["--bind", dir.to_str().unwrap(), dir.to_str().unwrap()])
@@ -60,12 +60,11 @@ pub fn jail_build(dir: &str, project_dirs: &ProjectDirs) {
 	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
 	env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
 	download_sources(project_dirs);
-	do_build(project_dirs);
+	build_offline(project_dirs);
 }
 
 
 fn prefetch_aur(target: &str, dirs: &ProjectDirs,
-	package_ii: &mut HashMap<String, (bool, bool)>,
 	pacman_deps: &mut HashSet<String>,
 	aur_deps: &mut HashMap<String, bool>,
 ) {
@@ -74,24 +73,20 @@ fn prefetch_aur(target: &str, dirs: &ProjectDirs,
 	aur_deps.insert(target.to_string(), !deps.is_empty());
 	debug!("package {} has dependencies: {:?}", target, &deps);
 	for dep in deps {
-		let ii = pacman::is_package_installed_installable(dep.as_str());
-		package_ii.insert(dep.to_string(), ii);
-		trace!("dependency {}, installed={}, pacman-installable: {}", &dep, ii.0, ii.1);
-		if ii == (false, true) {
-			pacman_deps.insert(dep.to_string());
-		} else if ii == (false, false) {
+		if !pacman::is_package_installable(&dep) {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", target, &dep);
-			prefetch_aur(&dep, dirs, package_ii, pacman_deps, aur_deps);
+			prefetch_aur(&dep, dirs, pacman_deps, aur_deps);
+		} else if !pacman::is_package_installed(&dep) {
+			pacman_deps.insert(dep.to_string());
 		}
 	}
 }
 
 
 pub fn install(target: &str, dirs: &ProjectDirs) {
-	let mut package_ii: HashMap<String, (bool, bool)> = HashMap::new();
 	let mut pacman_deps = HashSet::new();
 	let mut aur_deps = HashMap::new();
-	prefetch_aur(target, dirs, &mut package_ii, &mut pacman_deps, &mut aur_deps);
+	prefetch_aur(target, dirs, &mut pacman_deps, &mut aur_deps);
 	pacman::ensure_pacman_packages_installed(&mut pacman_deps);
 	for (target, _) in aur_deps {
 		// TODO: group in independent branches

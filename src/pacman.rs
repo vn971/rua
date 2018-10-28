@@ -4,16 +4,14 @@ use std::process::Command;
 use std::process::Stdio;
 
 
-pub fn is_package_installed_installable(package: &str) -> (bool, bool) {
-	let command = Command::new("pacman").arg("-Qi").arg(&package)
-		.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap();
-	if command.success() {
-		(true, true)
-	} else {
-		let command = Command::new("pacman").arg("-Si").arg(&package)
-			.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap();
-		(false, command.success())
-	}
+pub fn is_package_installed(package: &str) -> bool {
+	Command::new("pacman").arg("-Qi").arg(&package)
+		.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap().success()
+}
+
+pub fn is_package_installable(package: &str) -> bool {
+	Command::new("pacman").arg("-Si").arg(&package)
+		.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap().success()
 }
 
 
@@ -32,7 +30,7 @@ pub fn ensure_pacman_packages_installed(pacman_deps: &mut HashSet<String>) {
 				.args(&deps_list).status().ok();
 		}
 		for dep in &deps_list {
-			if is_package_installed_installable(&dep).0 {
+			if is_package_installed(&dep) {
 				pacman_deps.remove(dep);
 			}
 		}

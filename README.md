@@ -4,9 +4,9 @@ Work In Progress! No official announcement has been made yet.
 
 RUA is a build tool for ArchLinux, AUR.
 
-* It will never allow you install SUID files
-* It shows you file list preview before installing.
-* It fetches all dependencies (recursively) before building
+* It never allows you install SUID files
+* It shows you file list preview before installing
+* It fetches all dependencies before building
 * * minimizing user interaction (verify all PKGBUILD-s once, build everything later)
 * * saving your time by exiting early in case of missing packages
 * It uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
@@ -37,4 +37,6 @@ RUA only adds built-time safety. Even though you can be sure there are no SUID f
 
 ## Other
 
-The name can be read as "RUst Aur jail". Project is shared under GPLv3+.
+The RUA name can be read as "RUst Aur jail", also an inversion of "AUR" word.
+
+Project is shared under GPLv3+.

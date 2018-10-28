@@ -19,6 +19,12 @@ pub fn parse_opts() -> ArgMatches<'static> {
 				.required(false)
 				.default_value(".")
 				.index(1)))
+		.subcommand(SubCommand::with_name("tarcheck")
+			.about("Checks *.tar archive")
+			.arg(Arg::with_name("TARGET")
+				.help("archive to check")
+				.required(true)
+				.index(1)))
 		.get_matches();
 	matches
 }

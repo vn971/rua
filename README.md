@@ -4,8 +4,8 @@ Work In Progress! No official announcement has been made yet.
 
 RUA is a build tool for ArchLinux, AUR.
 
-* TODO: It will never allow you install SUID files
-* TODO: It shows you file list preview before installing.
+* It will never allow you install SUID files
+* It shows you file list preview before installing.
 * It fetches all dependencies (recursively) before building
 * * minimizing user interaction (verify all PKGBUILD-s once, build everything later)
 * * saving your time by exiting early in case of missing packages
@@ -29,7 +29,6 @@ TODO: make AUR package :-)
 * The tool does not allow you searching for packages, it only installs once you know the exact name. Author of this tool uses the [web page](https://aur.archlinux.org/packages/) to find packages.
 * The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
-* Build-time dependencies are not distinguished from run-time dependencies (all are requested to install).
 
 
 ## Safety

@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.3.0"
+version = "0.4.0"
 description = "AUR builder written in Rust"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"
@@ -17,6 +17,8 @@ env_logger = "0.5.13"
 fs2 = "0.4.3"
 log = "0.4"
 regex = "1"
+tar = "0.4"
+#libalpm = "0.1.2"
 
 [dependencies.config]
 version = "0.9"

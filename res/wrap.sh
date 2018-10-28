@@ -11,4 +11,4 @@ exec nice -n19 \
 	--ro-bind "$RUA_CONFIG_DIR" "$RUA_CONFIG_DIR" \
 	--ro-bind "$PWD" "$PWD" \
 	--seccomp 3 \
-	"$@" 3< "$RUA_CONFIG_DIR/seccomp.bpf"
+	"$@" 3< "$RUA_SECCOMP_FILE"

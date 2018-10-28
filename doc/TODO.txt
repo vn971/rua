@@ -1,7 +1,7 @@
 Possible features to implement (until it becomes heavy enough for issue tracker):
 
-support non-amd64 architectures (seccomp is the blocker)
 do something smart about AUR package caching
 AUR upstream diff
 patching AUR packages
 use libalpm instead of `pacman` commands: https://crates.io/crates/libalpm
+add to arch wiki once it's publicly released

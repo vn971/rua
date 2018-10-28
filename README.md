@@ -32,12 +32,7 @@ TODO: make AUR package :-)
 
 
 ## Safety
-RUA only adds built-time safety. Even though you can be sure there are no SUID files and ugly stuff like that, The resulting package (run-time) is as safe as it was in the first place (even though
-
-properties of the resulting package are not changed in any way.
-* Packages can install to dangerous locations like /etc/cron.d, if you're not paying attention to package file list preview.
-
-That being said, the build process is protected as much as I could
+RUA only adds built-time safety. Even though you can be sure there are no SUID files and ugly stuff like that, the resulting package (run-time) is as safe as it was in the first place. Do not install AUR packages you don't trust.
 
 
 ## Other

@@ -21,7 +21,9 @@ mod aur;
 use chrono::Utc;
 use directories::ProjectDirs;
 use env_logger::Env;
+use fs2::FileExt;
 use std::env;
+use std::fs::File;
 use std::fs::OpenOptions;
 use std::fs::Permissions;
 use std::fs;
@@ -87,6 +89,9 @@ fn main() {
 	overwrite_script(&dirs.config_dir().join(wrapped::GET_DEPS_SCRIPT_PATH), include_bytes!("../res/get_deps.sh"));
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 	ensure_script(&dirs.config_dir().join("wrap_args.sh"), include_bytes!("../res/wrap_args.sh"));
+
+	let locked_file = File::open(dirs.config_dir()).unwrap();
+	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
 	let opts = parse_opts::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {

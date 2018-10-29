@@ -50,4 +50,3 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
 	}
 	ensure_packages_installed(map, "-S");
 }
-

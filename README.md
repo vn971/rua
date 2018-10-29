@@ -21,7 +21,9 @@ Planned features include AUR upstream git diff and local patch application.
 
 ## Install
 * Install dependencies: `pacman -S --needed --asdeps bubblewrap rustup`
-* Build with Rust/cargo: `cargo install`
+* Build:
+* * `cargo install`, to build in cloned repo
+* * `cargo install rua`, to build from crates.io
 
 As an AUR package: [rua](https://aur.archlinux.org/packages/rua/).
 
@@ -29,7 +31,7 @@ As an AUR package: [rua](https://aur.archlinux.org/packages/rua/).
 ## Limitations
 
 * The tool does not allow you searching for packages, it only installs once you know the exact name. Author of this tool uses the [web page](https://aur.archlinux.org/packages/) to find packages.
-* No smart caching is implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
+* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
 * The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
 * Unless you explicitly enable it, builds do not share anything with normal user home (~). This may result in rust/maven/whatever packages being re-downloaded each build. Take a look at ~/.config/rua/wrap_args.sh to see which compromises you might want to take on that.

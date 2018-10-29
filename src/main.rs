@@ -20,7 +20,7 @@ mod aur;
 
 use chrono::Utc;
 use directories::ProjectDirs;
-use log::LevelFilter;
+use env_logger::Env;
 use std::env;
 use std::fs::OpenOptions;
 use std::fs::Permissions;
@@ -58,9 +58,8 @@ fn overwrite_script(path: &PathBuf, content: &[u8]) {
 
 fn main() {
 	ensure_env("RUST_BACKTRACE", "1");
-	let mut logger = env_logger::Builder::from_default_env();
-	if env::var_os("RUST_LOG").is_none() { logger.filter_level(LevelFilter::Info); }
-	logger.format(|buf, record| writeln!(buf,
+	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
+		.format(|buf, record| writeln!(buf,
 			"{} [{}] - {}",
 			Utc::now().format("%Y-%m-%d %H:%M:%S"),
 			record.level(),

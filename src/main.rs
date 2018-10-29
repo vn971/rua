@@ -85,10 +85,12 @@ fn main() {
 		fs::remove_dir_all(dirs.cache_dir()).unwrap();
 		std::fs::create_dir_all(dirs.cache_dir()).unwrap();
 		let target = matches.value_of("TARGET").unwrap();
-		wrapped::install(target, &dirs);
+		let is_offline = matches.is_present("offline");
+		wrapped::install(target, &dirs, is_offline);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("DIR").unwrap_or(".");
-		wrapped::build_directory(target_dir, &dirs);
+		let is_offline = matches.is_present("offline");
+		wrapped::build_directory(target_dir, &dirs, is_offline);
 		for file in fs::read_dir("target").unwrap() {
 			tar_check::tar_check(file.unwrap().path());
 		}

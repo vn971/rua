@@ -3,14 +3,16 @@ use std::io::Read;
 use std::io;
 use std::path::PathBuf;
 use std::process;
-use tar::Archive;
+use tar::*;
 
 
 pub fn tar_check(package_file: PathBuf) {
 	let package_file = package_file.to_str().expect("unexpected characters in package name");
 	let mut install_file = String::new();
-	for file in Archive::new(File::open(package_file).unwrap()).entries().unwrap() {
-		let mut file = file.unwrap();
+	let mut archive = Archive::new(File::open(package_file).expect(&format!("cannot open file {}", package_file)));
+	let archive_files = archive.entries().expect(&format!("cannot open archive {}", package_file));
+	for file in archive_files {
+		let mut file = file.expect(&format!("cannot access tar file in {}", package_file));
 		let mode = file.header().mode().unwrap();
 		if mode > 0o777 {
 			eprintln!("ERROR! File {} / {:?} has mode {}, which is out of 0o777 permission zone", package_file, file.header().path(), mode);

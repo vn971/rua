@@ -23,21 +23,17 @@ fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 	Command::new(dirs.config_dir().join(WRAP_SCRIPT_PATH))
 }
 
-fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
-	let mut command = Command::new(dirs.config_dir().join(WRAP_SCRIPT_PATH));
-	command.arg("--unshare-net");
-	command
-}
 
 pub fn get_deps(dir: &str, dirs: &ProjectDirs) -> Vec<String> {
 	env::set_current_dir(dir).unwrap();
-	let command = wrap_no_internet(dirs)
+	let command = wrap_yes_internet(dirs).arg("--unshare-net")
 		.args(&["bash", "--restricted", dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap()])
 		.stderr(Stdio::inherit()).output().unwrap();
 	String::from_utf8_lossy(&command.stdout).split(' ')
 		.map(|s| s.trim().to_string())
 		.filter(|s| !s.is_empty()).collect()
 }
+
 
 fn download_sources(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap();
@@ -50,21 +46,22 @@ fn download_sources(dirs: &ProjectDirs) {
 }
 
 
-fn build_offline(dirs: &ProjectDirs) {
+fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	let dir = env::current_dir().unwrap();
 	let dir = dir.to_str().unwrap();
-	let command = wrap_no_internet(dirs)
-		.args(&["--bind", dir, dir])
-		.args(&["makepkg"]).status().unwrap();
+	let mut command = wrap_yes_internet(dirs);
+	if is_offline { command.arg("--unshare-net"); }
+	command.args(&["--bind", dir, dir]);
+	let command = command.args(&["makepkg"]).status().unwrap();
 	assert!(command.success(), "Failed to build package");
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs) {
+pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) {
+	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
 	if Path::new(dir).join("target").exists() == false {
-		env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
 		env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
 		download_sources(project_dirs);
-		build_offline(project_dirs);
+		build_local(project_dirs, is_offline);
 	}
 }
 
@@ -107,13 +104,13 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 }
 
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>) {
+fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_unstable_by_key(|pair| -*pair.1);
 	for (_, packages) in &packages.iter().group_by(|pair| *pair.1) {
 		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
 		for name in &packages {
-			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs);
+			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs, is_offline);
 		}
 		for name in &packages {
 			package_tar_review(name, dirs);
@@ -128,10 +125,10 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>) {
 	}
 }
 
-pub fn install(name: &str, dirs: &ProjectDirs) {
+pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut aur_deps = HashMap::new();
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_deps, 0);
 	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(dirs, aur_deps);
+	install_all(dirs, aur_deps, is_offline);
 }

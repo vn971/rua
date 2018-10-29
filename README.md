@@ -1,7 +1,5 @@
 ## RUA
 
-Work In Progress! No official announcement has been made yet.
-
 RUA is a build tool for ArchLinux, AUR. Its features:
 
 * Never allows you install SUID files
@@ -11,14 +9,15 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * group dependencies to require fewer interaction times
 * * (exit early in case of missing dependencies)
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-* * no internet access is given to PKGBUILD when building packages
-* * PKGBUILD script is run under seccomp rules
 * * filesystem is read-only except the build dir
+* * PKGBUILD script is run under seccomp rules
+* * optionally, no internet access is given to PKGBUILD when building packages
 * * home directory (~) is not visible to PKGBUILD, except the build dir
 * * etc
 * Written in Rust
 
 Planned features include AUR upstream git diff and local patch application.
+
 
 ## Install
 * Install dependencies: `pacman -S --needed --asdeps bubblewrap`

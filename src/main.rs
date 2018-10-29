@@ -20,14 +20,15 @@ mod aur;
 
 use chrono::Utc;
 use directories::ProjectDirs;
+use log::LevelFilter;
 use std::env;
 use std::fs::OpenOptions;
+use std::fs::Permissions;
 use std::fs;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
-use std::fs::Permissions;
 use std::path::Path;
+use std::path::PathBuf;
 
 fn ensure_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
@@ -56,10 +57,10 @@ fn overwrite_script(path: &PathBuf, content: &[u8]) {
 
 
 fn main() {
-	ensure_env("RUST_LOG", "info");
 	ensure_env("RUST_BACKTRACE", "1");
-	env_logger::Builder::from_default_env()
-		.format(|buf, record| writeln!(buf,
+	let mut logger = env_logger::Builder::from_default_env();
+	if env::var_os("RUST_LOG").is_none() { logger.filter_level(LevelFilter::Info); }
+	logger.format(|buf, record| writeln!(buf,
 			"{} [{}] - {}",
 			Utc::now().format("%Y-%m-%d %H:%M:%S"),
 			record.level(),
@@ -102,6 +103,7 @@ fn main() {
 		for file in fs::read_dir("target").unwrap() {
 			tar_check::tar_check(file.unwrap().path());
 		}
+		eprintln!("Package built and checked in: {:?}", Path::new(target_dir).join("target"));
 	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
 		let target_dir = matches.value_of("TARGET").unwrap();
 		tar_check::tar_check(Path::new(target_dir).to_path_buf());

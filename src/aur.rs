@@ -20,7 +20,6 @@ fn assert_command_success(command: &Output) {
 pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 	let valid_name_regexp = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
 	assert!(valid_name_regexp.is_match(name), "unexpected package name {}", name);
-	// TODO: download new version, with some caching
 	fs::create_dir_all(dirs.cache_dir().join(name)).unwrap();
 	env::set_current_dir(dirs.cache_dir().join(name)).unwrap();
 	if !Path::new("build").exists() && !Path::new("target").exists() {

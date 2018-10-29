@@ -58,7 +58,9 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) {
 	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
-	if Path::new(dir).join("target").exists() == false {
+	if Path::new(dir).join("target").exists() {
+		eprintln!("Skipping build for {} as 'target' directory is already present.", dir);
+	} else {
 		env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
 		download_sources(project_dirs);
 		build_local(project_dirs, is_offline);
@@ -67,6 +69,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) 
 
 fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	if dirs.cache_dir().join(name).join(CHECKED_TARS).exists() {
+		eprintln!("Skipping *.tar verification for package {} as it already has been verified before.", name);
 		return;
 	}
 	let expect = format!("target directory not found for package {}: {:?}", name,
@@ -87,6 +90,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	depth: i32,
 ) {
 	if aur_deps.contains_key(name) {
+		eprintln!("Skipping already fetched package {}", name);
 		return;
 	}
 	aur_deps.insert(name.to_string(), depth);

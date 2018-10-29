@@ -16,6 +16,7 @@ pub fn is_package_installable(package: &str) -> bool {
 		.stdout(Stdio::null()).stderr(Stdio::null()).status().unwrap().success()
 }
 
+// TODO: DRY
 
 pub fn ensure_aur_packages_installed(mut packages: HashMap<String, PathBuf>) {
 	while !packages.is_empty() {
@@ -51,11 +52,7 @@ pub fn ensure_pacman_packages_installed(mut packages: HashSet<String>) {
 			Command::new("sudo").arg("pacman").arg("-S").arg("--needed").arg("--asdeps")
 				.args(&list).status().ok();
 		}
-		for dep in &list {
-			if is_package_installed(&dep) {
-				packages.remove(dep);
-			}
-		}
+		packages.retain(|name| !is_package_installed(name));
 	}
 }
 

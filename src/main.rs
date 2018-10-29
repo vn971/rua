@@ -109,7 +109,8 @@ fn main() {
 		}
 		eprintln!("Package built and checked in: {:?}", Path::new(target_dir).join("target"));
 	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
-		let target_dir = matches.value_of("TARGET").unwrap();
-		tar_check::tar_check(Path::new(target_dir).to_path_buf());
+		let target = matches.value_of("TARGET").unwrap();
+		tar_check::tar_check(Path::new(target).to_path_buf());
+		eprintln!("Package passed all checks: {}", target);
 	}
 }

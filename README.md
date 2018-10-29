@@ -6,8 +6,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * Never allows you install SUID files
 * Minimizes user interaction:
 * * verify all PKGBUILD-s once, build everything later
-* * group dependencies to require fewer interaction times
-* * (exit early in case of missing dependencies)
+* * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
 * * filesystem is read-only except the build dir
 * * PKGBUILD script is run under seccomp rules
@@ -19,6 +18,16 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 Planned features include AUR upstream git diff and local patch application.
 
 
+# Use
+
+`rua install firefox-ublock-origin`  # install AUR package (with user confirmation)
+
+`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access.
+
+`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script preview etc).
+
+`rua jailbuild --offline /path/to/aur/repo`  # build a directory. Don't fetch any dependencies. Beware: this specific command may have bugs in case of a non-clean directory (no guarantees provided here).
+
 ## Install
 * Install dependencies: `pacman -S --needed --asdeps bubblewrap rustup`
 * Build:
@@ -27,6 +36,19 @@ Planned features include AUR upstream git diff and local patch application.
 
 As an AUR package: [rua](https://aur.archlinux.org/packages/rua/).
 
+
+## How it works
+We'll consider the "install" command as it's the most advanced one. RUA will:
+
+1. Fetch the AUR package (via git)
+2. Let the user review PKGBUILD and the repo. Only go to next steps after user approval.
+3. Check AUR dependencies, repeat the process for them
+4. Ask the user to install all aggregated non-aur packages.
+5. Build all AUR packages of maximum dependency "depth"
+6. After all are built, let the user review them all
+7. If review passes, let the user install these packages
+8. The lowest (dependency-wise) packages are now installed. Go to 5.
+9. Exit when all packages are installed.
 
 ## Limitations
 

@@ -7,6 +7,7 @@ extern crate config;
 extern crate directories;
 extern crate env_logger;
 extern crate fs2;
+extern crate itertools;
 extern crate regex;
 extern crate tar;
 #[macro_use] extern crate log;
@@ -84,7 +85,10 @@ fn main() {
 		wrapped::install(target, &dirs);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("DIR").unwrap_or(".");
-		wrapped::jail_build(target_dir, &dirs);
+		wrapped::build_directory(target_dir, &dirs);
+		for file in fs::read_dir("target").unwrap() {
+			tar_check::tar_check(file.unwrap().path());
+		}
 	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
 		let target_dir = matches.value_of("TARGET").unwrap();
 		tar_check::tar_check(Path::new(target_dir).to_path_buf());

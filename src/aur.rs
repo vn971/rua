@@ -23,7 +23,7 @@ pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 	// TODO: download new version, with some caching
 	fs::create_dir_all(dirs.cache_dir().join(name)).unwrap();
 	env::set_current_dir(dirs.cache_dir().join(name)).unwrap();
-	if !Path::new("build").exists() {
+	if !Path::new("build").exists() && !Path::new("target").exists() {
 		let dir = "aur.tmp";
 		fs::remove_dir_all(dir).ok();
 		let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
@@ -39,7 +39,7 @@ pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 			let string = string.trim().to_lowercase();
 
 			if string == "y" {
-				Command::new("less").arg("PKGBUILD").status().ok();
+				Command::new(env::var("PAGER").unwrap_or("less".to_string())).arg("PKGBUILD").status().ok();
 			} else if string == "i" {
 				Command::new(env::var("SHELL").unwrap_or("bash".to_string())).status().ok();
 			} else if string == "o" {

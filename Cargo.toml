@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.5.2"
+version = "0.5.3"
 description = "AUR builder written in Rust"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"

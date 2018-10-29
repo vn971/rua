@@ -1,7 +1,8 @@
 Possible features to implement (until it becomes heavy enough for issue tracker):
 
 do something smart about AUR package caching
-AUR upstream diff
-patching AUR packages
-use libalpm instead of `pacman` commands: https://crates.io/crates/libalpm
+eager invocation of sudo, if explicitly enabled in config
+upstream AUR diff
+local AUR packages
 add to arch wiki once it's publicly released
+use libalpm instead of `pacman` commands, to speed-up: https://crates.io/crates/libalpm

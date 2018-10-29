@@ -16,13 +16,15 @@ use tar_check;
 
 
 const CHECKED_TARS: &str = "checked_tars";
+pub const GET_DEPS_SCRIPT_PATH: &str = ".system/get_deps.sh";
+pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
-	Command::new(dirs.cache_dir().join(".rua/wrap.sh"))
+	Command::new(dirs.config_dir().join(WRAP_SCRIPT_PATH))
 }
 
 fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
-	let mut command = Command::new(dirs.cache_dir().join(".rua/wrap.sh"));
+	let mut command = Command::new(dirs.config_dir().join(WRAP_SCRIPT_PATH));
 	command.arg("--unshare-net");
 	command
 }
@@ -30,7 +32,7 @@ fn wrap_no_internet(dirs: &ProjectDirs) -> Command {
 pub fn get_deps(dir: &str, dirs: &ProjectDirs) -> Vec<String> {
 	env::set_current_dir(dir).unwrap();
 	let command = wrap_no_internet(dirs)
-		.args(&["bash", "--restricted", dirs.cache_dir().join(".rua/get_deps.sh").to_str().unwrap()])
+		.args(&["bash", "--restricted", dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap()])
 		.stderr(Stdio::inherit()).output().unwrap();
 	String::from_utf8_lossy(&command.stdout).split(' ')
 		.map(|s| s.trim().to_string())

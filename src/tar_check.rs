@@ -21,13 +21,15 @@ pub fn tar_check(package_file: PathBuf) {
 		}
 	}
 	loop {
-		let install_note = if install_file.is_empty() { "" } else { "[I] = show install file, " };
+		let has_install = !install_file.is_empty();
 		eprint!("\nPackage {} has no SUID files.\n\
 			[E] = list executable files, [L] = list all files, {}[O] = ok, proceed. ",
-			package_file, install_note
+			package_file,
+			if has_install { "[I] = show install file, " } else { "" }
 		);
 		let mut string = String::new();
 		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
+		eprintln!();
 		let string = string.trim().to_lowercase();
 		if string == "l" {
 			for file in Archive::new(File::open(package_file).unwrap()).entries().unwrap() {
@@ -50,7 +52,7 @@ pub fn tar_check(package_file: PathBuf) {
 					eprintln!("{}", path);
 				}
 			}
-		} else if string == "i" && !install_file.is_empty() {
+		} else if string == "i" && has_install {
 			eprintln!("{}", &install_file);
 		} else if string == "o" {
 			break;

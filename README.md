@@ -2,20 +2,23 @@
 
 Work In Progress! No official announcement has been made yet.
 
-RUA is a build tool for ArchLinux, AUR.
+RUA is a build tool for ArchLinux, AUR. Its features:
 
-* It never allows you install SUID files
-* It shows you file list preview before installing
-* It fetches all dependencies before building
-* * minimizing user interaction (verify all PKGBUILD-s once, build everything later)
-* * saving your time by exiting early in case of missing packages
-* It uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-* * No internet access is given to PKGBUILD when building packages
+* Never allows you install SUID files
+* Shows you file list preview before installing
+* Minimizes user interaction:
+* * verify all PKGBUILD-s once, build everything later
+* * group dependencies to require fewer interaction times
+* * (exit early in case of missing dependencies)
+* Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
+* * no internet access is given to PKGBUILD when building packages
 * * PKGBUILD script is run under seccomp rules
-* * Filesystem is read-only except the build dir
-* * Home directory (~) is not visible to PKGBUILD, except the build dir
+* * filesystem is read-only except the build dir
+* * home directory (~) is not visible to PKGBUILD, except the build dir
 * * etc
+* Written in Rust
 
+Planned features include AUR upstream git diff and local patch application.
 
 ## Install
 * Install dependencies: `pacman -S --needed --asdeps bubblewrap`
@@ -27,6 +30,7 @@ TODO: make AUR package :-)
 ## Limitations
 
 * The tool does not allow you searching for packages, it only installs once you know the exact name. Author of this tool uses the [web page](https://aur.archlinux.org/packages/) to find packages.
+* No smart caching is implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
 * The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
 

@@ -35,6 +35,7 @@ fn ensure_env(key: &str, value: &str) {
 	}
 }
 
+
 fn ensure_file(path: &PathBuf, content: &[u8]) {
 	let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path).unwrap();
 	file.write_all(content).unwrap();
@@ -63,10 +64,10 @@ fn main() {
 	ensure_env("PKGEXT", ".pkg.tar");
 
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua").unwrap();
-	std::fs::create_dir_all(dirs.cache_dir().join(".rua")).unwrap();
-	std::fs::create_dir_all(dirs.config_dir()).unwrap();
+	std::fs::create_dir_all(dirs.cache_dir()).unwrap();
+	std::fs::create_dir_all(dirs.config_dir().join(".system")).unwrap();
 	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
-	let seccomp_file = dirs.cache_dir().join(".rua/seccomp.bpf");
+	let seccomp_file = dirs.config_dir().join(".system/seccomp.bpf");
 	if cfg!(target_arch = "i686") {
 		ensure_file(&seccomp_file, include_bytes!("../res/seccomp-i686.bpf"));
 	} else if cfg!(target_arch = "x86_64") {
@@ -75,12 +76,14 @@ fn main() {
 		panic!("Unable to find seccomp file for your architecture. Please create it and put it to {:?}", seccomp_file);
 	}
 	ensure_env("RUA_SECCOMP_FILE", seccomp_file.to_str().unwrap());
-	ensure_script(&dirs.cache_dir().join(".rua/get_deps.sh"), include_bytes!("../res/get_deps.sh"));
-	ensure_script(&dirs.cache_dir().join(".rua/wrap.sh"), include_bytes!("../res/wrap.sh"));
+	ensure_script(&dirs.config_dir().join(wrapped::GET_DEPS_SCRIPT_PATH), include_bytes!("../res/get_deps.sh"));
+	ensure_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 
 
 	let opts = parse_opts::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {
+		fs::remove_dir_all(dirs.cache_dir()).unwrap();
+		std::fs::create_dir_all(dirs.cache_dir()).unwrap();
 		let target = matches.value_of("TARGET").unwrap();
 		wrapped::install(target, &dirs);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {

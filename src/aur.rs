@@ -41,6 +41,7 @@ pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 			if string == "y" {
 				Command::new(env::var("PAGER").unwrap_or("less".to_string())).arg("PKGBUILD").status().ok();
 			} else if string == "i" {
+				eprintln!("Exit the shell with `logout` or Ctrl-D...");
 				Command::new(env::var("SHELL").unwrap_or("bash".to_string())).status().ok();
 			} else if string == "o" {
 				break;

@@ -32,6 +32,7 @@ TODO: make AUR package :-)
 * No smart caching is implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
 * The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
+* Unless you explicitly enable it, builds do not share anything with normal user home (~). This may result in rust/maven/whatever packages being re-downloaded at each build. Take a look at ~/.config/rua/wrap_args.sh to see which compromises you might want to take.
 
 
 ## Safety

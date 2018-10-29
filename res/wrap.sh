@@ -14,6 +14,7 @@ exec nice -n19 \
 	--dev /dev \
 	--tmpfs /tmp \
 	--tmpfs ~ \
+	--ro-bind ~/.gnupg ~/.gnupg --tmpfs ~/.gnupg/private-keys-v1.d \
 	--ro-bind "$RUA_CONFIG_DIR" "$RUA_CONFIG_DIR" \
 	--ro-bind "$PWD" "$PWD" \
 	--seccomp 3 \

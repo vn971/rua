@@ -2,8 +2,8 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
-* Never allows you install SUID files
 * Shows you file list preview before installing
+* Never allows you install SUID files
 * Minimizes user interaction:
 * * verify all PKGBUILD-s once, build everything later
 * * group dependencies to require fewer interaction times
@@ -20,10 +20,10 @@ Planned features include AUR upstream git diff and local patch application.
 
 
 ## Install
-* Install dependencies: `pacman -S --needed --asdeps bubblewrap`
-* Build with Rust/cargo: `cargo install rua`
+* Install dependencies: `pacman -S --needed --asdeps bubblewrap rustup`
+* Build with Rust/cargo: `cargo install`
 
-TODO: make AUR package :-)
+As an AUR package: [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Limitations
@@ -32,7 +32,7 @@ TODO: make AUR package :-)
 * No smart caching is implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
 * The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
-* Unless you explicitly enable it, builds do not share anything with normal user home (~). This may result in rust/maven/whatever packages being re-downloaded at each build. Take a look at ~/.config/rua/wrap_args.sh to see which compromises you might want to take.
+* Unless you explicitly enable it, builds do not share anything with normal user home (~). This may result in rust/maven/whatever packages being re-downloaded each build. Take a look at ~/.config/rua/wrap_args.sh to see which compromises you might want to take on that.
 
 
 ## Safety
@@ -41,6 +41,6 @@ RUA only adds built-time safety. Even though you can be sure there are no SUID f
 
 ## Other
 
-The RUA name can be read as "RUst Aur jail", also an inversion of "AUR" word.
+The RUA name can be read as "RUst Aur jail", also an inversion of "AUR".
 
 Project is shared under GPLv3+.

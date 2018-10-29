@@ -7,7 +7,7 @@ use tar::*;
 
 
 pub fn tar_check(package_file: PathBuf) {
-	let package_file = package_file.to_str().expect("unexpected characters in package name");
+	let package_file = package_file.to_str().unwrap();
 	let mut install_file = String::new();
 	let mut archive = Archive::new(File::open(package_file).expect(&format!("cannot open file {}", package_file)));
 	let archive_files = archive.entries().expect(&format!("cannot open archive {}", package_file));

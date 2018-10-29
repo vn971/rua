@@ -222,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.5.7"
+version = "0.5.8"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",

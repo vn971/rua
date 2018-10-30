@@ -27,17 +27,22 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access.
 
-`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script preview etc).
+`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
-`rua jailbuild --offline /path/to/aur/repo`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
+`rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
-## Install
-* Install dependencies: `pacman -S --needed --asdeps bubblewrap rustup`
+
+## Install (the AUR way)
+Install [RUA](https://aur.archlinux.org/packages/rua/) package using the default manual build process (https://wiki.archlinux.org/index.php/Arch_User_Repository#Prerequisites). Or using another AUR helper, or an earlier version of RUA.
+
+
+## Install (the Rust way)
+* Install dependencies: `pacman -S --needed --asdeps bubblewrap rust`
 * Build:
 * * `cargo install`, to build in cloned repo
 * * `cargo install rua`, to build from crates.io
 
-As an AUR package: [rua](https://aur.archlinux.org/packages/rua/).
+There won't be bash/zsh/fish completions this way, but everything else should work.
 
 
 ## How it works

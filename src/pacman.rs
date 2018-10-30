@@ -8,7 +8,7 @@ use std::path::Path;
 
 
 pub fn is_package_installed(package: &str) -> bool {
-	Command::new("pacman").arg("-Qi").arg(&package)
+	Command::new("pacman").arg("-T").arg(&package)
 		.stdout(Stdio::null()).stderr(Stdio::null()).status()
 		.expect(&format!("Failed to determine if package {} is installed", package)).success()
 }

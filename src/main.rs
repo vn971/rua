@@ -12,11 +12,12 @@ extern crate regex;
 extern crate tar;
 #[macro_use] extern crate log;
 
-mod parse_opts;
-mod wrapped;
-mod tar_check;
-mod pacman;
 mod aur;
+mod pacman;
+mod parse_opts;
+mod tar_check;
+mod util;
+mod wrapped;
 
 use chrono::Utc;
 use directories::ProjectDirs;

@@ -2,8 +2,11 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
-* Shows you file list preview before installing
-* Never allows you install SUID files
+* Show the user what they are about to install:
+* * Show INSTALL script (if present)
+* * Check there are no SUID files
+* * File list preview
+* * Executable list preview
 * Minimizes user interaction:
 * * verify all PKGBUILD-s once, build everything later
 * * group dependencies for batch review/install

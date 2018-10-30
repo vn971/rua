@@ -6,6 +6,7 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 use std::process::Output;
+use util;
 
 
 fn assert_command_success(command: &Output) {
@@ -15,26 +16,6 @@ fn assert_command_success(command: &Output) {
 		String::from_utf8_lossy(&command.stderr),
 		String::from_utf8_lossy(&command.stdout),
 	);
-}
-
-fn run_env_command(main: &str, alternative: &str, arguments: &[&str]) {
-	let command = env::var(main).ok()
-		.map(|s| s.trim().to_owned());
-	let command: Vec<_> = command.iter().flat_map(|e| e.split(" "))
-		.map(|e| e.trim()).filter(|e| !e.is_empty())
-		.collect();
-	let mut command = if let Some(first) = command.first() {
-		let mut cmd = Command::new(first);
-		cmd.args(&command[1..]);
-		cmd
-	} else {
-		Command::new(alternative)
-	};
-	command.args(arguments);
-	let command = command.status();
-	for err in command.err() {
-		eprintln!("Failed to run command, error: {}", err);
-	}
 }
 
 pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
@@ -59,12 +40,12 @@ pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 			let string = string.trim().to_lowercase();
 
 			if string == "v" {
-				run_env_command("PAGER", "less", &["PKGBUILD"]);
+				util::run_env_command("PAGER", "less", &["PKGBUILD"]);
 			} else if string == "e" {
-				run_env_command("EDITOR", "nano", &["PKGBUILD"]);
+				util::run_env_command("EDITOR", "nano", &["PKGBUILD"]);
 			} else if string == "i" {
 				eprintln!("Exit the shell with `logout` or Ctrl-D...");
-				run_env_command("SHELL", "bash", &[]);
+				util::run_env_command("SHELL", "bash", &[]);
 			} else if string == "o" {
 				break;
 			}

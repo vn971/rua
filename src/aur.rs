@@ -19,7 +19,7 @@ fn assert_command_success(command: &Output) {
 
 fn run_env_command(main: &str, alternative: &str, arguments: &[&str]) {
 	let command = env::var(main).ok()
-		.map(|s| s.trim().to_string());
+		.map(|s| s.trim().to_owned());
 	let command: Vec<_> = command.iter().flat_map(|e| e.split(" "))
 		.map(|e| e.trim()).filter(|e| !e.is_empty())
 		.collect();

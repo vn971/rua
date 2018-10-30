@@ -30,7 +30,7 @@ pub fn get_deps(dir: &str, dirs: &ProjectDirs) -> Vec<String> {
 		.args(&["bash", "--restricted", dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap()])
 		.stderr(Stdio::inherit()).output().unwrap();
 	String::from_utf8_lossy(&command.stdout).split(' ')
-		.map(|s| s.trim().to_string())
+		.map(|s| s.trim().to_owned())
 		.filter(|s| !s.is_empty()).collect()
 }
 
@@ -93,7 +93,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 		eprintln!("Skipping already fetched package {}", name);
 		return;
 	}
-	aur_deps.insert(name.to_string(), depth);
+	aur_deps.insert(name.to_owned(), depth);
 	aur::download_if_absent(&name, &dirs);
 	let deps = get_deps(dirs.cache_dir().join(name).join("build").to_str().unwrap(), &dirs);
 	debug!("package {} has dependencies: {:?}", name, &deps);
@@ -102,7 +102,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", name, &dep);
 			prefetch_aur(&dep, dirs, pacman_deps, aur_deps, depth + 1);
 		} else if !pacman::is_package_installed(&dep) {
-			pacman_deps.insert(dep.to_string());
+			pacman_deps.insert(dep.to_owned());
 		}
 	}
 }
@@ -122,7 +122,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
 		for name in packages {
 			for file in fs::read_dir(dirs.cache_dir().join(name).join(CHECKED_TARS)).unwrap() {
-				packages_to_install.insert(name.to_string(), file.unwrap().path());
+				packages_to_install.insert(name.to_owned(), file.unwrap().path());
 			}
 		}
 		pacman::ensure_aur_packages_installed(packages_to_install);

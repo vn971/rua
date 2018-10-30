@@ -3,11 +3,11 @@
 RUA is a build tool for ArchLinux, AUR. Its features:
 
 * Show the user what they are about to install:
-* * Show INSTALL script (if present)
-* * Warns if SUID files are present, and shows them
-* * File list preview
-* * Executable list preview
-* Minimizes user interaction:
+* * show INSTALL script (if present)
+* * warn if SUID files are present, and show them
+* * show file list preview
+* * show executable list preview
+* Minimize user interaction:
 * * verify all PKGBUILD-s once, build everything later
 * * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:

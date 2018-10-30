@@ -16,6 +16,7 @@ cargo publish
 
 version=$(cat Cargo.toml | head | grep version | sed 's/.*"\(.*\)"/\1/')
 git tag -m "release" "$version"
+git push
 
 exit
 }

@@ -1,10 +1,7 @@
 #!/bin/bash -euET
 
 wrap_args=()
-
-if test -e ~/.config/rua/wrap_args.sh; then
-  source ~/.config/rua/wrap_args.sh
-fi
+test -e ~/.config/rua/wrap_args.sh && source ~/.config/rua/wrap_args.sh
 
 exec nice -n19 \
 	ionice -c idle \

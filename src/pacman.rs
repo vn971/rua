@@ -23,7 +23,7 @@ fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, operation: 
 		{
 			let mut list = packages.iter().map(|(_name, path)| path.to_str().unwrap()).collect::<Vec<_>>();
 			list.sort_unstable();
-			eprintln!("Dependencies need to be installed:");
+			eprintln!("Packages (or dependencies) need to be installed:");
 			eprintln!("\n    pacman {} --needed --asdeps {}\n", operation, list.join(" "));
 			eprint!("Enter S to `sudo` install it, or install manually and press M when done: ");
 			let mut string = String::new();

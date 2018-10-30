@@ -1,13 +1,17 @@
 [package]
 name = "rua"
-version = "0.6.1"
+version = "0.6.2"
 description = "AUR builder written in Rust"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"
 keywords = ["archlinux", "aur", "build", "jail", "bubblewrap"]
 readme = "README.md"
 repository = "https://github.com/vn971/rua"
+build = "build.rs"
 
+
+[build-dependencies]
+clap = "2.32.0"
 
 [dependencies]
 chrono = "0.4"

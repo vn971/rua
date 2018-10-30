@@ -42,7 +42,7 @@ fn download_sources(dirs: &ProjectDirs) {
 	let dir = dir.to_str().unwrap();
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "--noprepare", "--nobuild"])
+		.args(&["makepkg", "--verifysource"])
 		.status().expect(&format!("Failed to fetch dependencies in directory {}", dir));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 }

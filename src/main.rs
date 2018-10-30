@@ -41,21 +41,27 @@ fn ensure_env(key: &str, value: &str) {
 
 
 fn overwrite_file(path: &PathBuf, content: &[u8]) {
-	let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path).unwrap();
-	file.write_all(content).unwrap();
+	let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path)
+		.expect(&format!("Failed to overwrite (initialize) file {:?}", path));
+	file.write_all(content)
+		.expect(&format!("Failed to write to file {:?} during initialization", path));
 }
 
 fn ensure_script(path: &PathBuf, content: &[u8]) {
 	if path.exists() == false {
-		let mut file = OpenOptions::new().create(true).write(true).open(path).unwrap();
-		file.write_all(content).unwrap();
-		fs::set_permissions(path, Permissions::from_mode(0o755)).unwrap();
+		let mut file = OpenOptions::new().create(true).write(true).open(path)
+			.expect(&format!("Failed to overwrite (initialize) file {:?}", path));
+		file.write_all(content)
+			.expect(&format!("Failed to write to file {:?} during initialization", path));
+		fs::set_permissions(path, Permissions::from_mode(0o755))
+			.expect(&format!("Failed to set permissions for {:?}", path));
 	}
 }
 
 fn overwrite_script(path: &PathBuf, content: &[u8]) {
 	overwrite_file(path, content);
-	fs::set_permissions(path, Permissions::from_mode(0o755)).unwrap();
+	fs::set_permissions(path, Permissions::from_mode(0o755))
+			.expect(&format!("Failed to set permissions for {:?}", path));
 }
 
 
@@ -74,9 +80,10 @@ fn main() {
 	assert!(env::var("PKGEXT").is_err(), "PKGEXT environment is set, but RUA needs to modify it. Please run RUA without it");
 	ensure_env("PKGEXT", ".pkg.tar");
 
-	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua").unwrap();
-	std::fs::create_dir_all(dirs.cache_dir()).unwrap();
-	std::fs::create_dir_all(dirs.config_dir().join(".system")).unwrap();
+	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
+		.expect(&format!("Failed to determine XDG directories"));
+	std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create project cache directory"));
+	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect(&format!("Failed to create project config directory"));
 	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
 	let seccomp_file = dirs.config_dir().join(".system/seccomp.bpf");
 	if cfg!(target_arch = "i686") {
@@ -96,21 +103,22 @@ fn main() {
 
 	let opts = cli_args::build_cli().get_matches();
 	if let Some(matches) = opts.subcommand_matches("install") {
-		fs::remove_dir_all(dirs.cache_dir()).unwrap();
-		std::fs::create_dir_all(dirs.cache_dir()).unwrap();
-		let target = matches.value_of("TARGET").unwrap();
+		fs::remove_dir_all(dirs.cache_dir()).expect(&format!("Failed to clean cache directory before installation"));
+		std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create cache directory"));
+		let target = matches.value_of("TARGET").expect(&format!("Cannot get installation TARGET"));
 		let is_offline = matches.is_present("offline");
 		wrapped::install(target, &dirs, is_offline);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("DIR").unwrap_or(".");
 		let is_offline = matches.is_present("offline");
 		wrapped::build_directory(target_dir, &dirs, is_offline);
-		for file in fs::read_dir("target").unwrap() {
-			tar_check::tar_check(file.unwrap().path());
+		for file in fs::read_dir("target").expect(&format!("'target' directory not found")) {
+			tar_check::tar_check(file.expect(
+				&format!("Failed to open file for tar_check analysis")).path());
 		}
 		eprintln!("Package built and checked in: {:?}", Path::new(target_dir).join("target"));
 	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
-		let target = matches.value_of("TARGET").unwrap();
+		let target = matches.value_of("TARGET").expect(&format!("Cannot get tarcheck TARGET"));
 		tar_check::tar_check(Path::new(target).to_path_buf());
 		eprintln!("Package passed all checks: {}", target);
 	}

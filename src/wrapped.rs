@@ -27,8 +27,10 @@ fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 pub fn get_deps(dir: &str, dirs: &ProjectDirs) -> Vec<String> {
 	env::set_current_dir(dir).unwrap();
 	let command = wrap_yes_internet(dirs).arg("--unshare-net")
-		.args(&["bash", "--restricted", dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap()])
-		.stderr(Stdio::inherit()).output().unwrap();
+		.args(&["bash", "--restricted"])
+		.arg(dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap())
+		.stderr(Stdio::inherit()).output()
+		.expect(&format!("Failed to run dependency retrieval script for directory {}", dir));
 	String::from_utf8_lossy(&command.stdout).split(' ')
 		.map(|s| s.trim().to_owned())
 		.filter(|s| !s.is_empty()).collect()
@@ -41,7 +43,7 @@ fn download_sources(dirs: &ProjectDirs) {
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])
 		.args(&["makepkg", "--noprepare", "--nobuild"])
-		.status().unwrap();
+		.status().expect(&format!("Failed to fetch dependencies in directory {}", dir));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 }
 
@@ -52,7 +54,8 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	let mut command = wrap_yes_internet(dirs);
 	if is_offline { command.arg("--unshare-net"); }
 	command.args(&["--bind", dir, dir]);
-	let command = command.args(&["makepkg"]).status().unwrap();
+	let command = command.args(&["makepkg"]).status()
+		.expect(&format!("Failed to build package (jailed makepkg) in directory {}", dir));
 	assert!(command.success(), "Failed to build package");
 }
 
@@ -61,7 +64,8 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) 
 	if Path::new(dir).join("target").exists() {
 		eprintln!("Skipping build for {} as 'target' directory is already present.", dir);
 	} else {
-		env::set_var("PKGDEST", Path::new(".").canonicalize().unwrap().join("target"));
+		env::set_var("PKGDEST", Path::new(".").canonicalize()
+			.expect(&format!("Failed to canonize target directory {}", dir)).join("target"));
 		download_sources(project_dirs);
 		build_local(project_dirs, is_offline);
 	}
@@ -75,12 +79,13 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	let expect = format!("target directory not found for package {}: {:?}", name,
 		dirs.cache_dir().join(name).join("build/target"));
 	for file in fs::read_dir(dirs.cache_dir().join(name).join("build/target")).expect(&expect) {
-		tar_check::tar_check(file.unwrap().path());
+		tar_check::tar_check(file.expect(&format!("Failed to open file for tar_check analysis")).path());
 	}
 	fs::rename(
 		dirs.cache_dir().join(name).join("build/target"),
 		dirs.cache_dir().join(name).join(CHECKED_TARS),
-	).unwrap();
+	).expect(&format!("Failed to move 'build/target' (build artefacts) \
+		to 'checked_tars' directory for package {}", name));
 }
 
 
@@ -122,8 +127,14 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 		}
 		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
 		for name in packages {
-			for file in fs::read_dir(dirs.cache_dir().join(name).join(CHECKED_TARS)).unwrap() {
-				packages_to_install.insert(name.to_owned(), file.unwrap().path());
+			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
+			let read_dir_iterator = fs::read_dir(checked_tars)
+				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
+			for file in read_dir_iterator {
+				packages_to_install.insert(
+					name.to_owned(),
+					file.expect(&format!("Failed to open file for tar_check analysis")).path(),
+				);
 			}
 		}
 		pacman::ensure_aur_packages_installed(packages_to_install);

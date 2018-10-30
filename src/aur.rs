@@ -21,13 +21,14 @@ fn assert_command_success(command: &Output) {
 pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 	let valid_name_regexp = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
 	assert!(valid_name_regexp.is_match(name), "unexpected package name {}", name);
-	fs::create_dir_all(dirs.cache_dir().join(name)).unwrap();
-	env::set_current_dir(dirs.cache_dir().join(name)).unwrap();
+	fs::create_dir_all(dirs.cache_dir().join(name)).expect(&format!("Failed to cache dir for {}", name));
+	env::set_current_dir(dirs.cache_dir().join(name)).expect(&format!("Faild to cd into build dir for {}", name));
 	if !Path::new("build").exists() && !Path::new("target").exists() {
 		let dir = "aur.tmp";
 		fs::remove_dir_all(dir).ok();
 		let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
-		let command = Command::new("git").args(&["clone", &git_http_ref, dir]).output().unwrap();
+		let command = Command::new("git").args(&["clone", &git_http_ref, dir])
+			.output().expect(&format!("Failed to git-clone repository {}", name));
 		assert_command_success(&command);
 		env::set_current_dir(&dir).unwrap();
 		assert!(Path::new("PKGBUILD").exists(), "PKGBUILD not found for package {}. \
@@ -51,6 +52,7 @@ pub fn download_if_absent(name: &str, dirs: &ProjectDirs) {
 			}
 		}
 		env::set_current_dir("..").unwrap();
-		fs::rename(dir, "build").unwrap();
+		fs::rename(dir, "build")
+			.expect(&format!("Failed to move temporary directory '{}' to 'build'", dir));
 	}
 }

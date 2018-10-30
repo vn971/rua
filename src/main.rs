@@ -14,7 +14,7 @@ extern crate tar;
 
 mod aur;
 mod pacman;
-mod parse_opts;
+mod cli_args;
 mod tar_check;
 mod util;
 mod wrapped;
@@ -94,7 +94,7 @@ fn main() {
 	let locked_file = File::open(dirs.config_dir()).unwrap();
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
-	let opts = parse_opts::parse_opts();
+	let opts = cli_args::parse_opts();
 	if let Some(matches) = opts.subcommand_matches("install") {
 		fs::remove_dir_all(dirs.cache_dir()).unwrap();
 		std::fs::create_dir_all(dirs.cache_dir()).unwrap();

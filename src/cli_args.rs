@@ -1,7 +1,7 @@
 use clap::*;
 
 pub fn parse_opts() -> ArgMatches<'static> {
-	let matches = App::new(env!("CARGO_PKG_NAME"))
+	let app = App::new(env!("CARGO_PKG_NAME"))
 		.version(env!("CARGO_PKG_VERSION"))
 		.author(env!("CARGO_PKG_AUTHORS"))
 		.about(env!("CARGO_PKG_DESCRIPTION"))
@@ -30,7 +30,6 @@ pub fn parse_opts() -> ArgMatches<'static> {
 			.arg(Arg::with_name("TARGET")
 				.help("archive to check")
 				.required(true)
-				.index(1)))
-		.get_matches();
-	matches
+				.index(1)));
+	app.get_matches()
 }

@@ -39,7 +39,7 @@ pub fn tar_check(package_path: PathBuf) {
 			format!("!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", package_str)
 		};
 		format!("\n{}\
-			[E]=list executable files, [L]=list all files, {}\
+			{}[E]=list executable files, [L]=list all files, \
 			[T]=run shell to inspect, [O]=ok, proceed. ",
 			suid_warning,
 			if has_install { "[I]=show install file, " } else { "" }

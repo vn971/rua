@@ -69,7 +69,7 @@ fn main() {
 			record.args()
 		))
 		.init();
-	info!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+	debug!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 	assert!(env::var("PKGDEST").is_err(), "PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it");
 	assert!(env::var("PKGEXT").is_err(), "PKGEXT environment is set, but RUA needs to modify it. Please run RUA without it");
 	ensure_env("PKGEXT", ".pkg.tar");

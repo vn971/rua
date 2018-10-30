@@ -98,11 +98,12 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	let deps = get_deps(dirs.cache_dir().join(name).join("build").to_str().unwrap(), &dirs);
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in &deps {
-		if !pacman::is_package_installable(&dep) {
+		if pacman::is_package_installed(&dep) {
+		} else if pacman::is_package_installable(&dep) {
+			pacman_deps.insert(dep.to_owned());
+		} else {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", name, &dep);
 			prefetch_aur(&dep, dirs, pacman_deps, aur_deps, depth + 1);
-		} else if !pacman::is_package_installed(&dep) {
-			pacman_deps.insert(dep.to_owned());
 		}
 	}
 }

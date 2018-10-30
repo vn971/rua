@@ -19,22 +19,29 @@ pub fn is_package_installable(package: &str) -> bool {
 
 
 fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, operation: &str) {
+	let mut first_run = true;
 	while !packages.is_empty() {
 		{
 			let mut list = packages.iter().map(|(_name, path)| path.to_str().unwrap()).collect::<Vec<_>>();
 			list.sort_unstable();
 			eprintln!("Packages (or dependencies) need to be installed:");
 			eprintln!("\n    pacman {} --needed --asdeps {}\n", operation, list.join(" "));
-			eprint!("Enter S to `sudo` install it, or install manually and press M when done: ");
+			eprint!("Enter S to `sudo` install it, or install manually and press M when done. ");
+			if !first_run {
+				eprint!("Press Z to skip pacman verification. ");
+			}
 			let mut string = String::new();
 			io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 			let string = string.trim().to_lowercase();
 			if string == "s" {
 				Command::new("sudo").arg("pacman").arg(operation).arg("--needed").arg("--asdeps")
 					.args(&list).status().ok();
+			} else if string == "z" && !first_run {
+				break;
 			}
 		}
 		packages.retain(|name, _path| !is_package_installed(name));
+		first_run = false;
 	}
 }
 

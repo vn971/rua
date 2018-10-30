@@ -26,7 +26,7 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script preview etc).
 
-`rua jailbuild --offline /path/to/aur/repo`  # build a directory. Don't fetch any dependencies. Beware: this specific command may have bugs in case of a non-clean directory (no guarantees provided here).
+`rua jailbuild --offline /path/to/aur/repo`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
 ## Install
 * Install dependencies: `pacman -S --needed --asdeps bubblewrap rustup`
@@ -60,7 +60,7 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 
 
 ## Safety
-RUA only adds built-time safety. Even though you can be sure there are no SUID files and ugly stuff like that, the resulting package (run-time) is as safe as it was in the first place. Do not install AUR packages you don't trust.
+RUA only adds built-time safety and review. Once the package passes your review, it's as safe (run-time) as it was in the first place. Do not install AUR packages you don't trust.
 
 
 ## Other

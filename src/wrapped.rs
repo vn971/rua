@@ -1,23 +1,26 @@
 // Commands that are run inside "bubblewrap" jail
 
+use aur::PREFETCH_DIR;
 use aur;
 use directories::ProjectDirs;
 use itertools::Itertools;
+use libalpm;
 use pacman;
+use srcinfo;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
+use std::fs::File;
 use std::fs;
+use std::io::Write;
 use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use std::process::Stdio;
 use tar_check;
 
 
 const CHECKED_TARS: &str = "checked_tars";
-pub const GET_DEPS_SCRIPT_PATH: &str = ".system/get_deps.sh";
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
@@ -25,27 +28,19 @@ fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 }
 
 
-pub fn get_deps(dir: &str, dirs: &ProjectDirs) -> Vec<String> {
-	env::set_current_dir(dir).unwrap();
-	let command = wrap_yes_internet(dirs).arg("--unshare-net")
-		.args(&["bash", "--restricted"])
-		.arg(dirs.config_dir().join(GET_DEPS_SCRIPT_PATH).to_str().unwrap())
-		.stderr(Stdio::inherit()).output()
-		.expect(&format!("Failed to run dependency retrieval script for directory {}", dir));
-	String::from_utf8_lossy(&command.stdout).split(' ')
-		.map(|s| s.trim().to_owned())
-		.filter(|s| !s.is_empty()).collect()
-}
-
-
-fn download_sources(dirs: &ProjectDirs) {
-	let dir = env::current_dir().unwrap();
+fn download_srcinfo_sources(dirs: &ProjectDirs) {
+	let dir = env::current_dir().unwrap().canonicalize().unwrap();
 	let dir = dir.to_str().unwrap();
+	let mut file = File::create("PKGBUILD.static").expect("cannot create temporary PKGBUILD.static file");
+	file.write_all(srcinfo::static_pkgbuild(".SRCINFO").as_bytes()).expect("cannot write to PKGBUILD.static");
+	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "--verifysource"])
+		.args(&["makepkg", "--verifysource", "--skipinteg"])
+		.args(&["-p", "PKGBUILD.static"])
 		.status().expect(&format!("Failed to fetch dependencies in directory {}", dir));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
+	fs::remove_file("PKGBUILD.static").expect("Failed to clean up PKGBUILD.static");
 }
 
 
@@ -67,7 +62,9 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) 
 	} else {
 		env::set_var("PKGDEST", Path::new(".").canonicalize()
 			.expect(&format!("Failed to canonize target directory {}", dir)).join("target"));
-		download_sources(project_dirs);
+		if is_offline {
+			download_srcinfo_sources(project_dirs);
+		}
 		build_local(project_dirs, is_offline);
 	}
 }
@@ -101,9 +98,14 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	}
 	aur_deps.insert(name.to_owned(), depth);
 	aur::fresh_download(&name, &dirs);
-	let deps = get_deps(dirs.cache_dir().join(name).join("build").to_str().unwrap(), &dirs);
+	let info = srcinfo::FlatSrcinfo::new(dirs.cache_dir().join(name).join(PREFETCH_DIR).join(".SRCINFO"));
+	let deps: Vec<&String> = info.get("depends").iter()
+		.merge(info.get("makedepends"))
+		.merge(info.get(&format!("depends_{}", libalpm::util::uname().machine())))
+		.merge(info.get(&format!("makedepends_{}", libalpm::util::uname().machine())))
+		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
-	for dep in &deps {
+	for dep in deps.into_iter() {
 		if pacman::is_package_installed(&dep) {
 		} else if pacman::is_package_installable(&dep) {
 			pacman_deps.insert(dep.to_owned());
@@ -163,6 +165,9 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let mut aur_deps = HashMap::new();
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_deps, 0);
 	show_install_summary(name, &pacman_deps, &aur_deps);
+	for (name, _) in &aur_deps {
+		aur::review_repo(name, dirs);
+	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
 	install_all(dirs, aur_deps, is_offline);
 }

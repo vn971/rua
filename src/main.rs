@@ -8,13 +8,16 @@ extern crate directories;
 extern crate env_logger;
 extern crate fs2;
 extern crate itertools;
+extern crate libalpm;
 extern crate regex;
 extern crate tar;
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 
 mod aur;
 mod cli_args;
 mod pacman;
+mod srcinfo;
 mod tar_check;
 mod util;
 mod wrapped;
@@ -93,7 +96,6 @@ fn main() {
 		panic!("Unable to find seccomp file for your architecture. Please create it and put it to {:?}", seccomp_file);
 	}
 	ensure_env("RUA_SECCOMP_FILE", seccomp_file.to_str().unwrap());
-	overwrite_script(&dirs.config_dir().join(wrapped::GET_DEPS_SCRIPT_PATH), include_bytes!("../res/get_deps.sh"));
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 	ensure_script(&dirs.config_dir().join("wrap_args.sh"), include_bytes!("../res/wrap_args.sh"));
 	let opts = cli_args::build_cli().get_matches();

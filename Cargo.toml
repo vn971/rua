@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.6.8"
+version = "0.7.0"
 description = "AUR builder written in Rust"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"
@@ -20,10 +20,11 @@ directories = "1.0"
 env_logger = "0.5.13"
 fs2 = "0.4.3"
 itertools = "0.7.8"
+lazy_static = "1.1.0"
+libalpm = { git = "https://github.com/jameslzhu/alpm", branch = "master" }
 log = "0.4"
 regex = "1"
 tar = "0.4"
-#libalpm = "0.1.2"
 
 [dependencies.config]
 version = "0.9"

@@ -99,7 +99,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 		return;
 	}
 	aur_deps.insert(name.to_owned(), depth);
-	aur::download_if_absent(&name, &dirs);
+	aur::fresh_download(&name, &dirs);
 	let deps = get_deps(dirs.cache_dir().join(name).join("build").to_str().unwrap(), &dirs);
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in &deps {

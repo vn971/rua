@@ -101,8 +101,6 @@ fn main() {
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
 	if let Some(matches) = opts.subcommand_matches("install") {
-		fs::remove_dir_all(dirs.cache_dir()).expect(&format!("Failed to clean cache directory before installation"));
-		std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create cache directory"));
 		let target = matches.value_of("TARGET").expect(&format!("Cannot get installation TARGET"));
 		let is_offline = matches.is_present("offline");
 		wrapped::install(target, &dirs, is_offline);

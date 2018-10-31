@@ -61,5 +61,5 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
 		let path = Path::new(&package).to_path_buf();
 		map.insert(package, path);
 	}
-	ensure_packages_installed(map, &["-S"]);
+	ensure_packages_installed(map, &["-S", "--asdeps"]);
 }

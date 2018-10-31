@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
+use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -141,10 +142,27 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 	}
 }
 
+fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_deps: &HashMap<String, i32>) {
+	eprintln!("\nIn order to install {}, the following pacman packages will need to be installed:", name);
+	eprint!("{}", pacman_deps.iter().map(|s| format!("  {}", s)).join("\n"));
+	eprintln!("And the following AUR packages will need to be built and installed:");
+	eprintln!("{}\n", aur_deps.keys().map(|s| format!("  {}", s)).join("\n"));
+	loop {
+		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
+		let mut string = String::new();
+		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
+		let string = string.trim().to_lowercase();
+		if string == "o" {
+			break
+		}
+	}
+}
+
 pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut aur_deps = HashMap::new();
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_deps, 0);
+	show_install_summary(name, &pacman_deps, &aur_deps);
 	pacman::ensure_pacman_packages_installed(pacman_deps);
 	install_all(dirs, aur_deps, is_offline);
 }

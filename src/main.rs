@@ -84,7 +84,6 @@ fn main() {
 		.expect(&format!("Failed to determine XDG directories"));
 	std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create project cache directory"));
 	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect(&format!("Failed to create project config directory"));
-	ensure_env("RUA_CONFIG_DIR", dirs.config_dir().to_str().unwrap());
 	let seccomp_file = dirs.config_dir().join(".system/seccomp.bpf");
 	if cfg!(target_arch = "i686") {
 		overwrite_file(&seccomp_file, include_bytes!("../res/seccomp-i686.bpf"));

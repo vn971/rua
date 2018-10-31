@@ -11,9 +11,9 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * verify all PKGBUILD-s once, build everything later
 * * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
+* * supports "offline" builds (no internet access given to PKGBUILD when building)
 * * filesystem is read-only except the build dir
 * * PKGBUILD script is run under seccomp rules
-* * optionally, no internet access is given to PKGBUILD when building packages
 * * home directory (~) is not visible to PKGBUILD, except the build dir
 * * etc
 * Written in Rust

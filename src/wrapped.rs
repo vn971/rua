@@ -117,7 +117,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_unstable_by_key(|pair| -*pair.1);
-	for (_, packages) in &packages.iter().group_by(|pair| *pair.1) {
+	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
 		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
 		for name in &packages {
 			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs, is_offline);
@@ -137,7 +137,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 				);
 			}
 		}
-		pacman::ensure_aur_packages_installed(packages_to_install);
+		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0);
 	}
 }
 

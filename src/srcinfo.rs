@@ -59,7 +59,6 @@ pub fn static_pkgbuild(path: &str) -> String {
 		assert!(value_regex.is_match(&value), "unexpected SRCINFO value {}", value);
 		bash.push(format!("{}+=( '{}' )", key, value));
 	}
-	bash.push("unset pkgname; pkgname=ignore;".to_owned());
 	bash.push("unset pkgdesc; pkgdesc=ignore;".to_owned());
 	bash.push("unset pkgver; pkgver=1;".to_owned());
 	bash.push("unset pkgrel; pkgrel=1;".to_owned());

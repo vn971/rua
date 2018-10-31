@@ -128,15 +128,14 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 		for name in &packages {
 			package_tar_review(name, dirs);
 		}
-		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
+		let mut packages_to_install: Vec<PathBuf> = Vec::new();
 		for name in packages {
 			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
 			let read_dir_iterator = fs::read_dir(checked_tars)
 				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
 			for file in read_dir_iterator {
-				packages_to_install.insert(
-					name.to_owned(),
-					file.expect(&format!("Failed to open file for tar_check analysis")).path(),
+				packages_to_install.push(
+					file.expect(&format!("Failed to open file for tar_check analysis")).path()
 				);
 			}
 		}

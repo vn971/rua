@@ -8,7 +8,7 @@ extern crate directories;
 extern crate env_logger;
 extern crate fs2;
 extern crate itertools;
-extern crate libalpm;
+extern crate libalpm_fork;
 extern crate regex;
 extern crate tar;
 #[macro_use] extern crate lazy_static;

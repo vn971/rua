@@ -4,7 +4,7 @@ use aur::PREFETCH_DIR;
 use aur;
 use directories::ProjectDirs;
 use itertools::Itertools;
-use libalpm;
+use libalpm_fork as libalpm;
 use pacman;
 use srcinfo;
 use std::collections::HashMap;

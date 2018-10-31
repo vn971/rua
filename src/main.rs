@@ -13,8 +13,8 @@ extern crate tar;
 #[macro_use] extern crate log;
 
 mod aur;
-mod pacman;
 mod cli_args;
+mod pacman;
 mod tar_check;
 mod util;
 mod wrapped;

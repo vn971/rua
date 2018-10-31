@@ -25,7 +25,6 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 	fs::create_dir_all(dirs.cache_dir().join(name)).expect(&format!("Failed to create cache dir for {}", name));
 	env::set_current_dir(dirs.cache_dir().join(name)).expect(&format!("Faild to cd into build dir for {}", name));
 	let dir = "aur.tmp";
-	fs::remove_dir_all(dir).ok();
 	let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
 	let command = Command::new("git").args(&["clone", &git_http_ref, dir])
 		.output().expect(&format!("Failed to git-clone repository {}", name));

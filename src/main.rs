@@ -96,11 +96,10 @@ fn main() {
 	overwrite_script(&dirs.config_dir().join(wrapped::GET_DEPS_SCRIPT_PATH), include_bytes!("../res/get_deps.sh"));
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 	ensure_script(&dirs.config_dir().join("wrap_args.sh"), include_bytes!("../res/wrap_args.sh"));
-
+	let opts = cli_args::build_cli().get_matches();
 	let locked_file = File::open(dirs.config_dir()).unwrap();
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
-	let opts = cli_args::build_cli().get_matches();
 	if let Some(matches) = opts.subcommand_matches("install") {
 		fs::remove_dir_all(dirs.cache_dir()).expect(&format!("Failed to clean cache directory before installation"));
 		std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create cache directory"));

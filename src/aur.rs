@@ -30,6 +30,7 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 		fs::remove_dir_all(&path).expect(&format!("Failed to clean cache dir {:?}", path));
 	}
 	fs::create_dir_all(dirs.cache_dir().join(name)).expect(&format!("Failed to create cache dir for {}", name));
+	env::set_current_dir(dirs.cache_dir().join(name)).expect(&format!("Failed to cd into {}", name));
 	let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
 	let command = Command::new("git").args(&["clone", &git_http_ref, PREFETCH_DIR])
 		.output().expect(&format!("Failed to git-clone repository {}", name));

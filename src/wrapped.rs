@@ -146,7 +146,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 
 fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_deps: &HashMap<String, i32>) {
 	eprintln!("\nIn order to install {}, the following pacman packages will need to be installed:", name);
-	eprint!("{}", pacman_deps.iter().map(|s| format!("  {}", s)).join("\n"));
+	eprintln!("{}", pacman_deps.iter().map(|s| format!("  {}", s)).join("\n"));
 	eprintln!("And the following AUR packages will need to be built and installed:");
 	eprintln!("{}\n", aur_deps.keys().map(|s| format!("  {}", s)).join("\n"));
 	loop {

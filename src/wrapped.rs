@@ -4,7 +4,7 @@ use aur::PREFETCH_DIR;
 use aur;
 use directories::ProjectDirs;
 use itertools::Itertools;
-use libalpm_fork as libalpm;
+use libalpm;
 use pacman;
 use srcinfo;
 use std::collections::HashMap;
@@ -31,8 +31,12 @@ fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap().canonicalize().unwrap();
 	let dir = dir.to_str().unwrap();
-	let mut file = File::create("PKGBUILD.static").expect("cannot create temporary PKGBUILD.static file");
-	file.write_all(srcinfo::static_pkgbuild(".SRCINFO").as_bytes()).expect("cannot write to PKGBUILD.static");
+	let mut file = File::create("PKGBUILD.static")
+		.expect("cannot create temporary PKGBUILD.static file");
+	let srcinfo_path = Path::new(".SRCINFO").canonicalize()
+		.expect(&format!("Cannot resolve .SRCINFO path in {}", dir));
+	file.write_all(srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
+		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])

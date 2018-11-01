@@ -33,7 +33,7 @@ Planned features include AUR upstream git diff and local patch application.
 
 
 ## Install (the AUR way)
-Install [rua](https://aur.archlinux.org/packages/rua/) package using the default manual build process (https://wiki.archlinux.org/index.php/Arch_User_Repository#Prerequisites). Or using another AUR helper, or an earlier version of RUA.
+Install [rua](https://aur.archlinux.org/packages/rua/) package using the default [manual build process](https://wiki.archlinux.org/index.php/Arch_User_Repository#Prerequisites). Or use another AUR helper, or an earlier version of RUA.
 
 
 ## Install (the Rust way)

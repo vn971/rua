@@ -38,9 +38,9 @@ impl FlatSrcinfo {
 }
 
 
-pub fn static_pkgbuild(path: &str) -> String {
+pub fn static_pkgbuild(path: PathBuf) -> String {
 	let mut bash = Vec::new();
-	let file = File::open(&path).unwrap();
+	let file = File::open(&path).expect(&format!("Cannot find file {:?}", path));
 	let file = BufReader::new(file);
 	for line in file.lines() {
 		let line = line.expect(&format!("Failed to parse .SRCINFO in {:?}", path));

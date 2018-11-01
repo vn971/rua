@@ -8,7 +8,7 @@ extern crate directories;
 extern crate env_logger;
 extern crate fs2;
 extern crate itertools;
-extern crate libalpm_fork;
+extern crate libalpm_fork as libalpm;
 extern crate regex;
 extern crate tar;
 #[macro_use] extern crate lazy_static;
@@ -69,7 +69,7 @@ fn overwrite_script(path: &PathBuf, content: &[u8]) {
 
 
 fn main() {
-	ensure_env("RUST_BACKTRACE", "1");
+	ensure_env("RUST_BACKTRACE", "1");  // if it wasn't set to "0" explicitly, set it to 1.
 	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
 		.format(|buf, record| writeln!(buf,
 			"{} [{}] - {}",

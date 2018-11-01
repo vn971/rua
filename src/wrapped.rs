@@ -5,7 +5,7 @@ use aur;
 use directories::ProjectDirs;
 use itertools::Itertools;
 use libalpm::Alpm;
-use libalpm::Db;
+use libalpm::SigLevel;
 use libalpm;
 use pacman;
 use srcinfo;
@@ -97,7 +97,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	pacman_deps: &mut HashSet<String>,
 	aur_packages: &mut HashMap<String, i32>,
 	depth: i32,
-	alpm_db: &Db,
+	alpm: &Alpm,
 ) {
 	if aur_packages.contains_key(name) {
 		eprintln!("Skipping already fetched package {}", name);
@@ -114,20 +114,20 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {
-		let satisfier = alpm_db.find_satisfier(&dep).expect("Failed to access libalpm.find_satisfier");
+		let satisfier = alpm.find_satisfier(&dep).expect("Failed to access libalpm.find_satisfier");
 		if let Some(satisfier) = satisfier {
 			if satisfier.install_date().is_none() {
 				pacman_deps.insert(dep.to_owned());
 			}
 		} else {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", name, &dep);
-			prefetch_aur(&dep, dirs, pacman_deps, aur_packages, depth + 1, alpm_db);
+			prefetch_aur(&dep, dirs, pacman_deps, aur_packages, depth + 1, alpm);
 		}
 	}
 }
 
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool, alpm_db: &Db) {
+fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool, alpm: &Alpm) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_unstable_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
@@ -149,7 +149,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 				);
 			}
 		}
-		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0, alpm_db);
+		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0, alpm);
 	}
 }
 
@@ -175,12 +175,14 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let mut aur_packages = HashMap::new();
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
 	let alpm = alpm.expect("Failed to initialize alpm library");
-	let alpm_db = alpm.local_db();
-	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm_db);
+	for repo in pacman::get_repository_list() {
+		alpm.register_sync_db(&repo, &SigLevel::from(0)).expect(&format!("Failed to register {} in libalpm", &repo));
+	}
+	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm);
 	show_install_summary(name, &pacman_deps, &aur_packages);
 	for (name, _) in &aur_packages {
 		aur::review_repo(name, dirs);
 	}
-	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm_db);
-	install_all(dirs, aur_packages, is_offline, &alpm_db);
+	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm);
+	install_all(dirs, aur_packages, is_offline, &alpm);
 }

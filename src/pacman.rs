@@ -1,4 +1,4 @@
-use libalpm::Db;
+use libalpm::Alpm;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io;
@@ -6,11 +6,26 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
+// let's commit this to git and clean up later, so it'll stay for history (if will ever be needed)
+//pub fn is_package_installable(package: &str) -> bool {
+//	Command::new("pacman").arg("-Sddp").arg(&package)
+//		.stdout(Stdio::null()).stderr(Stdio::null()).status()
+//		.expect(&format!("Failed to determine if package {} is installable", package))
+//		.success()
+//}
+
+pub fn get_repository_list() -> Vec<String> {
+	let cmd = Command::new("pacman-conf").arg("--repo-list").output()
+		.expect("cannot get repository list: pacman-conf --repo-list");
+	let output = String::from_utf8(cmd.stdout).unwrap();
+	output.lines().map(|s| s.to_owned()).collect()
+}
+
 
 fn ensure_packages_installed(
 	mut packages: HashMap<String, PathBuf>,
 	base_args: &[&str],
-	alpm_db: &Db
+	alpm: &Alpm
 ) {
 	while !packages.is_empty() {
 		{
@@ -29,7 +44,7 @@ fn ensure_packages_installed(
 				break;
 			}
 		}
-		packages.retain(|name, _| alpm_db.find_satisfier(name)
+		packages.retain(|name, _| alpm.find_satisfier(name)
 			.expect("Failed to access libalpm.find_satisfier")
 			.expect(&format!("satisfier for {} no longer exists", name))
 			.install_date().is_none()
@@ -37,20 +52,20 @@ fn ensure_packages_installed(
 	}
 }
 
-pub fn ensure_aur_packages_installed(packages: Vec<PathBuf>, is_dependency: bool, alpm_db: &Db) {
+pub fn ensure_aur_packages_installed(packages: Vec<PathBuf>, is_dependency: bool, alpm: &Alpm) {
 	let mut map: HashMap<String, PathBuf> = HashMap::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
 		map.insert(package.to_str().unwrap().to_owned(), path);
 	}
 	if is_dependency {
-		ensure_packages_installed(map, &["-U", "--asdeps"], alpm_db);
+		ensure_packages_installed(map, &["-U", "--asdeps"], alpm);
 	} else {
-		ensure_packages_installed(map, &["-U"], alpm_db);
+		ensure_packages_installed(map, &["-U"], alpm);
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: HashSet<String>, alpm_db: &Db) {
+pub fn ensure_pacman_packages_installed(packages: HashSet<String>, alpm_db: &Alpm) {
 	let mut map: HashMap<String, PathBuf> = HashMap::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();

@@ -36,7 +36,7 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 	let command = Command::new("git").args(&["clone", &git_http_ref, PREFETCH_DIR])
 		.output().expect(&format!("Failed to git-clone repository {}", name));
 	assert_command_success(&command);
-	assert!(Path::new(".SRCINFO").exists(),
+	assert!(Path::new(PREFETCH_DIR).join(".SRCINFO").exists(),
 		"Repository {} does not have an SRCINFO file. Does this package exist in AUR?", name);
 }
 

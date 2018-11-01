@@ -41,8 +41,8 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 	env::set_current_dir(dirs.cache_dir().join(name).join(PREFETCH_DIR)).expect(&format!("Faild to cd into build dir for {}", name));
 	loop {
-		eprint!("Verifying package {}. V=view PKGBUILD, E=edit PKGBUILD, \
-		I=run shell to inspect, O=ok, use package: ", name);
+		eprint!("Verifying package {}. [V]=view PKGBUILD, [E]=edit PKGBUILD, \
+		[I]=run shell to inspect, [O]=ok, use package: ", name);
 		let mut string = String::new();
 		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 		let string = string.trim().to_lowercase();

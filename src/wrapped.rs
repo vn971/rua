@@ -89,14 +89,14 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 
 fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	pacman_deps: &mut HashSet<String>,
-	aur_deps: &mut HashMap<String, i32>,
+	aur_packages: &mut HashMap<String, i32>,
 	depth: i32,
 ) {
-	if aur_deps.contains_key(name) {
+	if aur_packages.contains_key(name) {
 		eprintln!("Skipping already fetched package {}", name);
 		return;
 	}
-	aur_deps.insert(name.to_owned(), depth);
+	aur_packages.insert(name.to_owned(), depth);
 	aur::fresh_download(&name, &dirs);
 	let info = srcinfo::FlatSrcinfo::new(dirs.cache_dir().join(name).join(PREFETCH_DIR).join(".SRCINFO"));
 	let deps: Vec<&String> = info.get("depends").iter()
@@ -111,7 +111,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 			pacman_deps.insert(dep.to_owned());
 		} else {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", name, &dep);
-			prefetch_aur(&dep, dirs, pacman_deps, aur_deps, depth + 1);
+			prefetch_aur(&dep, dirs, pacman_deps, aur_packages, depth + 1);
 		}
 	}
 }
@@ -143,30 +143,31 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 	}
 }
 
-fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_deps: &HashMap<String, i32>) {
+fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_packages: &HashMap<String, i32>) {
+	if pacman_deps.len() + aur_packages.len() == 1 { return; }
 	eprintln!("\nIn order to install {}, the following pacman packages will need to be installed:", name);
 	eprintln!("{}", pacman_deps.iter().map(|s| format!("  {}", s)).join("\n"));
 	eprintln!("And the following AUR packages will need to be built and installed:");
-	eprintln!("{}\n", aur_deps.keys().map(|s| format!("  {}", s)).join("\n"));
+	eprintln!("{}\n", aur_packages.keys().map(|s| format!("  {}", s)).join("\n"));
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let mut string = String::new();
 		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 		let string = string.trim().to_lowercase();
 		if string == "o" {
-			break
+			break;
 		}
 	}
 }
 
 pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let mut pacman_deps = HashSet::new();
-	let mut aur_deps = HashMap::new();
-	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_deps, 0);
-	show_install_summary(name, &pacman_deps, &aur_deps);
-	for (name, _) in &aur_deps {
+	let mut aur_packages = HashMap::new();
+	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0);
+	show_install_summary(name, &pacman_deps, &aur_packages);
+	for (name, _) in &aur_packages {
 		aur::review_repo(name, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(dirs, aur_deps, is_offline);
+	install_all(dirs, aur_packages, is_offline);
 }

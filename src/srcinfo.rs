@@ -13,7 +13,7 @@ pub struct FlatSrcinfo {
 impl FlatSrcinfo {
 	pub fn new(path: PathBuf) -> FlatSrcinfo {
 		let mut result: HashMap<String, Vec<String>> = HashMap::new();
-		let file = File::open(&path).unwrap();
+		let file = File::open(&path).expect(&format!("Cannot open SRCINFO at path {:?}", path));
 		let file = BufReader::new(file);
 		for line in file.lines() {
 			let line = line.expect(&format!("Failed to parse .SRCINFO in {:?}", path));
@@ -40,7 +40,7 @@ impl FlatSrcinfo {
 
 pub fn static_pkgbuild(path: PathBuf) -> String {
 	let mut bash = Vec::new();
-	let file = File::open(&path).expect(&format!("Cannot find file {:?}", path));
+	let file = File::open(&path).expect(&format!("Cannot open SRCINFO in {:?}", path));
 	let file = BufReader::new(file);
 	for line in file.lines() {
 		let line = line.expect(&format!("Failed to parse .SRCINFO in {:?}", path));

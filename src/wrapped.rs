@@ -102,7 +102,8 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	}
 	aur_packages.insert(name.to_owned(), depth);
 	aur::fresh_download(&name, &dirs);
-	let info = srcinfo::FlatSrcinfo::new(dirs.cache_dir().join(name).join(PREFETCH_DIR).join(".SRCINFO"));
+	let info = dirs.cache_dir().join(name).join(PREFETCH_DIR).join(".SRCINFO");
+	let info = srcinfo::FlatSrcinfo::new(info);
 	let deps: Vec<&String> = info.get("depends").iter()
 		.merge(info.get("makedepends"))
 		.merge(info.get(&format!("depends_{}", libalpm::util::uname().machine())))

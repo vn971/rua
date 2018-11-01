@@ -1,26 +1,17 @@
+use libalpm::Db;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io;
-use std::process::Command;
-use std::process::Stdio;
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::path::Path;
+use std::path::PathBuf;
+use std::process::Command;
 
 
-pub fn is_package_installed(package: &str) -> bool {
-	Command::new("pacman").arg("-T").arg(&package)
-		.stdout(Stdio::null()).stderr(Stdio::null()).status()
-		.expect(&format!("Failed to determine if package {} is installed", package)).success()
-}
-
-pub fn is_package_installable(package: &str) -> bool {
-	Command::new("pacman").arg("-Si").arg(&package)
-		.stdout(Stdio::null()).stderr(Stdio::null()).status()
-		.expect(&format!("Failed to determine if package {} is installable", package)).success()
-}
-
-
-fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, base_args: &[&str]) {
+fn ensure_packages_installed(
+	mut packages: HashMap<String, PathBuf>,
+	base_args: &[&str],
+	alpm_db: &Db
+) {
 	while !packages.is_empty() {
 		{
 			let mut list = packages.iter().map(|(_name, path)| path.to_str().unwrap()).collect::<Vec<_>>();
@@ -38,28 +29,32 @@ fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, base_args: 
 				break;
 			}
 		}
-		packages.retain(|name, _path| !is_package_installed(name));
+		packages.retain(|name, _| alpm_db.find_satisfier(name)
+			.expect("Failed to access libalpm.find_satisfier")
+			.expect(&format!("satisfier for {} no longer exists", name))
+			.install_date().is_none()
+		);
 	}
 }
 
-pub fn ensure_aur_packages_installed(packages: Vec<PathBuf>, is_dependency: bool) {
+pub fn ensure_aur_packages_installed(packages: Vec<PathBuf>, is_dependency: bool, alpm_db: &Db) {
 	let mut map: HashMap<String, PathBuf> = HashMap::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
 		map.insert(package.to_str().unwrap().to_owned(), path);
 	}
 	if is_dependency {
-		ensure_packages_installed(map, &["-U", "--asdeps"]);
+		ensure_packages_installed(map, &["-U", "--asdeps"], alpm_db);
 	} else {
-		ensure_packages_installed(map, &["-U"]);
+		ensure_packages_installed(map, &["-U"], alpm_db);
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
+pub fn ensure_pacman_packages_installed(packages: HashSet<String>, alpm_db: &Db) {
 	let mut map: HashMap<String, PathBuf> = HashMap::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
 		map.insert(package, path);
 	}
-	ensure_packages_installed(map, &["-S", "--asdeps"]);
+	ensure_packages_installed(map, &["-S", "--asdeps"], alpm_db);
 }

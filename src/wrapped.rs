@@ -6,7 +6,6 @@ use directories::ProjectDirs;
 use itertools::Itertools;
 use libalpm::Alpm;
 use libalpm::SigLevel;
-use libalpm;
 use pacman;
 use srcinfo;
 use std::collections::HashMap;
@@ -20,6 +19,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use tar_check;
+use uname;
 
 
 const CHECKED_TARS: &str = "checked_tars";
@@ -92,6 +92,10 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 		to 'checked_tars' directory for package {}", name));
 }
 
+lazy_static! {
+	static ref uname_arch: String = uname::uname()
+		.expect("Failed to get system architecture via uname").machine;
+}
 
 fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	pacman_deps: &mut HashSet<String>,
@@ -109,8 +113,8 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 	let info = srcinfo::FlatSrcinfo::new(info);
 	let deps: Vec<&String> = info.get("depends").iter()
 		.merge(info.get("makedepends"))
-		.merge(info.get(&format!("depends_{}", libalpm::util::uname().machine())))
-		.merge(info.get(&format!("makedepends_{}", libalpm::util::uname().machine())))
+		.merge(info.get(&format!("depends_{}", uname_arch.as_str())))
+		.merge(info.get(&format!("makedepends_{}", uname_arch.as_str())))
 		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {

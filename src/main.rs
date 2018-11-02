@@ -11,6 +11,7 @@ extern crate itertools;
 extern crate libalpm_fork as libalpm;
 extern crate regex;
 extern crate tar;
+extern crate uname;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 

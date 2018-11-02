@@ -6,6 +6,17 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
+
+pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
+	alpm.local_db().find_satisfier(name)
+		.expect("Failed to access libalpm.find_satisfier")
+		.map_or(false, |sat| sat.install_date().is_some())
+}
+
+pub fn is_package_installable(alpm: &Alpm, name: &str) -> bool {
+	alpm.find_satisfier(name).expect("Failed to access libalpm.find_satisfier").is_some()
+}
+
 // let's commit this to git and clean up later, so it'll stay for history (if will ever be needed)
 //pub fn is_package_installable(package: &str) -> bool {
 //	Command::new("pacman").arg("-Sddp").arg(&package)
@@ -44,11 +55,7 @@ fn ensure_packages_installed(
 				break;
 			}
 		}
-		packages.retain(|name, _| alpm.find_satisfier(name)
-			.expect("Failed to access libalpm.find_satisfier")
-			.expect(&format!("satisfier for {} no longer exists", name))
-			.install_date().is_none()
-		);
+		packages.retain(|name, _| !is_package_installed(alpm, name));
 	}
 }
 

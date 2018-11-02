@@ -118,14 +118,11 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {
-		let satisfier = alpm.find_satisfier(&dep).expect("Failed to access libalpm.find_satisfier");
-		if let Some(satisfier) = satisfier {
-			if satisfier.install_date().is_none() {
-				pacman_deps.insert(dep.to_owned());
-			}
-		} else {
+		if !pacman::is_package_installable(alpm, &dep) {
 			eprintln!("{} depends on AUR package {}. Trying to fetch it...", name, &dep);
 			prefetch_aur(&dep, dirs, pacman_deps, aur_packages, depth + 1, alpm);
+		} else if !pacman::is_package_installed(alpm, &dep) {
+			pacman_deps.insert(dep.to_owned());
 		}
 	}
 }
@@ -183,6 +180,7 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 		alpm.register_sync_db(&repo, &SigLevel::default()).expect(&format!("Failed to register {} in libalpm", &repo));
 	}
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm);
+	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
 	show_install_summary(name, &pacman_deps, &aur_packages);
 	for (name, _) in &aur_packages {
 		aur::review_repo(name, dirs);

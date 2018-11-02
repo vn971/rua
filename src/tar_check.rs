@@ -4,23 +4,33 @@ use std::io;
 use std::path::PathBuf;
 use tar::*;
 use util;
+use xz2::read::XzDecoder;
 
 
 pub fn tar_check(tar_file: PathBuf) {
 	let tar_str = tar_file.to_str().unwrap();
+	let archive = File::open(&tar_file).expect(&format!("cannot open file {}", tar_str));
+	if tar_str.ends_with(".tar.xz") {
+		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
+	} else if tar_str.ends_with(".tar") {
+		tar_check_archive(Archive::new(archive), tar_str);
+	} else {
+		panic!("Unsupported file format for tar_check function: {}", tar_str)
+	};
+}
+
+
+fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	let mut install_file = String::new();
 	let mut all_files = Vec::new();
 	let mut executable_files = Vec::new();
 	let mut suid_files = Vec::new();
-
-	let mut archive = Archive::new(File::open(&tar_file)
-		.expect(&format!("cannot open file {}", tar_str)));
-	let archive_files = archive.entries().expect(&format!("cannot open archive {}", tar_str));
+	let archive_files = archive.entries().expect(&format!("cannot open archive {}", path_str));
 	for file in archive_files {
-		let mut file = file.expect(&format!("cannot access tar file in {}", tar_str));
+		let mut file = file.expect(&format!("cannot access tar file in {}", path_str));
 		let path = {
 			let path = file.header().path()
-				.expect(&format!("Failed to extract tar file metadata for file in {}", tar_str));
+				.expect(&format!("Failed to extract tar file metadata for file in {}", path_str));
 			path.to_str().unwrap().to_owned()
 		};
 		let mode = file.header().mode().unwrap();
@@ -30,16 +40,16 @@ pub fn tar_check(tar_file: PathBuf) {
 		if mode > 0o777 { suid_files.push(path.clone()); }
 		if &path == ".INSTALL" {
 			file.read_to_string(&mut install_file)
-				.expect(&format!("Failed to read INSTALL script from tar file {}", tar_str));
+				.expect(&format!("Failed to read INSTALL script from tar file {}", path_str));
 		}
 	}
 
 	let has_install = !install_file.is_empty();
 	let notice = {
 		let suid_warning = if suid_files.is_empty() {
-			format!("Package {} has no SUID files.\n", tar_str)
+			format!("Package {} has no SUID files.\n", path_str)
 		} else {
-			format!("!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", tar_str)
+			format!("!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", path_str)
 		};
 		format!("\n{}\
 			{}[E]=list executable files, [L]=list all files, \

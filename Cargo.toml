@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.8.0"
+version = "0.8.1"
 description = "AUR builder written in Rust"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"
@@ -26,6 +26,7 @@ log = "0.4"
 regex = "1"
 tar = "0.4"
 uname = "0.1.1"
+xz2 = "0.1.6"
 
 [dependencies.config]
 version = "0.9"

@@ -3,8 +3,8 @@
 RUA is a build tool for ArchLinux, AUR. Its features:
 
 * Show the user what they are about to install:
-* * show INSTALL script (if present)
 * * warn if SUID files are present, and show them
+* * show INSTALL script (if present)
 * * show file list preview
 * * show executable list preview
 * Minimize user interaction:
@@ -12,7 +12,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
 * * supports "offline" builds (no internet access given to PKGBUILD)
-* * home directory `~` is not visible to PKGBUILD, except the build dir. The rest of the filesystem is read-only
+* * home directory (`~`) is not visible to PKGBUILD, except the build dir. The rest of the filesystem is read-only
 * * PKGBUILD script is run under seccomp rules
 * * etc
 * Written in Rust

@@ -12,6 +12,7 @@ extern crate libalpm_fork as libalpm;
 extern crate regex;
 extern crate tar;
 extern crate uname;
+extern crate xz2;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 
@@ -81,8 +82,13 @@ fn main() {
 		.init();
 	debug!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 	assert!(env::var("PKGDEST").is_err(), "PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it");
-	assert!(env::var("PKGEXT").is_err(), "PKGEXT environment is set, but RUA needs to modify it. Please run RUA without it");
-	ensure_env("PKGEXT", ".pkg.tar");
+	let is_extension_compatible = env::var_os("PKGEXT").map_or(true, |ext| {
+		let ext = ext.to_string_lossy();
+		ext.ends_with(".tar") || ext.ends_with(".tar.xz")
+	});
+	assert!(is_extension_compatible, "PKGEXT environment is set to an incompatible value. \
+		Only *.tar and *.tar.xz are supported.");
+	ensure_env("PKGEXT", ".pkg.tar.xz");
 
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
 		.expect(&format!("Failed to determine XDG directories"));

@@ -176,7 +176,7 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
 	let alpm = alpm.expect("Failed to initialize alpm library");
 	for repo in pacman::get_repository_list() {
-		alpm.register_sync_db(&repo, &SigLevel::from(0)).expect(&format!("Failed to register {} in libalpm", &repo));
+		alpm.register_sync_db(&repo, &SigLevel::default()).expect(&format!("Failed to register {} in libalpm", &repo));
 	}
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm);
 	show_install_summary(name, &pacman_deps, &aur_packages);

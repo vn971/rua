@@ -11,10 +11,9 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * verify all PKGBUILD-s once, build everything later
 * * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-* * supports "offline" builds (no internet access given to PKGBUILD when building)
-* * filesystem is read-only except the build dir
+* * supports "offline" builds (no internet access given to PKGBUILD)
+* * home directory `~` is not visible to PKGBUILD, except the build dir. The rest of the filesystem is read-only
 * * PKGBUILD script is run under seccomp rules
-* * home directory (~) is not visible to PKGBUILD, except the build dir
 * * etc
 * Written in Rust
 
@@ -25,11 +24,13 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua install firefox-ublock-origin`  # install AUR package (with user confirmation)
 
-`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access.
+`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO.
 
 `rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
 `rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
+
+`rua --help && rua install --help`  # shows CLI help
 
 
 ## Install (the AUR way)

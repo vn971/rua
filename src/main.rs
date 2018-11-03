@@ -94,6 +94,7 @@ fn main() {
 		.expect(&format!("Failed to determine XDG directories"));
 	std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create project cache directory"));
 	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect(&format!("Failed to create project config directory"));
+	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d")).expect(&format!("Failed to create project config directory"));
 	let seccomp_file = dirs.config_dir().join(".system/seccomp.bpf");
 	if cfg!(target_arch = "i686") {
 		overwrite_file(&seccomp_file, include_bytes!("../res/seccomp-i686.bpf"));
@@ -104,7 +105,7 @@ fn main() {
 	}
 	ensure_env("RUA_SECCOMP_FILE", seccomp_file.to_str().unwrap());
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
-	ensure_script(&dirs.config_dir().join("wrap_args.sh"), include_bytes!("../res/wrap_args.sh"));
+	ensure_script(&dirs.config_dir().join(".system/wrap_args_example.sh"), include_bytes!("../res/wrap_args.sh"));
 	let opts = cli_args::build_cli().get_matches();
 	let locked_file = File::open(dirs.config_dir()).unwrap();
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");

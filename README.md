@@ -32,6 +32,8 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua --help && rua install --help`  # shows CLI help
 
+Jail wrapper arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent directory for examples.
+
 
 ## Install (the AUR way)
 Install [rua](https://aur.archlinux.org/packages/rua/) package using the default [manual build process](https://wiki.archlinux.org/index.php/Arch_User_Repository#Prerequisites). Or use another AUR helper, or an earlier version of RUA.
@@ -50,14 +52,14 @@ There won't be bash/zsh/fish completions this way, but everything else should wo
 We'll consider the "install" command as it's the most advanced one. RUA will:
 
 1. Fetch the AUR package (via git)
-2. Let the user review PKGBUILD and the repo. Only go to next steps after user approval.
-3. Check AUR dependencies, repeat the process for them
-4. Ask the user to install all aggregated non-aur packages.
-5. Build all AUR packages of maximum dependency "depth"
-6. After all are built, let the user review them all
-7. If review passes, let the user install these packages
-8. The lowest (dependency-wise) packages are now installed. Go to 5.
-9. Exit when all packages are installed.
+1. Check .SRCINFO for other AUR dependencies, repeat the process for them
+1. Once all dependencies are fetched, we know which pacman packages are needed to install, and which AUR packages are needed to be built and installed. Show this summary to the user.
+1. If the user proceeds, let them review all repo-s, including their PKGBUILDs.
+1. Build all AUR packages of maximum dependency "depth"
+1. After all are built, let the user review them all
+1. If review passes, let the user install these packages
+1. The lowest (dependency-wise) packages are now installed. Go to 5.
+1. Exit when all packages are installed.
 
 ## Limitations
 
@@ -69,7 +71,7 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 
 
 ## Safety
-RUA only adds built-time safety and review. Once the package passes your review, it's as safe (run-time) as it was in the first place. Do not install AUR packages you don't trust.
+RUA only adds build-time safety and install-time control. Once the package passes your review, it's as safe (run-time) as it was in the first place. Do not install AUR packages you don't trust.
 
 
 ## Other

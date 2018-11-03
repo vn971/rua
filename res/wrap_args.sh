@@ -1,4 +1,4 @@
-wrap_args=()
+# Copy this file to ~/.config/rua/wrap_args.d/*.sh  for it to work.
 
 # Example: unsafe shared directories.
 # test -e ~/.cargo && wrap_args+=(--bind ~/.cargo ~/.cargo)

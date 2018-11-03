@@ -45,21 +45,15 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	}
 
 	let has_install = !install_file.is_empty();
-	let notice = {
-		let suid_warning = if suid_files.is_empty() {
-			format!("Package {} has no SUID files.\n", path_str)
-		} else {
-			format!("!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", path_str)
-		};
-		format!("\n{}\
-			{}[E]=list executable files, [L]=list all files, \
-			[T]=run shell to inspect, [O]=ok, proceed. ",
-			suid_warning,
-			if has_install { "[I]=show install file, " } else { "" }
-		)
-	};
 	loop {
-		eprint!("{}", notice);
+		if suid_files.is_empty() {
+			eprint!("\nPackage {} has no SUID files.\n", path_str);
+		} else {
+			eprint!("\n!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", path_str)
+		};
+		if has_install { eprint!("[I]=show install file, "); };
+		eprintln!("[E]=list executable files, [L]=list all files, \
+			[T]=run shell to inspect, [O]=ok, proceed. ");
 		let mut string = String::new();
 		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
 		eprintln!();

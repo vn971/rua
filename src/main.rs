@@ -115,7 +115,7 @@ fn main() {
 		let is_offline = matches.is_present("offline");
 		wrapped::install(target, &dirs, is_offline);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
-		let target_dir = matches.value_of("DIR").unwrap_or(".");
+		let target_dir = matches.value_of("TARGET").unwrap_or(".");
 		let is_offline = matches.is_present("offline");
 		wrapped::build_directory(target_dir, &dirs, is_offline);
 		for file in fs::read_dir("target").expect(&format!("'target' directory not found")) {
@@ -127,5 +127,10 @@ fn main() {
 		let target = matches.value_of("TARGET").expect(&format!("Cannot get tarcheck TARGET"));
 		tar_check::tar_check(Path::new(target).to_path_buf());
 		eprintln!("Package passed all checks: {}", target);
+	} else if let Some(matches) = opts.subcommand_matches("search") {
+		let target = matches.value_of("TARGET").expect(&format!("Cannot get TARGET argument"));
+		eprintln!("Results for '{}', sorted by popularity: \
+			https://aur.archlinux.org/packages/?K={}&SB=p&SO=d",
+			target, target);
 	}
 }

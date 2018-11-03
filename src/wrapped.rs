@@ -83,7 +83,7 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	let expect = format!("target directory not found for package {}: {:?}", name,
 		dirs.cache_dir().join(name).join("build/target"));
 	for file in fs::read_dir(dirs.cache_dir().join(name).join("build/target")).expect(&expect) {
-		tar_check::tar_check(file.expect(&format!("Failed to open file for tar_check analysis")).path());
+		tar_check::tar_check(file.expect("Failed to open file for tar_check analysis").path());
 	}
 	fs::rename(
 		dirs.cache_dir().join(name).join("build/target"),
@@ -146,7 +146,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: b
 				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
 			for file in read_dir_iterator {
 				packages_to_install.push(
-					file.expect(&format!("Failed to open file for tar_check analysis")).path()
+					file.expect("Failed to open file for tar_check analysis").path()
 				);
 			}
 		}

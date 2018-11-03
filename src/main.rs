@@ -66,7 +66,7 @@ fn ensure_script(path: &PathBuf, content: &[u8]) {
 fn overwrite_script(path: &PathBuf, content: &[u8]) {
 	overwrite_file(path, content);
 	fs::set_permissions(path, Permissions::from_mode(0o755))
-			.expect(&format!("Failed to set permissions for {:?}", path));
+		.expect(&format!("Failed to set permissions for {:?}", path));
 }
 
 
@@ -91,19 +91,16 @@ fn main() {
 	ensure_env("PKGEXT", ".pkg.tar.xz");
 
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
-		.expect(&format!("Failed to determine XDG directories"));
-	std::fs::create_dir_all(dirs.cache_dir()).expect(&format!("Failed to create project cache directory"));
-	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect(&format!("Failed to create project config directory"));
-	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d")).expect(&format!("Failed to create project config directory"));
-	let seccomp_file = dirs.config_dir().join(".system/seccomp.bpf");
-	if cfg!(target_arch = "i686") {
-		overwrite_file(&seccomp_file, include_bytes!("../res/seccomp-i686.bpf"));
-	} else if cfg!(target_arch = "x86_64") {
-		overwrite_file(&seccomp_file, include_bytes!("../res/seccomp-x86_64.bpf"));
-	} else if seccomp_file.exists() == false {
-		panic!("Unable to find seccomp file for your architecture. Please create it and put it to {:?}", seccomp_file);
-	}
-	ensure_env("RUA_SECCOMP_FILE", seccomp_file.to_str().unwrap());
+		.expect("Failed to determine XDG directories");
+	std::fs::create_dir_all(dirs.cache_dir()).expect("Failed to create project cache directory");
+	fs::remove_dir_all(dirs.config_dir().join(".system")).expect("Failed to remove .system config dir");
+	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect("Failed to create project config directory");
+	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d")).expect("Failed to create project config directory");
+	overwrite_file(&dirs.config_dir().join(".system/seccomp-i686.bpf"), include_bytes!("../res/seccomp-i686.bpf"));
+	overwrite_file(&dirs.config_dir().join(".system/seccomp-x86_64.bpf"), include_bytes!("../res/seccomp-x86_64.bpf"));
+	let seccomp_path = format!(".system/seccomp-{}.bpf", uname::uname()
+		.expect("Failed to get system architecture via uname").machine);
+	ensure_env("RUA_SECCOMP_FILE", dirs.config_dir().join(seccomp_path).to_str().unwrap());
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 	ensure_script(&dirs.config_dir().join(".system/wrap_args_example.sh"), include_bytes!("../res/wrap_args.sh"));
 	let opts = cli_args::build_cli().get_matches();
@@ -111,24 +108,23 @@ fn main() {
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
 	if let Some(matches) = opts.subcommand_matches("install") {
-		let target = matches.value_of("TARGET").expect(&format!("Cannot get installation TARGET"));
+		let target = matches.value_of("TARGET").expect("Cannot get installation TARGET");
 		let is_offline = matches.is_present("offline");
 		wrapped::install(target, &dirs, is_offline);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("TARGET").unwrap_or(".");
 		let is_offline = matches.is_present("offline");
 		wrapped::build_directory(target_dir, &dirs, is_offline);
-		for file in fs::read_dir("target").expect(&format!("'target' directory not found")) {
-			tar_check::tar_check(file.expect(
-				&format!("Failed to open file for tar_check analysis")).path());
+		for file in fs::read_dir("target").expect("'target' directory not found") {
+			tar_check::tar_check(file.expect("Failed to open file for tar_check analysis").path());
 		}
 		eprintln!("Package built and checked in: {:?}", Path::new(target_dir).join("target"));
 	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
-		let target = matches.value_of("TARGET").expect(&format!("Cannot get tarcheck TARGET"));
+		let target = matches.value_of("TARGET").expect("Cannot get tarcheck TARGET");
 		tar_check::tar_check(Path::new(target).to_path_buf());
 		eprintln!("Package passed all checks: {}", target);
 	} else if let Some(matches) = opts.subcommand_matches("search") {
-		let target = matches.value_of("TARGET").expect(&format!("Cannot get TARGET argument"));
+		let target = matches.value_of("TARGET").expect("Cannot get TARGET argument");
 		eprintln!("Results for '{}', sorted by popularity: \
 			https://aur.archlinux.org/packages/?K={}&SB=p&SO=d",
 			target, target);

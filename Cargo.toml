@@ -1,7 +1,7 @@
 [package]
 name = "rua"
 version = "0.9.1"
-description = "AUR builder written in Rust"
+description = "Secure jailed AUR helper for Arch Linux"
 authors = ["Vasya Novikov <n1dr+cm3513git@ya.ru>"]
 license="GPL-3.0-or-later"
 keywords = ["archlinux", "aur", "build", "jail", "bubblewrap"]
@@ -28,10 +28,6 @@ tar = "0.4"
 uname = "0.1.1"
 xz2 = "0.1.6"
 
-[dependencies.config]
-version = "0.9"
-default-features = false
-features = ["toml"]
 
 
 [profile.release]

@@ -3,7 +3,6 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 
 extern crate chrono;
 extern crate clap;
-extern crate config;
 extern crate directories;
 extern crate env_logger;
 extern crate fs2;

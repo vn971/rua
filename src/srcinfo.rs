@@ -39,6 +39,7 @@ impl FlatSrcinfo {
 
 
 pub fn static_pkgbuild(path: PathBuf) -> String {
+	let unary_keys = ["epoch", "install", "changelog", "pkgdesc", "pkgrel", "pkgver", "url"];
 	let mut bash = Vec::new();
 	let file = File::open(&path).expect(&format!("Cannot open SRCINFO in {:?}", path));
 	let file = BufReader::new(file);
@@ -57,11 +58,11 @@ pub fn static_pkgbuild(path: PathBuf) -> String {
 			static ref value_regex: Regex = Regex::new(r"[^']*").unwrap();
 		}
 		assert!(value_regex.is_match(&value), "unexpected SRCINFO value {}", value);
-		bash.push(format!("{}+=( '{}' )", key, value));
+		if unary_keys.contains(&key.as_str()) {
+			bash.push(format!("{}='{}'", key, value));
+		} else {
+			bash.push(format!("{}+=('{}')", key, value));
+		}
 	}
-	bash.push("unset pkgdesc; pkgdesc=ignore;".to_owned());
-	bash.push("unset pkgver; pkgver=1;".to_owned());
-	bash.push("unset pkgrel; pkgrel=1;".to_owned());
-	bash.push("unset url; url=ignore;".to_owned());
 	bash.join("\n")
 }

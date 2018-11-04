@@ -1,5 +1,12 @@
 use std::env;
 use std::process::Command;
+use std::io;
+
+pub fn console_get_line() -> String {
+	let mut string = String::new();
+	io::stdin().read_line(&mut string).expect("RUA requires console to get user input");
+	string.trim().to_lowercase()
+}
 
 /// For example: SHELL, PAGER, EDITOR.
 pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, arguments: &[&str]) {

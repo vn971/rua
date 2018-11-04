@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::Read;
-use std::io;
 use std::path::PathBuf;
 use tar::*;
 use util;
@@ -54,10 +53,8 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		if has_install { eprint!("[I]=show install file, "); };
 		eprintln!("[E]=list executable files, [L]=list all files, \
 			[T]=run shell to inspect, [O]=ok, proceed. ");
-		let mut string = String::new();
-		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
+		let string = util::console_get_line();
 		eprintln!();
-		let string = string.trim().to_lowercase();
 		if string == "s" && !suid_files.is_empty() {
 			for path in &suid_files {
 				eprintln!("{}", path);

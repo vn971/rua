@@ -14,12 +14,12 @@ use std::env;
 use std::fs::File;
 use std::fs;
 use std::io::Write;
-use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use tar_check;
 use uname;
+use util;
 
 
 const CHECKED_TARS: &str = "checked_tars";
@@ -162,9 +162,7 @@ fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_packages:
 	eprintln!("{}\n", aur_packages.keys().map(|s| format!("  {}", s)).join("\n"));
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
-		let mut string = String::new();
-		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
-		let string = string.trim().to_lowercase();
+		let string = util::console_get_line();
 		if string == "o" {
 			break;
 		}

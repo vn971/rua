@@ -2,7 +2,6 @@ use directories::ProjectDirs;
 use regex::Regex;
 use std::env;
 use std::fs;
-use std::io;
 use std::path::Path;
 use std::process::Command;
 use std::process::Output;
@@ -46,9 +45,7 @@ pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 	loop {
 		eprint!("Verifying package {}. [V]=view PKGBUILD, [E]=edit PKGBUILD, \
 		[I]=run shell to inspect, [O]=ok, use package: ", name);
-		let mut string = String::new();
-		io::stdin().read_line(&mut string).expect("RUA requires console to ask confirmation.");
-		let string = string.trim().to_lowercase();
+		let string = util::console_get_line();
 
 		if string == "v" {
 			util::run_env_command("PAGER", "less", &["PKGBUILD"]);

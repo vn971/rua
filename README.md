@@ -32,7 +32,7 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua --help && rua install --help`  # shows CLI help
 
-Jail wrapper arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent directory for examples.
+Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent directory for examples.
 
 
 ## Install (the AUR way)

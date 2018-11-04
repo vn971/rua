@@ -63,15 +63,14 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 
 ## Limitations
 
-* The tool does not allow you searching for packages, it only installs once you know the exact name. Author of this tool uses the [web page](https://aur.archlinux.org/packages/) to find packages.
-* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes all caches in case of possible conflict.
-* The tool does not show you outdated packages (those which have updates in AUR). Use web site email notifications for now. Hopefully I'll implement it over time. Pull requests are welcomed.
+* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes caches in case of possible conflict.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
-* Unless you explicitly enable it, builds do not share anything with normal user home (~). This may result in rust/maven/whatever packages being re-downloaded each build. Take a look at ~/.config/rua/wrap_args.sh to see which compromises you might want to take on that.
+* The tool does not show you outdated packages yet (those that have updates in AUR). Pull requests are welcomed.
+* Unless you explicitly enable it, builds do not share package manager data with normal user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
 ## Safety
-RUA only adds build-time safety and install-time control. Once the package passes your review, it's as safe (run-time) as it was in the first place. Do not install AUR packages you don't trust.
+RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as safe (run-time) as they were in the first place. Do not install AUR packages you don't trust.
 
 
 ## Other

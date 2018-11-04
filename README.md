@@ -63,14 +63,16 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 
 ## Limitations
 
-* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes caches in case of possible conflict.
-* Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
+* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes caches in case of possible conflict. This may change in the future.
+* Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD. This may change in the future.
 * The tool does not show you outdated packages yet (those that have updates in AUR). Pull requests are welcomed.
 * Unless you explicitly enable it, builds do not share package manager data with normal user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
 ## Safety
-RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as safe (run-time) as they were in the first place. Do not install AUR packages you don't trust.
+RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as run-time safe as they were in the first place. Do not install AUR packages you don't trust.
+
+Note that RUA grants read-only access to public GPG keys for signature verification. This means read-only access to ~/.gnupg, excluding ~/.gnupg/private-keys-v1.d, which is blocked.
 
 
 ## Other

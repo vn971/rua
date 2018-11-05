@@ -51,7 +51,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprint!("\n!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ", path_str)
 		};
 		if has_install { eprint!("[I]=show install file, "); };
-		eprintln!("[E]=list executable files, [L]=list all files, \
+		eprint!("[E]=list executable files, [L]=list all files, \
 			[T]=run shell to inspect, [O]=ok, proceed. ");
 		let string = util::console_get_line();
 		eprintln!();

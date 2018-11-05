@@ -128,32 +128,6 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 }
 
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool, alpm: &Alpm) {
-	let mut packages = packages.iter().collect::<Vec<_>>();
-	packages.sort_unstable_by_key(|pair| -*pair.1);
-	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
-		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
-		for name in &packages {
-			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs, is_offline);
-		}
-		for name in &packages {
-			package_tar_review(name, dirs);
-		}
-		let mut packages_to_install: Vec<PathBuf> = Vec::new();
-		for name in packages {
-			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
-			let read_dir_iterator = fs::read_dir(checked_tars)
-				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
-			for file in read_dir_iterator {
-				packages_to_install.push(
-					file.expect("Failed to open file for tar_check analysis").path()
-				);
-			}
-		}
-		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0, alpm);
-	}
-}
-
 fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_packages: &HashMap<String, i32>) {
 	if pacman_deps.len() + aur_packages.len() == 1 { return; }
 	eprintln!("\nIn order to install {}, the following pacman packages will need to be installed:", name);
@@ -166,6 +140,33 @@ fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_packages:
 		if string == "o" {
 			break;
 		}
+	}
+}
+
+fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool, alpm: &Alpm) {
+	let mut packages = packages.iter().collect::<Vec<_>>();
+	packages.sort_unstable_by_key(|pair| -*pair.1);
+	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
+		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
+		for name in &packages {
+			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs, is_offline);
+		}
+		for name in &packages {
+			package_tar_review(name, dirs);
+		}
+		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
+		for name in packages {
+			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
+			let read_dir_iterator = fs::read_dir(checked_tars)
+				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
+			for file in read_dir_iterator {
+				packages_to_install.insert(
+					name.to_owned(),
+					file.expect("Failed to open file for tar_check analysis").path()
+				);
+			}
+		}
+		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0, alpm);
 	}
 }
 

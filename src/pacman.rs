@@ -49,16 +49,14 @@ fn ensure_packages_installed(
 	}
 }
 
-pub fn ensure_aur_packages_installed(packages: Vec<PathBuf>, is_dependency: bool, alpm: &Alpm) {
-	let mut map: HashMap<String, PathBuf> = HashMap::new();
-	for package in packages {
-		let path = Path::new(&package).to_path_buf();
-		map.insert(package.to_str().unwrap().to_owned(), path);
-	}
+pub fn ensure_aur_packages_installed(packages: HashMap<String, PathBuf>,
+	is_dependency: bool,
+	alpm: &Alpm
+) {
 	if is_dependency {
-		ensure_packages_installed(map, &["-U", "--asdeps"], alpm);
+		ensure_packages_installed(packages, &["-U", "--asdeps"], alpm);
 	} else {
-		ensure_packages_installed(map, &["-U"], alpm);
+		ensure_packages_installed(packages, &["-U"], alpm);
 	}
 }
 

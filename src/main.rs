@@ -92,7 +92,7 @@ fn main() {
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
 		.expect("Failed to determine XDG directories");
 	std::fs::create_dir_all(dirs.cache_dir()).expect("Failed to create project cache directory");
-	fs::remove_dir_all(dirs.config_dir().join(".system")).expect("Failed to remove .system config dir");
+	fs::remove_dir_all(dirs.config_dir().join(".system")).ok();
 	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect("Failed to create project config directory");
 	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d")).expect("Failed to create project config directory");
 	overwrite_file(&dirs.config_dir().join(".system/seccomp-i686.bpf"), include_bytes!("../res/seccomp-i686.bpf"));

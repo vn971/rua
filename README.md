@@ -12,7 +12,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * group dependencies for batch review/install
 * Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
 * * supports "offline" builds (no internet access given to PKGBUILD)
-* * home directory (`~`) is not visible to PKGBUILD, except the build dir. The rest of the filesystem is read-only
+* * uses isolated filesystem, e.g. no access to home directory (`~`). See [safety](#Safety) section below
 * * PKGBUILD script is run under seccomp rules
 * * etc
 * Written in Rust
@@ -36,7 +36,13 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent d
 
 
 ## Install (the AUR way)
-Install [rua](https://aur.archlinux.org/packages/rua/) package using the default [manual build process](https://wiki.archlinux.org/index.php/Arch_User_Repository#Prerequisites). Or use another AUR helper, or an earlier version of RUA.
+```sh
+sudo pacman -S --needed base-devel cargo bubblewrap
+git clone https://aur.archlinux.org/rua.git
+cd rua
+makepkg -si
+```
+In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Install (the Rust way)
@@ -69,10 +75,16 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 * Unless you explicitly enable it, builds do not share package manager data with normal user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
-## Safety
+## <a name="Safety"/> Safety
 RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as run-time safe as they were in the first place. Do not install AUR packages you don't trust.
 
-Note that RUA grants read-only access to public GPG keys for signature verification. This means read-only access to ~/.gnupg, excluding ~/.gnupg/private-keys-v1.d, which is blocked.
+When building packages, RUA uses the following filesystem isolation by default:
+
+* Build directory is mounted read-write.
+* ~/.gnupg directory is mounted read-only, excluding ~/.gnupg/private-keys-v1.d, which is blocked. This allows signature verification to work.
+* The rest of `~` is not visible to the build process, mounted under tmpfs.
+* The rest of `/` is mounted read-only.
+* You can add your mount points by configuring "wrap_args".
 
 
 ## Other

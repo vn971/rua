@@ -2,18 +2,8 @@
 
 wrap_args=()
 
-if test -d ~/.gnupg; then
-  wrap_args+=(--ro-bind ~/.gnupg ~/.gnupg)
-fi
-if test -d ~/.gnupg/private-keys-v1.d; then
-  wrap_args+=(--tmpfs ~/.gnupg/private-keys-v1.d)
-fi
-if test -d ~/.gnupg/openpgp-revocs.d; then
-  wrap_args+=(--tmpfs ~/.gnupg/openpgp-revocs.d)
-fi
-
 for filename in ~/.config/rua/wrap_args.d/*.sh ; do
-  [ -e "$filename" ] || continue
+  test -e "$filename" || continue
   source "$filename"
 done
 
@@ -25,6 +15,9 @@ exec nice -n19 \
   --dev /dev \
   --tmpfs /tmp \
   --tmpfs ~ \
+  --ro-bind-try ~/.gnupg ~/.gnupg \
+  --tmpfs ~/.gnupg/private-keys-v1.d \
+  --tmpfs ~/.gnupg/openpgp-revocs.d \
   --ro-bind ~/.config/rua ~/.config/rua \
   --seccomp 3 \
   "${wrap_args[@]}" \

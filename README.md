@@ -75,7 +75,7 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 * Unless you explicitly enable it, builds do not share package manager data with normal user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
-## <a name="Safety"/> Safety
+## Safety
 RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as run-time safe as they were in the first place. Do not install AUR packages you don't trust.
 
 When building packages, RUA uses the following filesystem isolation by default:

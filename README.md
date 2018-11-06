@@ -37,7 +37,7 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent d
 
 ## Install (the AUR way)
 ```sh
-sudo pacman -S --needed base-devel bubblewrap libarchive cargo
+sudo pacman -S --needed base-devel bubblewrap cargo
 git clone https://aur.archlinux.org/rua.git
 cd rua
 makepkg -si
@@ -46,7 +46,7 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Install (the Rust way)
-* Install dependencies: `pacman -S --needed base-devel bubblewrap libarchive rust`
+* Install dependencies: `pacman -S --needed base-devel bubblewrap rust`
 * Build:
 * * `cargo install`, to build in cloned repo
 * * `cargo install rua`, to build from crates.io

@@ -113,7 +113,7 @@ fn main() {
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("TARGET").unwrap_or(".");
 		let is_offline = matches.is_present("offline");
-		wrapped::build_directory(target_dir, &dirs, is_offline);
+		wrapped::build_directory(target_dir, &dirs, is_offline, false);
 		for file in fs::read_dir("target").expect("'target' directory not found") {
 			tar_check::tar_check(file.expect("Failed to open file for tar_check analysis").path());
 		}

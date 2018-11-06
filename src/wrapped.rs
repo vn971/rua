@@ -61,17 +61,17 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	assert!(command.success(), "Failed to build package");
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, is_offline: bool) {
+pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
 	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
-	if Path::new(dir).join("target").exists() {
+	if Path::new(dir).join("target").exists() && lazy {
 		eprintln!("Skipping build for {} as 'target' directory is already present.", dir);
 	} else {
 		env::set_var("PKGDEST", Path::new(".").canonicalize()
 			.expect(&format!("Failed to canonize target directory {}", dir)).join("target"));
-		if is_offline {
+		if offline {
 			download_srcinfo_sources(project_dirs);
 		}
-		build_local(project_dirs, is_offline);
+		build_local(project_dirs, offline);
 	}
 }
 
@@ -143,13 +143,14 @@ fn show_install_summary(name: &str, pacman_deps: &HashSet<String>, aur_packages:
 	}
 }
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, is_offline: bool, alpm: &Alpm) {
+fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool, alpm: &Alpm) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_unstable_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
 		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
 		for name in &packages {
-			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(), dirs, is_offline);
+			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(),
+				dirs, offline, true);
 		}
 		for name in &packages {
 			package_tar_review(name, dirs);

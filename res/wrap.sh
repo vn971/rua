@@ -2,9 +2,9 @@
 
 namespace_args=(--unshare-user --unshare-ipc --unshare-pid --unshare-uts --unshare-cgroup)
 gnupg_args=(
-  --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}" "${GNUPGHOME:-$HOME/.gnupg}"
   --tmpfs "${GNUPGHOME:-$HOME/.gnupg}"/private-keys-v1.d
   --tmpfs "${GNUPGHOME:-$HOME/.gnupg}"/openpgp-revocs.d
+  --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}" "${GNUPGHOME:-$HOME/.gnupg}"
 )
 wrap_args=()
 

@@ -35,9 +35,14 @@ Planned features include AUR upstream git diff and local patch application.
 Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent directory for examples.
 
 
-## Install (the AUR way)
+## Install dependencies
 ```sh
 sudo pacman -S --needed base-devel bubblewrap cargo
+```
+
+
+## Install (the AUR way)
+```sh
 git clone https://aur.archlinux.org/rua.git
 cd rua
 makepkg -si
@@ -46,10 +51,8 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Install (the Rust way)
-* Install dependencies: `pacman -S --needed base-devel bubblewrap rust`
-* Build:
-* * `cargo install`, to build in cloned repo
-* * `cargo install rua`, to build from crates.io
+* `cargo install`, to build in cloned repo
+* `cargo install rua`, to build from crates.io
 
 There won't be bash/zsh/fish completions this way, but everything else should work.
 
@@ -60,11 +63,12 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 1. Fetch the AUR package (via git)
 1. Check .SRCINFO for other AUR dependencies, repeat the process for them
 1. Once all dependencies are fetched, we know which pacman packages are needed to install, and which AUR packages are needed to be built and installed. Show this summary to the user.
-1. If the user proceeds, let them review all repo-s, including their PKGBUILDs.
+1. If the user proceeds, prepare a list of all cumulative pacman dependencies, let the user install these dependencies.
+1. Let the user review all repo-s, including their PKGBUILDs.
 1. Build all AUR packages of maximum dependency "depth"
 1. After all are built, let the user review them all
 1. If review passes, let the user install these packages
-1. The lowest (dependency-wise) packages are now installed. Go to 5.
+1. The lowest (dependency-wise) packages are now installed. Go to 6.
 1. Exit when all packages are installed.
 
 ## Limitations

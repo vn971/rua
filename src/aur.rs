@@ -1,5 +1,6 @@
 use directories::ProjectDirs;
 use regex::Regex;
+use rm_rf;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -26,9 +27,7 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 	}
 	assert!(name_regexp.is_match(name), "unexpected package name {}", name);
 	let path = dirs.cache_dir().join(name);
-	if path.exists() {
-		fs::remove_dir_all(&path).expect(&format!("Failed to clean cache dir {:?}", path));
-	}
+	rm_rf::force_remove_all(&path, true).expect(&format!("Failed to clean cache dir {:?}", path));
 	fs::create_dir_all(dirs.cache_dir().join(name)).expect(&format!("Failed to create cache dir for {}", name));
 	env::set_current_dir(dirs.cache_dir().join(name)).expect(&format!("Failed to cd into {}", name));
 	let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);

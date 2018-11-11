@@ -9,6 +9,7 @@ extern crate fs2;
 extern crate itertools;
 extern crate libalpm_fork as libalpm;
 extern crate regex;
+extern crate rm_rf;
 extern crate tar;
 extern crate uname;
 extern crate xz2;
@@ -92,7 +93,7 @@ fn main() {
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
 		.expect("Failed to determine XDG directories");
 	std::fs::create_dir_all(dirs.cache_dir()).expect("Failed to create project cache directory");
-	fs::remove_dir_all(dirs.config_dir().join(".system")).ok();
+	rm_rf::force_remove_all(dirs.config_dir().join(".system"), true).ok();
 	std::fs::create_dir_all(dirs.config_dir().join(".system")).expect("Failed to create project config directory");
 	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d")).expect("Failed to create project config directory");
 	overwrite_file(&dirs.config_dir().join(".system/seccomp-i686.bpf"), include_bytes!("../res/seccomp-i686.bpf"));

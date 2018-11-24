@@ -1,0 +1,11 @@
+sudo: false
+
+language: rust
+rust:
+  - stable
+  - nightly
+
+cache: cargo
+
+script:
+  - cargo check --verbose --all

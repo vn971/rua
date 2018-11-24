@@ -1,4 +1,4 @@
-## RUA
+## RUA  [![Build Status](https://travis-ci.org/vn971/rua.svg?branch=master)](https://travis-ci.org/vn971/rua)  [![crates.io](https://img.shields.io/crates/v/rua.svg)](https://crates.io/crates/rua)
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
@@ -51,8 +51,7 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Install (the Rust way)
-* `cargo install`, to build in cloned repo
-* `cargo install rua`, to build from crates.io
+* `cargo install rua`
 
 There won't be bash/zsh/fish completions this way, but everything else should work.
 

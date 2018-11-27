@@ -37,7 +37,7 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent d
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed base-devel bubblewrap cargo
+sudo pacman -S --needed git base-devel bubblewrap cargo
 ```
 
 

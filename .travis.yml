@@ -1,6 +1,5 @@
-sudo: false
-
 language: rust
+
 rust:
   - stable
   - nightly
@@ -12,3 +11,12 @@ before_install:
 
 script:
   - cargo check --verbose --all
+
+if: tag IS blank  # do not build tags, only commits
+
+sudo: false
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always

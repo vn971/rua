@@ -23,12 +23,15 @@ fn assert_command_success(command: &Output) {
 
 pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 	lazy_static! {
-		static ref name_regexp: Regex = Regex::new(r"[a-zA-Z][a-zA-Z._-]*").unwrap();
+		static ref name_regexp: Regex = Regex::new(r"[a-zA-Z][a-zA-Z._-]*")
+		.expect(&format!("{}:{} Failed to parse regexp", file!(), line!()));
 	}
-	assert!(name_regexp.is_match(name), "unexpected package name {}", name);
+	assert!(name_regexp.is_match(name), "{}:{} unexpected package name {}", file!(), line!(), name);
 	let path = dirs.cache_dir().join(name);
-	rm_rf::force_remove_all(&path, true).expect(&format!("Failed to clean cache dir {:?}", path));
-	fs::create_dir_all(dirs.cache_dir().join(name)).expect(&format!("Failed to create cache dir for {}", name));
+	rm_rf::force_remove_all(&path, true)
+		.expect(&format!("{}:{} Failed to clean cache dir {:?}", file!(), line!(), path));
+	fs::create_dir_all(dirs.cache_dir().join(name))
+		.expect(&format!("Failed to create cache dir for {}", name));
 	env::set_current_dir(dirs.cache_dir().join(name)).expect(&format!("Failed to cd into {}", name));
 	let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
 	let command = Command::new("git").args(&["clone", &git_http_ref, PREFETCH_DIR])
@@ -57,7 +60,8 @@ pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 			break;
 		}
 	}
-	env::set_current_dir("..").unwrap();
+	env::set_current_dir("..")
+		.expect(&format!("{}:{} Failed to move to parent repo after review", file!(), line!()));
 	fs::rename(PREFETCH_DIR, "build")
 		.expect(&format!("Failed to move temporary directory '{}' to 'build'", PREFETCH_DIR));
 }

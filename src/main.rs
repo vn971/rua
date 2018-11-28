@@ -104,7 +104,7 @@ fn main() {
 	overwrite_script(&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH), include_bytes!("../res/wrap.sh"));
 	ensure_script(&dirs.config_dir().join(".system/wrap_args_example.sh"), include_bytes!("../res/wrap_args.sh"));
 	let opts = cli_args::build_cli().get_matches();
-	let locked_file = File::open(dirs.config_dir()).unwrap();
+	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
 	locked_file.try_lock_exclusive().expect("Another RUA instance is already running.");
 
 	if let Some(matches) = opts.subcommand_matches("install") {

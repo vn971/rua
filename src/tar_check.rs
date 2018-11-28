@@ -7,7 +7,8 @@ use xz2::read::XzDecoder;
 
 
 pub fn tar_check(tar_file: PathBuf) {
-	let tar_str = tar_file.to_str().unwrap();
+	let tar_str = tar_file.to_str()
+		.expect(&format!("{}:{} Failed to parse tar file name", file!(), line!()));
 	let archive = File::open(&tar_file).expect(&format!("cannot open file {}", tar_str));
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
@@ -30,9 +31,10 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		let path = {
 			let path = file.header().path()
 				.expect(&format!("Failed to extract tar file metadata for file in {}", path_str));
-			path.to_str().unwrap().to_owned()
+			path.to_str().expect(&format!("{}:{} failed to parse file name", file!(), line!())).to_owned()
 		};
-		let mode = file.header().mode().unwrap();
+		let mode = file.header().mode()
+			.expect(&format!("{}:{} Failed to get file mode for file {}", file!(), line!(), path));
 		let is_normal = !path.ends_with("/") && !path.starts_with(".");
 		if is_normal { all_files.push(path.clone()); }
 		if is_normal && (mode & 0o111 > 0) { executable_files.push(path.clone()); }

@@ -51,7 +51,8 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 
 
 fn build_local(dirs: &ProjectDirs, is_offline: bool) {
-	let dir = env::current_dir().unwrap();
+	let dir = env::current_dir()
+		.expect(&format!("{}:{} Failed to get current dir", file!(), line!()));
 	let dir = dir.to_str().unwrap();
 	let mut command = wrap_yes_internet(dirs);
 	if is_offline { command.arg("--unshare-net"); }
@@ -150,7 +151,8 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
 		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
 		for name in &packages {
-			build_directory(dirs.cache_dir().join(&name).join("build").to_str().unwrap(),
+			build_directory(dirs.cache_dir().join(&name).join("build").to_str()
+				.expect(&format!("{}:{} Failed to resolve build path for {}", file!(), line!(), name)),
 				dirs, offline, true);
 		}
 		for name in &packages {

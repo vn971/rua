@@ -24,15 +24,15 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua install firefox-ublock-origin`  # install AUR package (with user confirmation)
 
-`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO.
+`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO only.
 
-`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
+`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
 `rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
 `rua --help && rua install --help`  # shows CLI help
 
-Jail arguments can be overridden in ~/.config/rua/wrap_args.d/, see the parent directory for examples.
+Jail arguments can be overridden in ~/.config/rua/wrap_args.d/ .
 
 
 ## Install dependencies
@@ -75,7 +75,7 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 * Smart caching is not implemented yet. To avoid outdated builds, RUA wipes caches in case of possible conflict. This may change in the future.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD. This may change in the future.
 * The tool does not show you outdated packages yet (those that have updates in AUR). Pull requests are welcomed.
-* Unless you explicitly enable it, builds do not share package manager data with normal user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
+* Unless you explicitly enable it, builds do not share user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
 ## Safety

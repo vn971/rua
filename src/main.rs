@@ -16,7 +16,7 @@ extern crate xz2;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 
-mod aur;
+mod aur_download;
 mod cli_args;
 mod pacman;
 mod srcinfo;

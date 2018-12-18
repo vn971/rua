@@ -1,7 +1,7 @@
 // Commands that are run inside "bubblewrap" jail
 
-use aur::PREFETCH_DIR;
-use aur;
+use aur_download::PREFETCH_DIR;
+use aur_download;
 use directories::ProjectDirs;
 use itertools::Itertools;
 use libalpm::Alpm;
@@ -109,7 +109,7 @@ fn prefetch_aur(name: &str, dirs: &ProjectDirs,
 		return;
 	}
 	aur_packages.insert(name.to_owned(), depth);
-	aur::fresh_download(&name, &dirs);
+	aur_download::fresh_download(&name, &dirs);
 	let info = dirs.cache_dir().join(name).join(PREFETCH_DIR).join(".SRCINFO");
 	let info = srcinfo::FlatSrcinfo::new(info);
 	let deps: Vec<&String> = info.get("depends").iter()
@@ -186,7 +186,7 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
 	show_install_summary(name, &pacman_deps, &aur_packages);
 	for (name, _) in &aur_packages {
-		aur::review_repo(name, dirs);
+		aur_download::review_repo(name, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm);
 	install_all(dirs, aur_packages, is_offline, &alpm);

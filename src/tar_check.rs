@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use tar::*;
-use util;
+use crate::util;
 use xz2::read::XzDecoder;
 
 

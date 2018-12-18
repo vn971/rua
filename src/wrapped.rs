@@ -1,13 +1,13 @@
 // Commands that are run inside "bubblewrap" jail
 
-use aur_download::PREFETCH_DIR;
-use aur_download;
+use crate::aur_download::PREFETCH_DIR;
+use crate::aur_download;
 use directories::ProjectDirs;
 use itertools::Itertools;
-use libalpm::Alpm;
-use libalpm::SigLevel;
-use pacman;
-use srcinfo;
+use crate::libalpm::Alpm;
+use crate::libalpm::SigLevel;
+use crate::pacman;
+use crate::srcinfo;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
@@ -17,9 +17,9 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use tar_check;
+use crate::tar_check;
 use uname;
-use util;
+use crate::util;
 
 
 const CHECKED_TARS: &str = "checked_tars";

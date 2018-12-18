@@ -1,10 +1,10 @@
-use libalpm::Alpm;
+use crate::libalpm::Alpm;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use util;
+use crate::util;
 
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {

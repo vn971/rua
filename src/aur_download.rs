@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use std::process::Output;
-use util;
+use crate::util;
 
 pub const PREFETCH_DIR: &str = "aur.tmp";
 

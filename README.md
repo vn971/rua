@@ -22,11 +22,11 @@ Planned features include AUR upstream git diff and local patch application.
 
 # Use
 
-`rua install firefox-ublock-origin`  # install AUR package (with user confirmation)
+`rua install xcalib`  # install AUR package (with user confirmation)
 
-`rua install --offline firefox-ublock-origin`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO only.
+`rua install --offline xcalib`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO only.
 
-`rua tarcheck my_built_package.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
+`rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
 `rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
@@ -61,13 +61,12 @@ We'll consider the "install" command as it's the most advanced one. RUA will:
 
 1. Fetch the AUR package (via git)
 1. Check .SRCINFO for other AUR dependencies, repeat the process for them
-1. Once all dependencies are fetched, we know which pacman packages are needed to install, and which AUR packages are needed to be built and installed. Show this summary to the user.
-1. If the user proceeds, prepare a list of all cumulative pacman dependencies, let the user install these dependencies.
-1. Let the user review all repo-s, including their PKGBUILDs.
+1. Once all dependencies are fetched, show user the summary of all pacman packages to install, AUR packages to build and install.
+1. Ask user to install pacman dependencies (in batch for all recursive dependencies)
+1. Let the user review all packages, including their PKGBUILDs.
 1. Build all AUR packages of maximum dependency "depth"
-1. After all are built, let the user review them all
-1. If review passes, let the user install these packages
-1. The lowest (dependency-wise) packages are now installed. Go to 6.
+1. Let the user review and install them (in batch)
+1. The lowest (dependency-wise) packages are now installed. Go two steps up.
 1. Exit when all packages are installed.
 
 ## Limitations

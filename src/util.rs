@@ -12,7 +12,7 @@ pub fn console_get_line() -> String {
 pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, arguments: &[&str]) {
 	let command = env::var(env_variable_name).ok()
 		.map(|s| s.trim().to_owned());
-	let command: Vec<_> = command.iter().flat_map(|e| e.split(" "))
+	let command: Vec<_> = command.iter().flat_map(|e| e.split(' '))
 		.map(|e| e.trim()).filter(|e| !e.is_empty())
 		.collect();
 	let mut command = if let Some(first) = command.first() {
@@ -24,7 +24,7 @@ pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, ar
 	};
 	command.args(arguments);
 	let command = command.status();
-	for err in command.err() {
+	if let Some(err) = command.err() {
 		eprintln!("Failed to run command, error: {}", err);
 	}
 }

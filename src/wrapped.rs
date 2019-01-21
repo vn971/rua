@@ -36,7 +36,7 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let mut file = File::create("PKGBUILD.static")
 		.expect("cannot create temporary PKGBUILD.static file");
 	let srcinfo_path = Path::new(".SRCINFO").canonicalize()
-		.expect(&format!("Cannot resolve .SRCINFO path in {}", dir));
+		.unwrap_or_else(|_| panic!("Cannot resolve .SRCINFO path in {}", dir));
 	file.write_all(srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
@@ -44,7 +44,7 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 		.args(&["--bind", dir, dir])
 		.args(&["makepkg", "--verifysource", "--skipinteg"])
 		.args(&["-p", "PKGBUILD.static"])
-		.status().expect(&format!("Failed to fetch dependencies in directory {}", dir));
+		.status().unwrap_or_else(|_| panic!("Failed to fetch dependencies in directory {}", dir));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 	fs::remove_file("PKGBUILD.static").expect("Failed to clean up PKGBUILD.static");
 }
@@ -52,23 +52,23 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 
 fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	let dir = env::current_dir()
-		.expect(&format!("{}:{} Failed to get current dir", file!(), line!()));
+		.unwrap_or_else(|_| panic!("{}:{} Failed to get current dir", file!(), line!()));
 	let dir = dir.to_str().unwrap();
 	let mut command = wrap_yes_internet(dirs);
 	if is_offline { command.arg("--unshare-net"); }
 	command.args(&["--bind", dir, dir]);
 	let command = command.args(&["makepkg"]).status()
-		.expect(&format!("Failed to build package (jailed makepkg) in directory {}", dir));
+		.unwrap_or_else(|_| panic!("Failed to build package (jailed makepkg) in directory {}", dir));
 	assert!(command.success(), "Failed to build package");
 }
 
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
-	env::set_current_dir(dir).expect(format!("cannot build in directory {}", dir).as_str());
+	env::set_current_dir(dir).unwrap_or_else(|_| panic!("cannot build in directory {}", dir));
 	if Path::new(dir).join("target").exists() && lazy {
 		eprintln!("Skipping build for {} as 'target' directory is already present.", dir);
 	} else {
 		env::set_var("PKGDEST", Path::new(".").canonicalize()
-			.expect(&format!("Failed to canonize target directory {}", dir)).join("target"));
+			.unwrap_or_else(|_| panic!("Failed to canonize target directory {}", dir)).join("target"));
 		if offline {
 			download_srcinfo_sources(project_dirs);
 		}
@@ -89,7 +89,7 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	fs::rename(
 		dirs.cache_dir().join(name).join("build/target"),
 		dirs.cache_dir().join(name).join(CHECKED_TARS),
-	).expect(&format!("Failed to move 'build/target' (build artefacts) \
+	).unwrap_or_else(|_| panic!("Failed to move 'build/target' (build artefacts) \
 		to 'checked_tars' directory for package {}", name));
 }
 
@@ -149,10 +149,10 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_unstable_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
-		let packages: Vec<_> = packages.into_iter().map(|pair| pair.0).collect();
+		let packages: Vec<_> = packages.map(|pair| pair.0).collect();
 		for name in &packages {
 			build_directory(dirs.cache_dir().join(&name).join("build").to_str()
-				.expect(&format!("{}:{} Failed to resolve build path for {}", file!(), line!(), name)),
+				.unwrap_or_else(|| panic!("{}:{} Failed to resolve build path for {}", file!(), line!(), name)),
 				dirs, offline, true);
 		}
 		for name in &packages {
@@ -162,7 +162,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 		for name in packages {
 			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
 			let read_dir_iterator = fs::read_dir(checked_tars)
-				.expect(&format!("Failed to read 'checked_tars' directory for {}", name));
+				.unwrap_or_else(|_| panic!("Failed to read 'checked_tars' directory for {}", name));
 			for file in read_dir_iterator {
 				packages_to_install.insert(
 					name.to_owned(),
@@ -180,12 +180,12 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
 	let alpm = alpm.expect("Failed to initialize alpm library");
 	for repo in pacman::get_repository_list() {
-		alpm.register_sync_db(&repo, &SigLevel::default()).expect(&format!("Failed to register {} in libalpm", &repo));
+		alpm.register_sync_db(&repo, &SigLevel::default()).unwrap_or_else(|_| panic!("Failed to register {} in libalpm", &repo));
 	}
 	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm);
 	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
 	show_install_summary(name, &pacman_deps, &aur_packages);
-	for (name, _) in &aur_packages {
+	for name in aur_packages.keys() {
 		aur_download::review_repo(name, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm);

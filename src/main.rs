@@ -47,26 +47,26 @@ fn ensure_env(key: &str, value: &str) {
 
 fn overwrite_file(path: &PathBuf, content: &[u8]) {
 	let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path)
-		.expect(&format!("Failed to overwrite (initialize) file {:?}", path));
+		.unwrap_or_else(|_| panic!("Failed to overwrite (initialize) file {:?}", path));
 	file.write_all(content)
-		.expect(&format!("Failed to write to file {:?} during initialization", path));
+		.unwrap_or_else(|_| panic!("Failed to write to file {:?} during initialization", path));
 }
 
 fn ensure_script(path: &PathBuf, content: &[u8]) {
-	if path.exists() == false {
+	if !path.exists() {
 		let mut file = OpenOptions::new().create(true).write(true).open(path)
-			.expect(&format!("Failed to overwrite (initialize) file {:?}", path));
+			.unwrap_or_else(|_| panic!("Failed to overwrite (initialize) file {:?}", path));
 		file.write_all(content)
-			.expect(&format!("Failed to write to file {:?} during initialization", path));
+			.unwrap_or_else(|_| panic!("Failed to write to file {:?} during initialization", path));
 		fs::set_permissions(path, Permissions::from_mode(0o755))
-			.expect(&format!("Failed to set permissions for {:?}", path));
+			.unwrap_or_else(|_| panic!("Failed to set permissions for {:?}", path));
 	}
 }
 
 fn overwrite_script(path: &PathBuf, content: &[u8]) {
 	overwrite_file(path, content);
 	fs::set_permissions(path, Permissions::from_mode(0o755))
-		.expect(&format!("Failed to set permissions for {:?}", path));
+		.unwrap_or_else(|_| panic!("Failed to set permissions for {:?}", path));
 }
 
 

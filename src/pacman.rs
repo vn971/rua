@@ -21,7 +21,7 @@ pub fn get_repository_list() -> Vec<String> {
 	let cmd = Command::new("pacman-conf").arg("--repo-list").output()
 		.expect("cannot get repository list: pacman-conf --repo-list");
 	let output = String::from_utf8(cmd.stdout).expect(
-		&format!("Failed to get repo list from `pacman-conf --repo-list`"));
+		"Failed to get repo list from `pacman-conf --repo-list`");
 	output.lines().map(|s| s.to_owned()).collect()
 }
 
@@ -34,7 +34,7 @@ fn ensure_packages_installed(
 	while !packages.is_empty() {
 		{
 			let mut list = packages.iter().map(|(_name, path)| path.to_str()
-				.expect(&format!("{}:{} cannot parse package name", file!(), line!()))).collect::<Vec<_>>();
+				.unwrap_or_else(|| panic!("{}:{} cannot parse package name", file!(), line!()))).collect::<Vec<_>>();
 			list.sort_unstable();
 			eprintln!("Packages need to be installed:");
 			eprintln!("\n    pacman {} --needed {}\n", base_args.join(" "), list.join(" "));

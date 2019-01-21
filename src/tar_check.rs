@@ -8,8 +8,8 @@ use xz2::read::XzDecoder;
 
 pub fn tar_check(tar_file: PathBuf) {
 	let tar_str = tar_file.to_str()
-		.expect(&format!("{}:{} Failed to parse tar file name", file!(), line!()));
-	let archive = File::open(&tar_file).expect(&format!("cannot open file {}", tar_str));
+		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));
+	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
 	} else if tar_str.ends_with(".tar") {
@@ -25,23 +25,23 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	let mut all_files = Vec::new();
 	let mut executable_files = Vec::new();
 	let mut suid_files = Vec::new();
-	let archive_files = archive.entries().expect(&format!("cannot open archive {}", path_str));
+	let archive_files = archive.entries().unwrap_or_else(|_| panic!("cannot open archive {}", path_str));
 	for file in archive_files {
-		let mut file = file.expect(&format!("cannot access tar file in {}", path_str));
+		let mut file = file.unwrap_or_else(|_| panic!("cannot access tar file in {}", path_str));
 		let path = {
 			let path = file.header().path()
-				.expect(&format!("Failed to extract tar file metadata for file in {}", path_str));
-			path.to_str().expect(&format!("{}:{} failed to parse file name", file!(), line!())).to_owned()
+				.unwrap_or_else(|_| panic!("Failed to extract tar file metadata for file in {}", path_str));
+			path.to_str().unwrap_or_else(|| panic!("{}:{} failed to parse file name", file!(), line!())).to_owned()
 		};
 		let mode = file.header().mode()
-			.expect(&format!("{}:{} Failed to get file mode for file {}", file!(), line!(), path));
-		let is_normal = !path.ends_with("/") && !path.starts_with(".");
+			.unwrap_or_else(|_| panic!("{}:{} Failed to get file mode for file {}", file!(), line!(), path));
+		let is_normal = !path.ends_with('/') && !path.starts_with('.');
 		if is_normal { all_files.push(path.clone()); }
 		if is_normal && (mode & 0o111 > 0) { executable_files.push(path.clone()); }
 		if mode > 0o777 { suid_files.push(path.clone()); }
 		if &path == ".INSTALL" {
 			file.read_to_string(&mut install_file)
-				.expect(&format!("Failed to read INSTALL script from tar file {}", path_str));
+				.unwrap_or_else(|_| panic!("Failed to read INSTALL script from tar file {}", path_str));
 		}
 	}
 

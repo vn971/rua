@@ -24,10 +24,8 @@ impl FlatSrcinfo {
 			assert!(!key.is_empty(), "Unexpected empty key in .SRCINFO");
 			let value = split.get(1).unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line)).to_string();
 			assert!(!value.is_empty(), "Unexpected empty value in .SRCINFO");
-			if result.contains_key(&key) {
-				if let Some(vec) = result.get_mut(&key){
-					vec.push(value);
-				}
+			if let Some(vec) = result.get_mut(&key) {
+				vec.push(value);
 			} else {
 				result.insert(key.to_string(), vec![value]);
 			}

@@ -9,8 +9,14 @@ cache: cargo
 before_install:
   - sudo apt-get install -y libarchive-dev
 
+before_script:
+  - rustup component add clippy
+  - rustup component add rustfmt
+
 script:
   - cargo check --verbose --all
+  - cargo clippy --all-targets --all-features -- -D warnings
+  - cargo fmt --all -- --check
 
 if: tag IS blank  # do not build tags, only commits
 

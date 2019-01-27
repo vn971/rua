@@ -2,7 +2,10 @@
 name = "rua"
 version = "0.9.11"
 description = "Secure jailed AUR helper for Arch Linux"
-authors = ["Vasili Novikov <n1dr+cm3513git@ya.ru>"]
+authors = [
+  "Vasili Novikov <n1dr+cm3513git@ya.ru>",
+  "Stefano Probst <senden9@gmail.com>",
+]
 license="GPL-3.0-or-later"
 edition="2018"
 keywords = ["archlinux", "aur", "build", "jail", "bubblewrap"]

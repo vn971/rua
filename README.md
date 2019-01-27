@@ -93,6 +93,6 @@ When building packages, RUA uses the following filesystem isolation by default:
 
 The RUA name can be read as "RUst Aur jail", also an inversion of "AUR".
 
-IRC: #rua@freenode.net  (no promises are made for availability)
+IRC: #rua @freenode.net  (no promises are made for availability)
 
 Project is shared under GPLv3+.

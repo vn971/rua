@@ -18,8 +18,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
-use uname;
+use std::process::{Command, Output};
+use std::str;
 
 const CHECKED_TARS: &str = "checked_tars";
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
@@ -121,11 +121,17 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	});
 }
 
-// TODO: use libalpm.uname instead of machine uname
 lazy_static! {
-	static ref uname_arch: String = uname::uname()
-		.expect("Failed to get system architecture via uname")
-		.machine;
+	/// Architecture as defined in the local pacman configuration
+	static ref pacman_arch: String = {
+		let process_output: Output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
+		if !process_output.status.success() {
+			panic!("pacman-conf call failed with an non-zero status");
+		}
+		let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
+		// Trim away the "/n" & convert into a String
+		arch.trim().into()
+	};
 }
 
 fn prefetch_aur(
@@ -152,8 +158,8 @@ fn prefetch_aur(
 		.get("depends")
 		.iter()
 		.merge(info.get("makedepends"))
-		.merge(info.get(&format!("depends_{}", uname_arch.as_str())))
-		.merge(info.get(&format!("makedepends_{}", uname_arch.as_str())))
+		.merge(info.get(&format!("depends_{}", pacman_arch.as_str())))
+		.merge(info.get(&format!("makedepends_{}", pacman_arch.as_str())))
 		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {

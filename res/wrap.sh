@@ -20,6 +20,7 @@ exec nice -n19 \
   --new-session --die-with-parent \
   --ro-bind / / \
   --dev /dev \
+  --proc /proc \
   --tmpfs /tmp \
   --tmpfs ~ \
   "${gnupg_args[@]}" \

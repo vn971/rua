@@ -18,7 +18,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::Command;
 use std::str;
 
 const CHECKED_TARS: &str = "checked_tars";
@@ -122,16 +122,7 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 }
 
 lazy_static! {
-	/// Architecture as defined in the local pacman configuration
-	static ref pacman_arch: String = {
-		let process_output: Output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
-		if !process_output.status.success() {
-			panic!("pacman-conf call failed with an non-zero status");
-		}
-		let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
-		// Trim away the "/n" & convert into a String
-		arch.trim().into()
-	};
+	static ref pacman_arch: String = crate::libalpm::util::uname().machine().to_owned();
 }
 
 fn prefetch_aur(

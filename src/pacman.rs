@@ -90,10 +90,24 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>, alpm_db: &Alp
 	ensure_packages_installed(map, &["-S", "--asdeps"], alpm_db);
 }
 
-// let's commit this to git and clean up later, so it'll stay in history (if will ever be needed)
+// Some old functions that invoke shelling below.
+// Currently, using "libalpm" crate is prefered instead.
+// These functions might get back in use should RUA-s move away from using libalpm (I don't know that yet).
+
 //pub fn is_package_installable(package: &str) -> bool {
 //	Command::new("pacman").arg("-Sddp").arg(&package)
 //		.stdout(Stdio::null()).stderr(Stdio::null()).status()
 //		.expect(&format!("Failed to determine if package {} is installable", package))
 //		.success()
 //}
+
+///// Architecture as defined in the local pacman configuration
+//static ref pacman_arch: String = {
+//let process_output: Output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
+//if !process_output.status.success() {
+//panic!("pacman-conf call failed with an non-zero status");
+//}
+//let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
+//// Trim away the "/n" & convert into a String
+//arch.trim().into()
+//};

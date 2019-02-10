@@ -10,6 +10,7 @@ use crate::tar_check;
 use crate::util;
 use directories::ProjectDirs;
 use itertools::Itertools;
+use std::cmp;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
@@ -133,7 +134,8 @@ fn prefetch_aur(
 	depth: i32,
 	alpm: &Alpm,
 ) {
-	if aur_packages.contains_key(name) {
+	if let Some(old_depth) = aur_packages.get(name) {
+		aur_packages.insert(name.to_owned(), cmp::max(depth + 1, *old_depth));
 		eprintln!("Skipping already fetched package {}", name);
 		return;
 	}
@@ -184,9 +186,11 @@ fn show_install_summary(
 		pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
 	);
 	eprintln!("And the following AUR packages will need to be built and installed:");
+	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
+	aur_packages.sort_by_key(|pair| -*pair.1);
 	eprintln!(
 		"{}\n",
-		aur_packages.keys().map(|s| format!("  {}", s)).join("\n")
+		aur_packages.iter().map(|s| format!("  {}", s.0)).join("\n")
 	);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
@@ -199,7 +203,7 @@ fn show_install_summary(
 
 fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool, alpm: &Alpm) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
-	packages.sort_unstable_by_key(|pair| -*pair.1);
+	packages.sort_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
 		let packages: Vec<_> = packages.map(|pair| pair.0).collect();
 		for name in &packages {

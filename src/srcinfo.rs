@@ -74,21 +74,14 @@ pub fn static_pkgbuild(path: PathBuf) -> String {
 			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
 			.to_string();
 		lazy_static! {
-			static ref key_regex: Regex = Regex::new(r"[a-zA-Z][a-zA-Z_]*").unwrap();
+			static ref key_regex: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z_]*$").unwrap();
 		}
 		assert!(key_regex.is_match(&key), "unexpected SRCINFO key {}", key);
 		let value = split
 			.get(1)
 			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
+			.replace("'", "'\''")
 			.to_string();
-		lazy_static! {
-			static ref value_regex: Regex = Regex::new(r"[^']*").unwrap();
-		}
-		assert!(
-			value_regex.is_match(&value),
-			"unexpected SRCINFO value {}",
-			value
-		);
 		if unary_keys.contains(&key.as_str()) {
 			bash.push(format!("{}='{}'", key, value));
 		} else {

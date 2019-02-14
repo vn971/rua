@@ -14,6 +14,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 * * supports "offline" builds (no internet access given to PKGBUILD)
 * * uses isolated filesystem, e.g. no access to home directory (`~`). See [safety](#Safety) section below
 * * PKGBUILD script is run under seccomp rules
+* * filesystem is mounted with "nosuid", so a build script cannot e.g. call `sudo`
 * * etc
 * Written in Rust
 

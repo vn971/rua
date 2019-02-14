@@ -141,7 +141,7 @@ fn main() {
 		include_bytes!("../res/wrap.sh"),
 	);
 	ensure_script(
-		&dirs.config_dir().join(".system/wrap_args_example.sh"),
+		&dirs.config_dir().join(".system/wrap_args.sh.example"),
 		include_bytes!("../res/wrap_args.sh"),
 	);
 	let opts = cli_args::build_cli().get_matches();

@@ -69,7 +69,8 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 }
 
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
-	env::set_current_dir(dir).unwrap_or_else(|_| panic!("cannot build in directory {}", dir));
+	env::set_current_dir(dir)
+		.unwrap_or_else(|_| panic!("cannot change the current directory to {}", dir));
 	if Path::new(dir).join("target").exists() && lazy {
 		eprintln!(
 			"Skipping build for {} as 'target' directory is already present.",

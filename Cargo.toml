@@ -1,9 +1,9 @@
 [package]
 name = "rua"
-version = "0.11.1"
+version = "0.11.2"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
-  "Vasili Novikov <n1dr+cm3513git@ya.ru>",
+  "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
   "Stefano Probst <senden9@gmail.com>",
 ]
 license="GPL-3.0-or-later"
@@ -31,6 +31,7 @@ regex = "1.1.0"
 rm_rf = "0.2.2"
 tar = "0.4.20"
 uname = "0.1.1"
+users = "0.8.1"
 xz2 = "0.1.6"
 
 

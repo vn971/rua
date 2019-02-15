@@ -12,6 +12,7 @@ extern crate regex;
 extern crate rm_rf;
 extern crate tar;
 extern crate uname;
+extern crate users;
 extern crate xz2;
 #[macro_use]
 extern crate lazy_static;
@@ -95,6 +96,12 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
+	let opts = cli_args::build_cli().get_matches();
+	if users::get_current_uid() == 0 {
+		error!("RUA should never be run as root.");
+		error!("(Also, makepkg will not allow you building from root anyway.)");
+		std::process::exit(1)
+	}
 	assert!(
 		env::var("PKGDEST").is_err(),
 		"PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it"
@@ -144,7 +151,6 @@ fn main() {
 		&dirs.config_dir().join(".system/wrap_args.sh.example"),
 		include_bytes!("../res/wrap_args.sh"),
 	);
-	let opts = cli_args::build_cli().get_matches();
 	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
 	locked_file
 		.try_lock_exclusive()

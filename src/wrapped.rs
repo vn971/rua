@@ -124,7 +124,7 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 }
 
 lazy_static! {
-	static ref pacman_arch: String = crate::libalpm::util::uname().machine().to_owned();
+	static ref PACMAN_ARCH: String = crate::libalpm::util::uname().machine().to_owned();
 }
 
 fn prefetch_aur(
@@ -152,8 +152,8 @@ fn prefetch_aur(
 		.get("depends")
 		.iter()
 		.merge(info.get("makedepends"))
-		.merge(info.get(&format!("depends_{}", pacman_arch.as_str())))
-		.merge(info.get(&format!("makedepends_{}", pacman_arch.as_str())))
+		.merge(info.get(&format!("depends_{}", PACMAN_ARCH.as_str())))
+		.merge(info.get(&format!("makedepends_{}", PACMAN_ARCH.as_str())))
 		.collect();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {

@@ -22,11 +22,11 @@ fn assert_command_success(command: &Output) {
 
 pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 	lazy_static! {
-		static ref name_regexp: Regex = Regex::new(r"[a-zA-Z][a-zA-Z._-]*")
+		static ref NAME_REGEX: Regex = Regex::new(r"[a-zA-Z][a-zA-Z._-]*")
 			.unwrap_or_else(|_| panic!("{}:{} Failed to parse regexp", file!(), line!()));
 	}
 	assert!(
-		name_regexp.is_match(name),
+		NAME_REGEX.is_match(name),
 		"{}:{} unexpected package name {}",
 		file!(),
 		line!(),

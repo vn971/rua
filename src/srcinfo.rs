@@ -74,7 +74,7 @@ pub fn static_pkgbuild(path: PathBuf) -> String {
 			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
 			.to_string();
 		lazy_static! {
-			static ref key_regex: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z_]*$").unwrap();
+			static ref key_regex: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z0-9_]*$").unwrap();
 		}
 		assert!(key_regex.is_match(&key), "unexpected SRCINFO key {}", key);
 		let value = split

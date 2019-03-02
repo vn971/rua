@@ -1,5 +1,7 @@
 #!/bin/bash -euET
 {
+# script to release RUA, probably has no use to anybody else except for reference.
+
 set -o pipefail
 
 cargo upgrade
@@ -14,15 +16,15 @@ cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo publish
 
-tag=$(cat Cargo.toml | head | grep version | sed 's/.*"\(.*\)"/\1/')
+tag=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')
 git tag -m "release" "$tag"
 
-# personal script to prepare and test AUR package
+# prepare and test AUR package
 if test -e .vasya-personal/aur_prepare.sh; then
   source .vasya-personal/aur_prepare.sh
 fi
 
-git push
+git push hub
 git push lab
 
 exit

@@ -41,7 +41,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 
-fn ensure_env(key: &str, value: &str) {
+fn default_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
 		env::set_var(key, value);
 	}
@@ -79,7 +79,7 @@ fn overwrite_script(path: &PathBuf, content: &[u8]) {
 }
 
 fn main() {
-	ensure_env("RUST_BACKTRACE", "1"); // if it wasn't set to "0" explicitly, set it to 1.
+	default_env("RUST_BACKTRACE", "1"); // if it wasn't set to "0" explicitly, set it to 1.
 	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
 		.format(|buf, record| {
 			writeln!(
@@ -98,8 +98,8 @@ fn main() {
 	);
 	let opts = cli_args::build_cli().get_matches();
 	if users::get_current_uid() == 0 {
-		error!("RUA should never be run as root.");
-		error!("(Also, makepkg will not allow you building from root anyway.)");
+		error!("RUA should not be run as root.");
+		error!("Also, makepkg will not allow you building from root anyway.");
 		std::process::exit(1)
 	}
 	assert!(
@@ -115,7 +115,7 @@ fn main() {
 		"PKGEXT environment is set to an incompatible value. \
 		 Only *.tar and *.tar.xz are supported."
 	);
-	ensure_env("PKGEXT", ".pkg.tar.xz");
+	default_env("PKGEXT", ".pkg.tar.xz");
 
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
 		.expect("Failed to determine XDG directories");
@@ -139,7 +139,7 @@ fn main() {
 			.expect("Failed to get system architecture via uname")
 			.machine
 	);
-	ensure_env(
+	default_env(
 		"RUA_SECCOMP_FILE",
 		dirs.config_dir().join(seccomp_path).to_str().unwrap(),
 	);

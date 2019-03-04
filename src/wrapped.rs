@@ -202,7 +202,13 @@ fn show_install_summary(
 	}
 }
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool, alpm: &Alpm) {
+fn install_all(
+	dirs: &ProjectDirs,
+	packages: HashMap<String, i32>,
+	offline: bool,
+	alpm: &Alpm,
+	asdeps: bool,
+) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
@@ -242,11 +248,11 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 				);
 			}
 		}
-		pacman::ensure_aur_packages_installed(packages_to_install, depth > 0, alpm);
+		pacman::ensure_aur_packages_installed(packages_to_install, asdeps || depth > 0, alpm);
 	}
 }
 
-pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
+pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut aur_packages = HashMap::new();
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
@@ -262,5 +268,5 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool) {
 		aur_download::review_repo(name, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm);
-	install_all(dirs, aur_packages, is_offline, &alpm);
+	install_all(dirs, aur_packages, is_offline, &alpm, asdeps);
 }

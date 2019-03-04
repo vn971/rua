@@ -10,6 +10,8 @@ pub fn build_cli() -> App<'static, 'static> {
 			.about("Download a package by name and build it.")
 			.arg(Arg::with_name("offline").long("offline").short("o")
 				.help("forbid internet access while building packages. Sources are downloaded using .SRCINFO only"))
+			.arg(Arg::with_name("asdeps").long("asdeps")
+				.help("Install as package as dependency"))
 			.arg(Arg::with_name("TARGET").help("target package").required(true).index(1)))
 		.subcommand(SubCommand::with_name("jailbuild")
 			.about("Build package, using PKGBUILD and wrapping in jail")

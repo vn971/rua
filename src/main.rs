@@ -161,7 +161,8 @@ fn main() {
 			.value_of("TARGET")
 			.expect("Cannot get installation TARGET");
 		let is_offline = matches.is_present("offline");
-		wrapped::install(target, &dirs, is_offline);
+		let asdeps = matches.is_present("asdeps");
+		wrapped::install(target, &dirs, is_offline, asdeps);
 	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
 		let target_dir = matches.value_of("TARGET").unwrap_or(".");
 		let is_offline = matches.is_present("offline");

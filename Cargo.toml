@@ -5,6 +5,7 @@ description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
   "Stefano Probst <senden9@gmail.com>",
+  "morganamilo <morganamilo@gmail.com>",
 ]
 license="GPL-3.0-or-later"
 edition="2018"

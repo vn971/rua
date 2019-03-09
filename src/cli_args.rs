@@ -1,4 +1,4 @@
-use clap::*;
+use clap::{App, AppSettings, Arg, SubCommand};
 
 pub fn build_cli() -> App<'static, 'static> {
 	App::new(env!("CARGO_PKG_NAME"))

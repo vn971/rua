@@ -9,21 +9,17 @@ mod tar_check;
 mod util;
 mod wrapped;
 
+use std::fs::{File, OpenOptions, Permissions};
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
+use std::{env, fs};
+
 use chrono::Utc;
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
-use log::debug;
-use log::error;
-use std::env;
-use std::fs;
-use std::fs::File;
-use std::fs::OpenOptions;
-use std::fs::Permissions;
-use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
-use std::path::PathBuf;
+use log::{debug, error};
 
 fn default_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {

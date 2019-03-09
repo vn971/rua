@@ -1,13 +1,13 @@
 use crate::util;
+
+use std::path::Path;
+use std::process::{Command, Output};
+use std::{env, fs};
+
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use regex::Regex;
 use rm_rf;
-use std::env;
-use std::fs;
-use std::path::Path;
-use std::process::Command;
-use std::process::Output;
 
 pub const PREFETCH_DIR: &str = "aur.tmp";
 

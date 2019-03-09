@@ -1,10 +1,12 @@
 use crate::util;
-use libalpm::Alpm;
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+
+use libalpm::Alpm;
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
 	alpm.local_db()

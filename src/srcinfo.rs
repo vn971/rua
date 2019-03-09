@@ -1,10 +1,10 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::BufRead;
-use std::io::BufReader;
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
+
+use lazy_static::lazy_static;
+use regex::Regex;
 
 pub struct FlatSrcinfo {
 	map: HashMap<String, Vec<String>>,

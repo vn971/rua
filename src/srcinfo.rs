@@ -81,7 +81,7 @@ pub fn static_pkgbuild(path: PathBuf) -> String {
 		let value = split
 			.get(1)
 			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
-			.replace("'", "'\''")
+			.replace("'", "'\\''")
 			.to_string();
 		if unary_keys.contains(&key.as_str()) {
 			bash.push(format!("{}='{}'", key, value));

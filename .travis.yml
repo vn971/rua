@@ -16,7 +16,7 @@ script:
   - cargo check --verbose --all
   - cargo clippy --all-targets --all-features -- -D warnings
   - cargo fmt --all -- --check
-  - git log -1 --pretty=format:'%an'
+  - git log -1 --pretty=format:'%an' 1>&2
   - grep --quiet "$(git log -1 --pretty=format:'%an')" Cargo.toml  # check that commit author is mentioned in Cargo.toml
 
 if: tag IS blank  # do not build tags, only commits

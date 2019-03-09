@@ -1,24 +1,6 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
-extern crate chrono;
-extern crate clap;
-extern crate directories;
-extern crate env_logger;
-extern crate fs2;
-extern crate itertools;
-extern crate libalpm_fork as libalpm;
-extern crate regex;
-extern crate rm_rf;
-extern crate tar;
-extern crate uname;
-extern crate users;
-extern crate xz2;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-
 mod aur_download;
 mod cli_args;
 mod pacman;
@@ -31,6 +13,8 @@ use chrono::Utc;
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
+use log::debug;
+use log::error;
 use std::env;
 use std::fs;
 use std::fs::File;

@@ -1,5 +1,6 @@
 use crate::util;
 use directories::ProjectDirs;
+use lazy_static::lazy_static;
 use regex::Regex;
 use rm_rf;
 use std::env;

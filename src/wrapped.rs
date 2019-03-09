@@ -2,14 +2,16 @@
 
 use crate::aur_download;
 use crate::aur_download::PREFETCH_DIR;
-use crate::libalpm::Alpm;
-use crate::libalpm::SigLevel;
 use crate::pacman;
 use crate::srcinfo;
 use crate::tar_check;
 use crate::util;
 use directories::ProjectDirs;
 use itertools::Itertools;
+use lazy_static::lazy_static;
+use libalpm::Alpm;
+use libalpm::SigLevel;
+use log::debug;
 use std::cmp;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -124,7 +126,7 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 }
 
 lazy_static! {
-	static ref PACMAN_ARCH: String = crate::libalpm::util::uname().machine().to_owned();
+	static ref PACMAN_ARCH: String = libalpm::util::uname().machine().to_owned();
 }
 
 fn prefetch_aur(

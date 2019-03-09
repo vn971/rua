@@ -1,5 +1,5 @@
-use crate::libalpm::Alpm;
 use crate::util;
+use libalpm::Alpm;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;

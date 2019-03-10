@@ -1,13 +1,14 @@
 // Commands that are run inside "bubblewrap" jail
 
 use crate::aur_download::{self, PREFETCH_DIR};
-use crate::{pacman, srcinfo, tar_check, util};
+use crate::{pacman, tar_check, util};
 
 use directories::ProjectDirs;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use libalpm::{Alpm, SigLevel};
 use log::debug;
+use srcinfo::Srcinfo;
 
 use std::cmp;
 use std::collections::{HashMap, HashSet};
@@ -33,7 +34,7 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let srcinfo_path = Path::new(".SRCINFO")
 		.canonicalize()
 		.unwrap_or_else(|_| panic!("Cannot resolve .SRCINFO path in {}", dir));
-	file.write_all(srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
+	file.write_all(crate::srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
 	let command = wrap_yes_internet(dirs)
@@ -143,14 +144,16 @@ fn prefetch_aur(
 		.join(name)
 		.join(PREFETCH_DIR)
 		.join(".SRCINFO");
-	let info = srcinfo::FlatSrcinfo::new(info);
-	let deps: Vec<&String> = info
-		.get("depends")
+	let info = Srcinfo::parse_file(&info).expect("Failed to parse srcinfo");
+	let deps = info
+		.pkg(name)
+		.unwrap_or_else(|| panic!("pkgname {} was not found in srcinfo", name))
+		.depends
 		.iter()
-		.merge(info.get("makedepends"))
-		.merge(info.get(&format!("depends_{}", PACMAN_ARCH.as_str())))
-		.merge(info.get(&format!("makedepends_{}", PACMAN_ARCH.as_str())))
-		.collect();
+		.chain(&info.base.makedepends)
+		.filter(|d| d.supports(PACMAN_ARCH.as_str()))
+		.flat_map(|d| &d.vec)
+		.collect::<Vec<_>>();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {
 		if pacman::is_package_installed(alpm, &dep) {

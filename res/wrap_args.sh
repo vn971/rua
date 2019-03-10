@@ -6,5 +6,4 @@
 #wrap_args+=(--bind-try ~/.ivy2 ~/.ivy2)
 #wrap_args+=(--bind-try ~/.m2 ~/.m2)
 #wrap_args+=(--bind-try ~/.gradle ~/.gradle)
-#wrap_args+=(--bind-try ~/.coursier ~/.coursier)
 #wrap_args+=(--bind-try ~/.npm ~/.npm)

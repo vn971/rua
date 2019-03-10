@@ -14,7 +14,6 @@ readme = "README.md"
 repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
-
 [build-dependencies]
 clap = "2.32.0"
 
@@ -30,11 +29,11 @@ libalpm = { package = "libalpm-fork", version = "0.1.4" }
 log = "0.4.6"
 regex = "1.1.2"
 rm_rf = "0.2.2"
+srcinfo = "0.3.1"
 tar = "0.4.21"
 uname = "0.1.1"
 users = "0.8.1"
 xz2 = "0.1.6"
-
 
 [profile.release]
 lto = true

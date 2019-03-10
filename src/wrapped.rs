@@ -38,7 +38,7 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "--verifysource", "--skipinteg"])
+		.args(&["makepkg", "-f", "--verifysource", "--skipinteg"])
 		.args(&["-p", "PKGBUILD.static"])
 		.status()
 		.unwrap_or_else(|_| panic!("Failed to fetch dependencies in directory {}", dir));

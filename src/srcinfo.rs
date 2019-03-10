@@ -3,8 +3,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
-use lazy_static::lazy_static;
-use regex::Regex;
+use srcinfo::Srcinfo;
 
 pub struct FlatSrcinfo {
 	map: HashMap<String, Vec<String>>,
@@ -50,44 +49,38 @@ impl FlatSrcinfo {
 	}
 }
 
-pub fn static_pkgbuild(path: PathBuf) -> String {
-	let unary_keys = [
-		"epoch",
-		"install",
-		"changelog",
-		"pkgdesc",
-		"pkgrel",
-		"pkgver",
-		"url",
-	];
-	let mut bash = Vec::new();
-	let file = File::open(&path).unwrap_or_else(|_| panic!("Cannot open SRCINFO in {:?}", path));
-	let file = BufReader::new(file);
-	for line in file.lines() {
-		let line = line.unwrap_or_else(|_| panic!("Failed to parse .SRCINFO in {:?}", path));
-		let line = line.trim();
-		if line.is_empty() || line.starts_with('#') {
-			continue;
-		}
-		let split: Vec<&str> = line.splitn(2, '=').map(|s| s.trim()).collect();
-		let key = split
-			.get(0)
-			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
-			.to_string();
-		lazy_static! {
-			static ref KEY_REGEX: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z0-9_]*$").unwrap();
-		}
-		assert!(KEY_REGEX.is_match(&key), "unexpected SRCINFO key {}", key);
-		let value = split
-			.get(1)
-			.unwrap_or_else(|| panic!("Unexpected line {} in .SRCINFO", line))
-			.replace("'", "'\\''")
-			.to_string();
-		if unary_keys.contains(&key.as_str()) {
-			bash.push(format!("{}='{}'", key, value));
-		} else {
-			bash.push(format!("{}+=('{}')", key, value));
-		}
+fn push_field(pkgbuild: &mut String, field: &str, s: &str) {
+	let s = s.replace("'", "'\\''");
+	pkgbuild.push_str(&format!("{}='{}'\n", field, s));
+}
+
+fn push_array(pkgbuild: &mut String, field: &str, items: &[String]) {
+	pkgbuild.push_str(&format!("{}=(", field));
+
+	for item in items {
+		pkgbuild.push_str(&format!("\n  '{}'", item.replace("'", "'\\''")))
 	}
-	bash.join("\n")
+
+	pkgbuild.push_str(")\n");
+}
+
+pub fn static_pkgbuild(path: PathBuf) -> String {
+	let srcinfo = Srcinfo::parse_file(path).expect("Failed to parse srcinfo");
+	let mut pkgbuild = String::new();
+
+	push_field(&mut pkgbuild, "pkgname", "tmp");
+	push_field(&mut pkgbuild, "pkgver", "1");
+	push_field(&mut pkgbuild, "pkgrel", "1");
+	push_array(&mut pkgbuild, "arch", &srcinfo.pkg.arch);
+
+	for source in &srcinfo.base.source {
+		if let Some(ref arch) = source.arch {
+			let field = format!("{}_{}", "source", arch);
+			push_array(&mut pkgbuild, &field, &source.vec);
+		} else {
+			push_array(&mut pkgbuild, "source", &source.vec);
+		};
+	}
+
+	pkgbuild
 }

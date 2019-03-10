@@ -334,6 +334,7 @@ dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rm_rf 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "srcinfo 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tar 0.4.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "uname 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "users 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -343,6 +344,11 @@ dependencies = [
 [[package]]
 name = "smallvec"
 version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "srcinfo"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -573,6 +579,7 @@ dependencies = [
 "checksum regex-syntax 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8c2f35eedad5295fdf00a63d7d4b238135723f92b434ec06774dad15c7ab0861"
 "checksum rm_rf 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "431cd5629bac2a14692429d42466297bdf9e9c48214a775e130613e5af273ed3"
 "checksum smallvec 0.6.9 (registry+https://github.com/rust-lang/crates.io-index)" = "c4488ae950c49d403731982257768f48fada354a5203fe81f9bb6f43ca9002be"
+"checksum srcinfo 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bea154bac8b4da4b5449eca46e60bc36f04f35657e30299188eb26096e5e1180"
 "checksum stacker 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "fb79482f57cf598af52094ec4cc3b3c42499d3ce5bd426f2ac41515b7e57404b"
 "checksum strsim 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bb4f380125926a99e52bc279241539c018323fab05ad6368b56f93d9369ff550"
 "checksum tar 0.4.21 (registry+https://github.com/rust-lang/crates.io-index)" = "904b43da53c99b929c4484fa281e5535f2eb86b3040de3e3e5b69708e2a8bd65"

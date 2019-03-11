@@ -16,7 +16,7 @@ script:
   - cargo check --verbose --all
   - cargo clippy --all-targets --all-features -- -D warnings
   - cargo fmt --all -- --check
-  - shellcheck -e SC1090 wrap.sh  # exclude non-constant sourcing that shellcheck cannot check
+  - shellcheck -e SC1090 res/wrap.sh  # exclude non-constant sourcing that shellcheck cannot check
 
 if: tag IS blank  # do not build tags, only commits
 

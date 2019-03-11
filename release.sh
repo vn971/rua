@@ -7,7 +7,7 @@ set -o pipefail
 cargo upgrade
 cargo update
 
-shellcheck -e SC1090 wrap.sh
+shellcheck -e SC1090 res/wrap.sh
 cargo fmt --all --
 cargo clippy --all-targets --all-features -- -D warnings
 

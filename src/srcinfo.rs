@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use srcinfo::Srcinfo;
+use srcinfo::{ArchVec, Srcinfo};
 
 fn push_field(pkgbuild: &mut String, field: &str, s: &str) {
 	let s = s.replace("'", "'\\''");
@@ -17,6 +17,17 @@ fn push_array(pkgbuild: &mut String, field: &str, items: &[String]) {
 	pkgbuild.push_str(")\n");
 }
 
+fn push_arch_vec(pkgbuild: &mut String, field: &str, items: &[ArchVec]) {
+	for source in items {
+		if let Some(ref arch) = source.arch {
+			let field = &format!("{}_{}", field, arch);
+			push_array(pkgbuild, field, &source.vec);
+		} else {
+			push_array(pkgbuild, field, &source.vec);
+		};
+	}
+}
+
 pub fn static_pkgbuild(path: PathBuf) -> String {
 	let srcinfo = Srcinfo::parse_file(path).expect("Failed to parse srcinfo");
 	let mut pkgbuild = String::new();
@@ -25,15 +36,13 @@ pub fn static_pkgbuild(path: PathBuf) -> String {
 	push_field(&mut pkgbuild, "pkgver", "1");
 	push_field(&mut pkgbuild, "pkgrel", "1");
 	push_array(&mut pkgbuild, "arch", &srcinfo.pkg.arch);
-
-	for source in &srcinfo.base.source {
-		if let Some(ref arch) = source.arch {
-			let field = format!("{}_{}", "source", arch);
-			push_array(&mut pkgbuild, &field, &source.vec);
-		} else {
-			push_array(&mut pkgbuild, "source", &source.vec);
-		};
-	}
+	push_arch_vec(&mut pkgbuild, "source", &srcinfo.base.source);
+	push_arch_vec(&mut pkgbuild, "md5sums", &srcinfo.base.md5sums);
+	push_arch_vec(&mut pkgbuild, "sha1sums", &srcinfo.base.sha1sums);
+	push_arch_vec(&mut pkgbuild, "sha224sums", &srcinfo.base.sha224sums);
+	push_arch_vec(&mut pkgbuild, "sha256sums", &srcinfo.base.sha256sums);
+	push_arch_vec(&mut pkgbuild, "sha384sums", &srcinfo.base.sha384sums);
+	push_arch_vec(&mut pkgbuild, "sha512sums", &srcinfo.base.sha512sums);
 
 	pkgbuild
 }

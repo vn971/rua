@@ -36,10 +36,10 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 		.unwrap_or_else(|_| panic!("Cannot resolve .SRCINFO path in {}", dir));
 	file.write_all(crate::srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
-	eprintln!("Downloading sources using .SRCINFO... (integrity tests will be done when building)");
+	eprintln!("Downloading sources using .SRCINFO...");
 	let command = wrap_yes_internet(dirs)
 		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "-f", "--verifysource", "--skipinteg"])
+		.args(&["makepkg", "-f", "--verifysource"])
 		.args(&["-p", "PKGBUILD.static"])
 		.status()
 		.unwrap_or_else(|_| panic!("Failed to fetch dependencies in directory {}", dir));

@@ -12,14 +12,16 @@ mod wrapped;
 use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{env, fs};
 
 use chrono::Utc;
+use cli_args::CliArgs;
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::{debug, error};
+use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
@@ -76,7 +78,7 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-	let opts = cli_args::build_cli().get_matches();
+	let my_struct_opts = cli_args::CliArgs::from_args();
 	if users::get_current_uid() == 0 {
 		error!("RUA should not be run as root.");
 		error!("Also, makepkg will not allow you building from root anyway.");
@@ -136,41 +138,38 @@ fn main() {
 		.try_lock_exclusive()
 		.expect("Another RUA instance is already running.");
 
-	if let Some(matches) = opts.subcommand_matches("install") {
-		let target = matches
-			.value_of("TARGET")
-			.expect("Cannot get installation TARGET");
-		let is_offline = matches.is_present("offline");
-		let asdeps = matches.is_present("asdeps");
-		wrapped::install(target, &dirs, is_offline, asdeps);
-	} else if let Some(matches) = opts.subcommand_matches("jailbuild") {
-		let target_dir = matches.value_of("TARGET").unwrap_or(".");
-		let is_offline = matches.is_present("offline");
-		wrapped::build_directory(target_dir, &dirs, is_offline, false);
-		for file in fs::read_dir("target").expect("'target' directory not found") {
-			tar_check::tar_check(
-				file.expect("Failed to open file for tar_check analysis")
-					.path(),
+	match my_struct_opts {
+		CliArgs::Install {
+			asdeps,
+			offline,
+			target,
+		} => {
+			wrapped::install(target, &dirs, offline, asdeps);
+		}
+		CliArgs::JailBuild { offline, target } => {
+			let target_str = target.to_str().unwrap_or_else(|| {
+				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
+			});
+			wrapped::build_directory(target_str, &dirs, offline, false);
+			for file in fs::read_dir("target").expect("'target' directory not found") {
+				tar_check::tar_check(
+					&file
+						.expect("Failed to open file for tar_check analysis")
+						.path(),
+				);
+			}
+			eprintln!("Package built and checked in: {:?}", target.join("target"));
+		}
+		CliArgs::Tarcheck { target } => {
+			tar_check::tar_check(&target);
+			eprintln!("Package passed all checks: {:?}", target);
+		}
+		CliArgs::Search { target } => {
+			eprintln!(
+				"Results for '{}', sorted by popularity: \
+				 https://aur.archlinux.org/packages/?K={}&SB=p&SO=d",
+				target, target
 			);
 		}
-		eprintln!(
-			"Package built and checked in: {:?}",
-			Path::new(target_dir).join("target")
-		);
-	} else if let Some(matches) = opts.subcommand_matches("tarcheck") {
-		let target = matches
-			.value_of("TARGET")
-			.expect("Cannot get tarcheck TARGET");
-		tar_check::tar_check(Path::new(target).to_path_buf());
-		eprintln!("Package passed all checks: {}", target);
-	} else if let Some(matches) = opts.subcommand_matches("search") {
-		let target = matches
-			.value_of("TARGET")
-			.expect("Cannot get TARGET argument");
-		eprintln!(
-			"Results for '{}', sorted by popularity: \
-			 https://aur.archlinux.org/packages/?K={}&SB=p&SO=d",
-			target, target
-		);
-	}
+	};
 }

@@ -1,28 +1,47 @@
-use clap::{App, AppSettings, Arg, SubCommand};
+use std::path::PathBuf;
+use structopt::StructOpt;
 
-pub fn build_cli() -> App<'static, 'static> {
-	App::new(env!("CARGO_PKG_NAME"))
-		.version(env!("CARGO_PKG_VERSION"))
-		.author(env!("CARGO_PKG_AUTHORS"))
-		.about(env!("CARGO_PKG_DESCRIPTION"))
-		.setting(AppSettings::SubcommandRequired)
-		.subcommand(SubCommand::with_name("install")
-			.about("Download a package by name and build it")
-			.arg(Arg::with_name("offline").long("offline").short("o")
-				.help("forbid internet access while building packages. Sources are downloaded using .SRCINFO only"))
-			.arg(Arg::with_name("asdeps").long("asdeps")
-				.help("Install package as dependency"))
-			.arg(Arg::with_name("TARGET").help("target package").required(true).index(1)))
-		.subcommand(SubCommand::with_name("jailbuild")
-			.about("Build package, using PKGBUILD and wrapping in jail")
-			.arg(Arg::with_name("offline").long("offline").short("o")
-				.help("forbid internet access while building. Sources are downloaded using .SRCINFO only"))
-			.arg(Arg::with_name("TARGET").help("directory to build")
-				.required(false).default_value(".").index(1)))
-		.subcommand(SubCommand::with_name("tarcheck")
-			.about("Check *.tar or *.tar.xz archive")
-			.arg(Arg::with_name("TARGET").help("archive to check").required(true).index(1)))
-		.subcommand(SubCommand::with_name("search")
-			.about("Opens AUR web search page")
-			.arg(Arg::with_name("TARGET").help("target to search for").required(true).index(1)))
+#[derive(StructOpt)]
+#[structopt()]
+pub enum CliArgs {
+	#[structopt(
+		name = "install",
+		about = "Download a package by name and build it in jail"
+	)]
+	Install {
+		#[structopt(long = "asdeps", help = "Install package as dependency")]
+		asdeps: bool,
+		#[structopt(
+			short = "o",
+			long = "offline",
+			help = "forbid internet access while building packages. Sources are downloaded using .SRCINFO only"
+		)]
+		offline: bool,
+		#[structopt(help = "Target package", multiple = true, required = true)]
+		target: Vec<String>,
+	},
+	#[structopt(
+		name = "jailbuild",
+		about = "Build package in specified directory, in jail"
+	)]
+	JailBuild {
+		#[structopt(
+			short = "o",
+			long = "offline",
+			help = "forbid internet access while building packages. Sources are downloaded using .SRCINFO only"
+		)]
+		offline: bool,
+		#[structopt(help = "Target directory", required = true)]
+		target: PathBuf,
+	},
+	#[structopt(name = "tarcheck", about = "Check *.tar or *.tar.xz archive")]
+	Tarcheck {
+		#[structopt(help = "Archive to check", required = true)]
+		target: PathBuf,
+	},
+	#[structopt(name = "search", about = "Opens AUR web search page")]
+	Search {
+		#[structopt(help = "Target to search for", required = true)]
+		target: String,
+	},
 }

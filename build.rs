@@ -1,6 +1,7 @@
-extern crate clap;
+extern crate structopt;
 
-use clap::Shell;
+use structopt::clap::App;
+use structopt::clap::Shell;
 
 include!("src/cli_args.rs");
 
@@ -9,7 +10,7 @@ fn main() {
 		None => return,
 		Some(out_dir) => out_dir,
 	};
-	let mut app = build_cli();
+	let mut app: App = CliArgs::clap();
 	app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, &directory);
 	app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Fish, &directory);
 	app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Zsh, &directory);

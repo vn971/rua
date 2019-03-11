@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check(tar_file: PathBuf) {
+pub fn tar_check(tar_file: &PathBuf) {
 	let tar_str = tar_file
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));

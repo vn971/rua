@@ -102,7 +102,8 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 	);
 	for file in fs::read_dir(dirs.cache_dir().join(name).join("build/target")).expect(&expect) {
 		tar_check::tar_check(
-			file.expect("Failed to open file for tar_check analysis")
+			&file
+				.expect("Failed to open file for tar_check analysis")
 				.path(),
 		);
 	}
@@ -166,18 +167,11 @@ fn prefetch_aur(
 	}
 }
 
-fn show_install_summary(
-	name: &str,
-	pacman_deps: &HashSet<String>,
-	aur_packages: &HashMap<String, i32>,
-) {
+fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<String, i32>) {
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
-	eprintln!(
-		"\nIn order to install {}, the following pacman packages will need to be installed:",
-		name
-	);
+	eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
 	eprintln!(
 		"{}",
 		pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
@@ -248,7 +242,7 @@ fn install_all(
 	}
 }
 
-pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
+pub fn install(name: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut aur_packages = HashMap::new();
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
@@ -257,9 +251,18 @@ pub fn install(name: &str, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 		alpm.register_sync_db(&repo, &SigLevel::default())
 			.unwrap_or_else(|_| panic!("Failed to register {} in libalpm", &repo));
 	}
-	prefetch_aur(name, dirs, &mut pacman_deps, &mut aur_packages, 0, &alpm);
+	for install_target in name {
+		prefetch_aur(
+			&install_target,
+			dirs,
+			&mut pacman_deps,
+			&mut aur_packages,
+			0,
+			&alpm,
+		);
+	}
 	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
-	show_install_summary(name, &pacman_deps, &aur_packages);
+	show_install_summary(&pacman_deps, &aur_packages);
 	for name in aur_packages.keys() {
 		aur_download::review_repo(name, dirs);
 	}

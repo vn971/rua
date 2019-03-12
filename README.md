@@ -2,20 +2,18 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
-- Show the user what they are about to install:
-  * warn if SUID files are present, and show them
-  * show INSTALL script (if present)
-  * show file list preview
-  * show executable list preview
-- Minimize user interaction:
-  * verify all PKGBUILD-s once, build everything later
-  * group dependencies for batch review/install
 - Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
   * supports "offline" builds (no internet access given to PKGBUILD)
   * uses isolated filesystem, e.g. no access to home directory (`~`). See [safety](#Safety) section below
   * PKGBUILD script is run under seccomp rules
   * filesystem is mounted with "nosuid", so a build script cannot e.g. call `sudo`
   * etc
+- Show the user what they are about to install:
+  * warn if SUID files are present, and show them
+  * show INSTALL script (if present), executable and file list preview
+- Minimize user interaction:
+  * verify all PKGBUILD-s once, build everything later
+  * group dependencies for batch review/install
 - Written in Rust
 
 Planned features include AUR upstream git diff and local patch application.
@@ -58,17 +56,17 @@ There won't be bash/zsh/fish completions this way, but everything else should wo
 
 
 ## How it works
-We'll consider the "install" command as it's the most advanced one. RUA will:
+We'll consider the "install" command. RUA will:
 
-1. Fetch the AUR package (via git)
-1. Check .SRCINFO for other AUR dependencies, repeat the process for them
-1. Once all dependencies are fetched, show user the summary of all pacman packages to install, AUR packages to build and install.
-1. Ask user to install pacman dependencies (in batch for all recursive dependencies)
-1. Let the user review all packages, including their PKGBUILDs.
-1. Build all AUR packages of maximum dependency "depth"
-1. Let the user review and install them (in batch)
-1. The lowest (dependency-wise) packages are now installed. Go two steps up.
-1. Exit when all packages are installed.
+1. Fetch the AUR package and all recursive dependencies.
+1. Prepare a summary of all pacman and AUR packages that will need installing.
+  Show the summary to the user, confirm proceeding.
+1. Iterate over all AUR dependencies and ask to review the repo-s (PKGBUILDs, etc).
+1. Propose installing all pacman dependencies in one batch.
+  (No need to do it for each AUR package individually, save user-s time).
+1. Build all AUR packages of maximum dependency "depth".
+1. Let the user review built artifacts (in batch).
+1. Install them. If any more packages are left, go two steps up.
 
 ## Limitations
 

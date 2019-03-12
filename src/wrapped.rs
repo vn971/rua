@@ -242,7 +242,7 @@ fn install_all(
 	}
 }
 
-pub fn install(name: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
+pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut aur_packages = HashMap::new();
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
@@ -251,7 +251,7 @@ pub fn install(name: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: 
 		alpm.register_sync_db(&repo, &SigLevel::default())
 			.unwrap_or_else(|_| panic!("Failed to register {} in libalpm", &repo));
 	}
-	for install_target in name {
+	for install_target in targets {
 		prefetch_aur(
 			&install_target,
 			dirs,

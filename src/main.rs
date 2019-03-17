@@ -35,9 +35,13 @@ fn overwrite_file(path: &PathBuf, content: &[u8]) {
 		.write(true)
 		.truncate(true)
 		.open(path)
-		.unwrap_or_else(|_| panic!("Failed to overwrite (initialize) file {:?}", path));
-	file.write_all(content)
-		.unwrap_or_else(|_| panic!("Failed to write to file {:?} during initialization", path));
+		.unwrap_or_else(|err| panic!("Failed to overwrite (initialize) file {:?}, {}", path, err));
+	file.write_all(content).unwrap_or_else(|e| {
+		panic!(
+			"Failed to write to file {:?} during initialization, {}",
+			path, e
+		)
+	});
 }
 
 fn ensure_script(path: &PathBuf, content: &[u8]) {
@@ -46,18 +50,22 @@ fn ensure_script(path: &PathBuf, content: &[u8]) {
 			.create(true)
 			.write(true)
 			.open(path)
-			.unwrap_or_else(|_| panic!("Failed to overwrite (initialize) file {:?}", path));
-		file.write_all(content)
-			.unwrap_or_else(|_| panic!("Failed to write to file {:?} during initialization", path));
+			.unwrap_or_else(|e| panic!("Failed to overwrite (initialize) file {:?}, {}", path, e));
+		file.write_all(content).unwrap_or_else(|e| {
+			panic!(
+				"Failed to write to file {:?} during initialization, {}",
+				path, e
+			)
+		});
 		fs::set_permissions(path, Permissions::from_mode(0o755))
-			.unwrap_or_else(|_| panic!("Failed to set permissions for {:?}", path));
+			.unwrap_or_else(|e| panic!("Failed to set permissions for {:?}, {}", path, e));
 	}
 }
 
 fn overwrite_script(path: &PathBuf, content: &[u8]) {
 	overwrite_file(path, content);
 	fs::set_permissions(path, Permissions::from_mode(0o755))
-		.unwrap_or_else(|_| panic!("Failed to set permissions for {:?}", path));
+		.unwrap_or_else(|e| panic!("Failed to set permissions for {:?}, {}", path, e));
 }
 
 fn main() {

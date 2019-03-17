@@ -30,10 +30,10 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap().canonicalize().unwrap();
 	let dir = dir.to_str().unwrap();
 	let mut file = File::create("PKGBUILD.static")
-		.unwrap_or_else(|err| panic!("Cannot create temporary PKGBUILD.static file, {}", err));
+		.unwrap_or_else(|err| panic!("Cannot create {}/PKGBUILD.static, {}", dir, err));
 	let srcinfo_path = Path::new(".SRCINFO")
 		.canonicalize()
-		.unwrap_or_else(|_| panic!("Cannot resolve .SRCINFO path in {}", dir));
+		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir, e));
 	file.write_all(crate::srcinfo_to_pkgbuild::static_pkgbuild(srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO...");
@@ -42,24 +42,24 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 		.args(&["makepkg", "-f", "--verifysource"])
 		.args(&["-p", "PKGBUILD.static"])
 		.status()
-		.unwrap_or_else(|_| panic!("Failed to fetch dependencies in directory {}", dir));
+		.unwrap_or_else(|e| panic!("Failed to fetch dependencies in directory {}, {}", dir, e));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
 	fs::remove_file("PKGBUILD.static").expect("Failed to clean up PKGBUILD.static");
 }
 
 fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	let dir = env::current_dir()
-		.unwrap_or_else(|_| panic!("{}:{} Failed to get current dir", file!(), line!()));
+		.unwrap_or_else(|e| panic!("{}:{} Failed to get current dir, {}", file!(), line!(), e));
 	let dir = dir.to_str().unwrap();
 	let mut command = wrap_yes_internet(dirs);
 	if is_offline {
 		command.arg("--unshare-net");
 	}
 	command.args(&["--bind", dir, dir]);
-	let command = command.args(&["makepkg"]).status().unwrap_or_else(|_| {
+	let command = command.args(&["makepkg"]).status().unwrap_or_else(|e| {
 		panic!(
-			"Failed to build package (jailed makepkg) in directory {}",
-			dir
+			"Failed to build package (jailed makepkg) in directory {}, {}",
+			dir, e,
 		)
 	});
 	assert!(command.success(), "Failed to build package");
@@ -67,7 +67,7 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
 	env::set_current_dir(dir)
-		.unwrap_or_else(|_| panic!("cannot change the current directory to {}", dir));
+		.unwrap_or_else(|e| panic!("cannot change the current directory to {}, {}", dir, e));
 	if Path::new(dir).join("target").exists() && lazy {
 		eprintln!(
 			"Skipping build for {} as 'target' directory is already present.",
@@ -78,7 +78,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, laz
 			"PKGDEST",
 			Path::new(".")
 				.canonicalize()
-				.unwrap_or_else(|_| panic!("Failed to canonize target directory {}", dir))
+				.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
 				.join("target"),
 		);
 		if offline {
@@ -112,11 +112,11 @@ fn package_tar_review(name: &str, dirs: &ProjectDirs) {
 		dirs.cache_dir().join(name).join("build/target"),
 		dirs.cache_dir().join(name).join(CHECKED_TARS),
 	)
-	.unwrap_or_else(|_| {
+	.unwrap_or_else(|e| {
 		panic!(
 			"Failed to move 'build/target' (build artefacts) \
-			 to 'checked_tars' directory for package {}",
-			name
+			 to 'checked_tars' directory for package {}, {}",
+			name, e
 		)
 	});
 }
@@ -247,8 +247,12 @@ fn install_all(
 		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
 		for name in packages {
 			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
-			let read_dir_iterator = fs::read_dir(checked_tars)
-				.unwrap_or_else(|_| panic!("Failed to read 'checked_tars' directory for {}", name));
+			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
+				panic!(
+					"Failed to read 'checked_tars' directory for {}, {}",
+					name, e
+				)
+			});
 			for file in read_dir_iterator {
 				packages_to_install.insert(
 					name.to_owned(),
@@ -268,7 +272,7 @@ pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdep
 	let alpm = alpm.expect("Failed to initialize alpm library");
 	for repo in pacman::get_repository_list() {
 		alpm.register_sync_db(&repo, &SigLevel::default())
-			.unwrap_or_else(|_| panic!("Failed to register {} in libalpm", &repo));
+			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
 	}
 	for install_target in targets {
 		prefetch_aur(

@@ -4,7 +4,7 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 mod aur_download;
 mod cli_args;
 mod pacman;
-mod srcinfo;
+mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod util;
 mod wrapped;

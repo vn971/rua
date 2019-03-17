@@ -29,12 +29,12 @@ fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
 fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let dir = env::current_dir().unwrap().canonicalize().unwrap();
 	let dir = dir.to_str().unwrap();
-	let mut file =
-		File::create("PKGBUILD.static").expect("cannot create temporary PKGBUILD.static file");
+	let mut file = File::create("PKGBUILD.static")
+		.unwrap_or_else(|err| panic!("Cannot create temporary PKGBUILD.static file, {}", err));
 	let srcinfo_path = Path::new(".SRCINFO")
 		.canonicalize()
 		.unwrap_or_else(|_| panic!("Cannot resolve .SRCINFO path in {}", dir));
-	file.write_all(crate::srcinfo::static_pkgbuild(srcinfo_path).as_bytes())
+	file.write_all(crate::srcinfo_to_pkgbuild::static_pkgbuild(srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO...");
 	let command = wrap_yes_internet(dirs)
@@ -139,20 +139,36 @@ fn prefetch_aur(
 	}
 	aur_packages.insert(name.to_owned(), depth);
 	aur_download::fresh_download(&name, &dirs);
-	let info = dirs
+	let srcinfo_path = dirs
 		.cache_dir()
 		.join(name)
 		.join(PREFETCH_DIR)
 		.join(".SRCINFO");
-	let info = Srcinfo::parse_file(&info).expect("Failed to parse srcinfo");
+	let info = Srcinfo::parse_file(&srcinfo_path).unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to parse {:?}, {}",
+			file!(),
+			line!(),
+			srcinfo_path,
+			err,
+		)
+	});
 	let deps = info
 		.pkg(name)
-		.unwrap_or_else(|| panic!("pkgname {} was not found in srcinfo", name))
+		.unwrap_or_else(|| {
+			panic!(
+				"{}:{} pkgname {} not found in {:?}",
+				file!(),
+				line!(),
+				name,
+				&srcinfo_path
+			)
+		})
 		.depends
 		.iter()
 		.chain(&info.base.makedepends)
-		.filter(|d| d.supports(PACMAN_ARCH.as_str()))
-		.flat_map(|d| &d.vec)
+		.filter(|deps_vector| deps_vector.supports(PACMAN_ARCH.as_str()))
+		.flat_map(|deps_vector| &deps_vector.vec)
 		.collect::<Vec<_>>();
 	debug!("package {} has dependencies: {:?}", name, &deps);
 	for dep in deps.into_iter() {

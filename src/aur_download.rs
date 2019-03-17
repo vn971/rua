@@ -34,23 +34,24 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 		name
 	);
 	let path = dirs.cache_dir().join(name);
-	rm_rf::force_remove_all(&path, true).unwrap_or_else(|_| {
+	rm_rf::force_remove_all(&path, true).unwrap_or_else(|err| {
 		panic!(
-			"{}:{} Failed to clean cache dir {:?}",
+			"{}:{} Failed to clean cache dir {:?}, {}",
 			file!(),
 			line!(),
-			path
+			path,
+			err,
 		)
 	});
 	fs::create_dir_all(dirs.cache_dir().join(name))
-		.unwrap_or_else(|_| panic!("Failed to create cache dir for {}", name));
+		.unwrap_or_else(|err| panic!("Failed to create cache dir for {}, {}", name, err));
 	env::set_current_dir(dirs.cache_dir().join(name))
-		.unwrap_or_else(|_| panic!("Failed to cd into {}", name));
+		.unwrap_or_else(|err| panic!("Failed to cd into {}, {}", name, err));
 	let git_http_ref = format!("https://aur.archlinux.org/{}.git", name);
 	let command = Command::new("git")
 		.args(&["clone", &git_http_ref, PREFETCH_DIR])
 		.output()
-		.unwrap_or_else(|_| panic!("Failed to git-clone repository {}", name));
+		.unwrap_or_else(|err| panic!("Failed to git-clone repository {}, {}", name, err));
 	assert_command_success(&command);
 	assert!(
 		Path::new(PREFETCH_DIR).join(".SRCINFO").exists(),
@@ -61,7 +62,7 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 
 pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 	env::set_current_dir(dirs.cache_dir().join(name).join(PREFETCH_DIR))
-		.unwrap_or_else(|_| panic!("Faild to cd into build dir for {}", name));
+		.unwrap_or_else(|err| panic!("Failed to cd into build dir for {}, {}", name, err));
 	loop {
 		eprint!(
 			"Verifying package {}. [V]=view PKGBUILD, [E]=edit PKGBUILD, \
@@ -81,17 +82,18 @@ pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 			break;
 		}
 	}
-	env::set_current_dir("..").unwrap_or_else(|_| {
+	env::set_current_dir("..").unwrap_or_else(|err| {
 		panic!(
-			"{}:{} Failed to move to parent repo after review",
+			"{}:{} Failed to move to parent repo after review, {}",
 			file!(),
-			line!()
+			line!(),
+			err,
 		)
 	});
-	fs::rename(PREFETCH_DIR, "build").unwrap_or_else(|_| {
+	fs::rename(PREFETCH_DIR, "build").unwrap_or_else(|err| {
 		panic!(
-			"Failed to move temporary directory '{}' to 'build'",
-			PREFETCH_DIR
+			"Failed to move temporary directory '{}' to 'build', {}",
+			PREFETCH_DIR, err,
 		)
 	});
 }

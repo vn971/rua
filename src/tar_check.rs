@@ -31,14 +31,15 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	let mut suid_files = Vec::new();
 	let archive_files = archive
 		.entries()
-		.unwrap_or_else(|_| panic!("cannot open archive {}", path_str));
+		.unwrap_or_else(|e| panic!("cannot open archive {}, {}", path_str, e));
 	for file in archive_files {
-		let mut file = file.unwrap_or_else(|_| panic!("cannot access tar file in {}", path_str));
+		let mut file =
+			file.unwrap_or_else(|e| panic!("cannot access tar file in {}, {}", path_str, e));
 		let path = {
-			let path = file.header().path().unwrap_or_else(|_| {
+			let path = file.header().path().unwrap_or_else(|e| {
 				panic!(
-					"Failed to extract tar file metadata for file in {}",
-					path_str
+					"Failed to extract tar file metadata for file in {}, {}",
+					path_str, e,
 				)
 			});
 			path.to_str()

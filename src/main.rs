@@ -12,7 +12,7 @@ mod wrapped;
 use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
+use std::path::Path;
 use std::{env, fs};
 
 use chrono::Utc;
@@ -29,7 +29,7 @@ fn default_env(key: &str, value: &str) {
 	}
 }
 
-fn overwrite_file(path: &PathBuf, content: &[u8]) {
+fn overwrite_file(path: &Path, content: &[u8]) {
 	let mut file = OpenOptions::new()
 		.create(true)
 		.write(true)
@@ -44,7 +44,7 @@ fn overwrite_file(path: &PathBuf, content: &[u8]) {
 	});
 }
 
-fn ensure_script(path: &PathBuf, content: &[u8]) {
+fn ensure_script(path: &Path, content: &[u8]) {
 	if !path.exists() {
 		let mut file = OpenOptions::new()
 			.create(true)
@@ -62,7 +62,7 @@ fn ensure_script(path: &PathBuf, content: &[u8]) {
 	}
 }
 
-fn overwrite_script(path: &PathBuf, content: &[u8]) {
+fn overwrite_script(path: &Path, content: &[u8]) {
 	overwrite_file(path, content);
 	fs::set_permissions(path, Permissions::from_mode(0o755))
 		.unwrap_or_else(|e| panic!("Failed to set permissions for {:?}, {}", path, e));

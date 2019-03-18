@@ -34,7 +34,7 @@ fn download_srcinfo_sources(dirs: &ProjectDirs) {
 	let srcinfo_path = Path::new(".SRCINFO")
 		.canonicalize()
 		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir, e));
-	file.write_all(crate::srcinfo_to_pkgbuild::static_pkgbuild(srcinfo_path).as_bytes())
+	file.write_all(crate::srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	eprintln!("Downloading sources using .SRCINFO...");
 	let command = wrap_yes_internet(dirs)

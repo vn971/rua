@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use srcinfo::{ArchVec, Srcinfo};
 
@@ -31,9 +31,9 @@ fn push_arrays(pkgbuild: &mut String, key: &str, arch_values: &[ArchVec]) {
 	}
 }
 
-pub fn static_pkgbuild(path: PathBuf) -> String {
-	let srcinfo = Srcinfo::parse_file(&path)
-		.unwrap_or_else(|e| panic!("{}:{} Failed to parse {:?}, {}", file!(), line!(), &path, e));
+pub fn static_pkgbuild(path: &Path) -> String {
+	let srcinfo = Srcinfo::parse_file(path)
+		.unwrap_or_else(|e| panic!("{}:{} Failed to parse {:?}, {}", file!(), line!(), path, e));
 	let mut pkgbuild = String::new();
 
 	push_field(&mut pkgbuild, "pkgname", "tmp");

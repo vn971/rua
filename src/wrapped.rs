@@ -168,6 +168,7 @@ fn prefetch_aur(
 		.depends
 		.iter()
 		.chain(&info.base.makedepends)
+		.chain(&info.base.checkdepends)
 		.filter(|deps_vector| deps_vector.supports(PACMAN_ARCH.as_str()))
 		.flat_map(|deps_vector| &deps_vector.vec)
 		.collect::<Vec<_>>();

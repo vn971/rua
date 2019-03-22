@@ -12,8 +12,8 @@ RUA is a build tool for ArchLinux, AUR. Its features:
   * warn if SUID files are present, and show them
   * show INSTALL script (if present), executable and file list preview
 - Minimize user interaction:
-  * verify all PKGBUILD-s once, build everything later
-  * group dependencies for batch review/install
+  * verify all PKGBUILD-s once, build without interruptions
+  * group built dependencies for batch review/install
 - Written in Rust
 
 Planned features include AUR upstream git diff and local patch application.

@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.13.0"
+version = "0.13.1"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -28,7 +28,7 @@ libalpm = { package = "libalpm-fork", version = "0.1.4" }
 log = "0.4.6"
 regex = "1.1.2"
 rm_rf = "0.2.2"
-srcinfo = "0.3.1"
+srcinfo = "0.3.2"
 structopt = "0.2.15"
 tar = "0.4.22"
 uname = "0.1.1"

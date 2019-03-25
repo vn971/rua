@@ -160,7 +160,7 @@ fn main() {
 			let target_str = target.to_str().unwrap_or_else(|| {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});
-			wrapped::build_directory(target_str, &dirs, offline, false);
+			wrapped::build_directory(target_str, &dirs, offline);
 			for file in fs::read_dir(TARGET_SUBDIR).expect("'target' directory not found") {
 				tar_check::tar_check(
 					&file

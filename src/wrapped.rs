@@ -68,27 +68,20 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	assert!(command.success(), "Failed to build package");
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
+pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 	env::set_current_dir(dir)
 		.unwrap_or_else(|e| panic!("cannot change the current directory to {}, {}", dir, e));
-	if Path::new(dir).join(TARGET_SUBDIR).exists() && lazy {
-		eprintln!(
-			"Skipping build for {} as 'target' directory is already present.",
-			dir
-		);
-	} else {
-		env::set_var(
-			"PKGDEST",
-			Path::new(".")
-				.canonicalize()
-				.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
-				.join(TARGET_SUBDIR),
-		);
-		if offline {
-			download_srcinfo_sources(project_dirs);
-		}
-		build_local(project_dirs, offline);
+	env::set_var(
+		"PKGDEST",
+		Path::new(".")
+			.canonicalize()
+			.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
+			.join(TARGET_SUBDIR),
+	);
+	if offline {
+		download_srcinfo_sources(project_dirs);
 	}
+	build_local(project_dirs, offline);
 }
 
 fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
@@ -125,7 +118,7 @@ fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 	}
 	fs::rename(&build_target_dir, &checked_tars_dir).unwrap_or_else(|e| {
 		panic!(
-			"Failed to move {} (build artifacts) to {} for package {}, {}",
+			"Failed to move {:?} (build artifacts) to {:?} for package {}, {}",
 			&build_target_dir, &checked_tars_dir, name, e,
 		)
 	});
@@ -249,7 +242,6 @@ fn install_all(
 					}),
 				dirs,
 				offline,
-				true,
 			);
 		}
 		for name in &packages {

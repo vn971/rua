@@ -4,7 +4,7 @@ use crate::aur_download;
 use crate::rua_dirs::CHECKED_TARS;
 use crate::rua_dirs::PREFETCH_DIR;
 use crate::rua_dirs::REVIEWED_BUILD_DIR;
-use crate::rua_dirs::TARGET_DIR;
+use crate::rua_dirs::TARGET_SUBDIR;
 use crate::{pacman, tar_check, util};
 
 use directories::ProjectDirs;
@@ -71,7 +71,7 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
 	env::set_current_dir(dir)
 		.unwrap_or_else(|e| panic!("cannot change the current directory to {}, {}", dir, e));
-	if Path::new(dir).join(TARGET_DIR).exists() && lazy {
+	if Path::new(dir).join(TARGET_SUBDIR).exists() && lazy {
 		eprintln!(
 			"Skipping build for {} as 'target' directory is already present.",
 			dir
@@ -82,7 +82,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, laz
 			Path::new(".")
 				.canonicalize()
 				.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
-				.join(TARGET_DIR),
+				.join(TARGET_SUBDIR),
 		);
 		if offline {
 			download_srcinfo_sources(project_dirs);
@@ -92,7 +92,13 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, laz
 }
 
 fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
-	rm_rf::force_remove_all(CHECKED_TARS, true).unwrap_or_else(|err| {
+	let build_target_dir = dirs
+		.cache_dir()
+		.join(name)
+		.join(REVIEWED_BUILD_DIR)
+		.join(TARGET_SUBDIR);
+	let checked_tars_dir = dirs.cache_dir().join(name).join(CHECKED_TARS);
+	rm_rf::force_remove_all(&checked_tars_dir, true).unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to clean checked tar files dir {:?}, {}",
 			file!(),
@@ -101,33 +107,26 @@ fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 			err,
 		)
 	});
-	let read_dir = fs::read_dir(dirs.cache_dir().join(name).join("build/target"));
-	let read_dir = read_dir.unwrap_or_else(|err| {
+	let target_dir = fs::read_dir(&build_target_dir);
+	let target_dir = target_dir.unwrap_or_else(|err| {
 		panic!(
 			"target directory not found for package {}: {:?}. \
 			 \nDoes the PKGBUILD respect the environment variable PKGDEST ?\
 			 \n{}",
-			name,
-			dirs.cache_dir().join(name).join("build/target"),
-			err,
+			name, &build_target_dir, err,
 		)
 	});
-	for file in read_dir {
+	for file in target_dir {
 		tar_check::tar_check(
 			&file
 				.expect("Failed to open file for tar_check analysis")
 				.path(),
 		);
 	}
-	fs::rename(
-		dirs.cache_dir().join(name).join("build/target"),
-		dirs.cache_dir().join(name).join(CHECKED_TARS),
-	)
-	.unwrap_or_else(|e| {
+	fs::rename(&build_target_dir, &checked_tars_dir).unwrap_or_else(|e| {
 		panic!(
-			"Failed to move 'build/target' (build artefacts) \
-			 to 'checked_tars' directory for package {}, {}",
-			name, e
+			"Failed to move {} (build artifacts) to {} for package {}, {}",
+			&build_target_dir, &checked_tars_dir, name, e,
 		)
 	});
 }

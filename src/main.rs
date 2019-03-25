@@ -22,7 +22,7 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::{debug, error};
-use rua_dirs::TARGET_DIR;
+use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
@@ -95,7 +95,7 @@ fn main() {
 		std::process::exit(1)
 	}
 	assert!(
-		env::var("PKGDEST").is_err(),
+		env::var_os("PKGDEST").is_none(),
 		"PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it"
 	);
 	let is_extension_compatible = env::var_os("PKGEXT").map_or(true, |ext| {
@@ -161,7 +161,7 @@ fn main() {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});
 			wrapped::build_directory(target_str, &dirs, offline, false);
-			for file in fs::read_dir(TARGET_DIR).expect("'target' directory not found") {
+			for file in fs::read_dir(TARGET_SUBDIR).expect("'target' directory not found") {
 				tar_check::tar_check(
 					&file
 						.expect("Failed to open file for tar_check analysis")
@@ -170,7 +170,7 @@ fn main() {
 			}
 			eprintln!(
 				"Package built and checked in: {:?}",
-				target.join(TARGET_DIR)
+				target.join(TARGET_SUBDIR)
 			);
 		}
 		CliArgs::Tarcheck { target } => {

@@ -105,8 +105,8 @@ fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 	let read_dir = read_dir.unwrap_or_else(|err| {
 		panic!(
 			"target directory not found for package {}: {:?}. \
-			Does the PKGBUILD respect the environment variable PKGDEST ?\
-			{}",
+			 \nDoes the PKGBUILD respect the environment variable PKGDEST ?\
+			 \n{}",
 			name,
 			dirs.cache_dir().join(name).join("build/target"),
 			err,

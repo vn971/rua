@@ -97,11 +97,11 @@ fn main() {
 	if !Command::new("bwrap")
 		.args(&["--ro-bind", "/", "/", "true"])
 		.status()
-		.expect("bwrap binary not found. RUA uses bwrap for security isolation.")
+		.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
 		.success()
 	{
 		eprintln!("Failed to run bwrap.");
-		eprintln!("Is RUA itself being run in jail (docker, bwrap, firejail,..)?");
+		eprintln!("Is RUA itself run in jail (docker, bwrap, firejail,..) ?");
 		eprintln!("If so, see https://github.com/vn971/rua/issues/8");
 		exit(4)
 	}

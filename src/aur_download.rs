@@ -1,11 +1,11 @@
+use crate::rua_dirs::PREFETCH_DIR;
+use crate::rua_dirs::REVIEWED_BUILD_DIR;
 use crate::util;
 
 use std::path::Path;
 use std::process::{Command, Output};
 use std::{env, fs};
 
-use crate::rua_dirs::PREFETCH_DIR;
-use crate::rua_dirs::REVIEWED_BUILD_DIR;
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use regex::Regex;

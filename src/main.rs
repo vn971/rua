@@ -14,6 +14,7 @@ use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+use std::process::exit;
 use std::{env, fs};
 
 use chrono::Utc;
@@ -144,10 +145,10 @@ fn main() {
 		include_bytes!("../res/wrap_args.sh"),
 	);
 	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
-	locked_file
-		.try_lock_exclusive()
-		.expect("Another RUA instance is already running.");
-
+	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
+		eprintln!("Another RUA instance already running.");
+		exit(2)
+	});
 	match my_struct_opts {
 		CliArgs::Install {
 			asdeps,

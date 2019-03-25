@@ -1,6 +1,10 @@
 // Commands that are run inside "bubblewrap" jail
 
-use crate::aur_download::{self, PREFETCH_DIR};
+use crate::aur_download;
+use crate::rua_dirs::CHECKED_TARS;
+use crate::rua_dirs::PREFETCH_DIR;
+use crate::rua_dirs::REVIEWED_BUILD_DIR;
+use crate::rua_dirs::TARGET_DIR;
 use crate::{pacman, tar_check, util};
 
 use directories::ProjectDirs;
@@ -19,7 +23,6 @@ use std::process::Command;
 use std::str;
 use std::{env, fs};
 
-const CHECKED_TARS: &str = "checked_tars";
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
@@ -68,7 +71,7 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
 	env::set_current_dir(dir)
 		.unwrap_or_else(|e| panic!("cannot change the current directory to {}, {}", dir, e));
-	if Path::new(dir).join("target").exists() && lazy {
+	if Path::new(dir).join(TARGET_DIR).exists() && lazy {
 		eprintln!(
 			"Skipping build for {} as 'target' directory is already present.",
 			dir
@@ -79,7 +82,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, laz
 			Path::new(".")
 				.canonicalize()
 				.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
-				.join("target"),
+				.join(TARGET_DIR),
 		);
 		if offline {
 			download_srcinfo_sources(project_dirs);
@@ -88,20 +91,28 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, laz
 	}
 }
 
-fn package_tar_review(name: &str, dirs: &ProjectDirs) {
-	if dirs.cache_dir().join(name).join(CHECKED_TARS).exists() {
-		eprintln!(
-			"Skipping *.tar verification for package {} as it already has been verified before.",
-			name
-		);
-		return;
-	}
-	let expect = format!(
-		"target directory not found for package {}: {:?}",
-		name,
-		dirs.cache_dir().join(name).join("build/target")
-	);
-	for file in fs::read_dir(dirs.cache_dir().join(name).join("build/target")).expect(&expect) {
+fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
+	rm_rf::force_remove_all(CHECKED_TARS, true).unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to clean checked tar files dir {:?}, {}",
+			file!(),
+			line!(),
+			CHECKED_TARS,
+			err,
+		)
+	});
+	let read_dir = fs::read_dir(dirs.cache_dir().join(name).join("build/target"));
+	let read_dir = read_dir.unwrap_or_else(|err| {
+		panic!(
+			"target directory not found for package {}: {:?}. \
+			Does the PKGBUILD respect the environment variable PKGDEST ?\
+			{}",
+			name,
+			dirs.cache_dir().join(name).join("build/target"),
+			err,
+		)
+	});
+	for file in read_dir {
 		tar_check::tar_check(
 			&file
 				.expect("Failed to open file for tar_check analysis")
@@ -227,7 +238,7 @@ fn install_all(
 			build_directory(
 				dirs.cache_dir()
 					.join(&name)
-					.join("build")
+					.join(REVIEWED_BUILD_DIR)
 					.to_str()
 					.unwrap_or_else(|| {
 						panic!(
@@ -243,7 +254,7 @@ fn install_all(
 			);
 		}
 		for name in &packages {
-			package_tar_review(name, dirs);
+			check_tars_and_move(name, dirs);
 		}
 		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
 		for name in packages {

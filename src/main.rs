@@ -4,6 +4,7 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 mod aur_download;
 mod cli_args;
 mod pacman;
+mod rua_dirs;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod util;
@@ -21,6 +22,7 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::{debug, error};
+use rua_dirs::TARGET_DIR;
 use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
@@ -159,14 +161,17 @@ fn main() {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});
 			wrapped::build_directory(target_str, &dirs, offline, false);
-			for file in fs::read_dir("target").expect("'target' directory not found") {
+			for file in fs::read_dir(TARGET_DIR).expect("'target' directory not found") {
 				tar_check::tar_check(
 					&file
 						.expect("Failed to open file for tar_check analysis")
 						.path(),
 				);
 			}
-			eprintln!("Package built and checked in: {:?}", target.join("target"));
+			eprintln!(
+				"Package built and checked in: {:?}",
+				target.join(TARGET_DIR)
+			);
 		}
 		CliArgs::Tarcheck { target } => {
 			tar_check::tar_check(&target);

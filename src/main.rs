@@ -13,6 +13,8 @@ use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+use std::process::exit;
+use std::process::Command;
 use std::{env, fs};
 
 use chrono::Utc;
@@ -91,6 +93,17 @@ fn main() {
 		error!("RUA should not be run as root.");
 		error!("Also, makepkg will not allow you building from root anyway.");
 		std::process::exit(1)
+	}
+	if !Command::new("bwrap")
+		.args(&["--ro-bind", "/", "/", "true"])
+		.status()
+		.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
+		.success()
+	{
+		eprintln!("Failed to run bwrap.");
+		eprintln!("Is RUA itself run in jail (docker, bwrap, firejail,..) ?");
+		eprintln!("If so, see https://github.com/vn971/rua/issues/8");
+		exit(4)
 	}
 	assert!(
 		env::var("PKGDEST").is_err(),

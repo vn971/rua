@@ -28,7 +28,7 @@ pub fn get_repository_list() -> Vec<String> {
 		.expect("cannot get repository list: pacman-conf --repo-list");
 	let output = String::from_utf8(cmd.stdout)
 		.expect("Failed to get repo list from `pacman-conf --repo-list`");
-	output.lines().map(|s| s.to_owned()).collect()
+	output.lines().map(ToOwned::to_owned).collect()
 }
 
 fn ensure_packages_installed(

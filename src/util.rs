@@ -18,7 +18,7 @@ pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, ar
 	let command: Vec<_> = command
 		.iter()
 		.flat_map(|e| e.split(' '))
-		.map(|e| e.trim())
+		.map(str::trim)
 		.filter(|e| !e.is_empty())
 		.collect();
 	let mut command = if let Some(first) = command.first() {

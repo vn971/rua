@@ -23,6 +23,7 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::{debug, error};
+use raur::{search, SearchStrategy};
 use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
@@ -186,11 +187,8 @@ fn main() {
 			eprintln!("Package passed all checks: {:?}", target);
 		}
 		CliArgs::Search { target } => {
-			eprintln!(
-				"Results for '{}', sorted by popularity: \
-				 https://aur.archlinux.org/packages/?K={}&SB=p&SO=d",
-				target, target
-			);
+			let result = search(target, SearchStrategy::Name);
+			eprintln!("Results for '{:?}'", result);
 		}
 	};
 }

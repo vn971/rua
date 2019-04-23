@@ -189,7 +189,7 @@ fn main() {
 		CliArgs::Search { target } => {
 			let result = search(target, SearchStrategy::Name);
 			match result {
-				Ok(raur_result) => println!("Search result '{:?}'", raur_result.packages),
+				Ok(raur_result) => println!("Search result: '{:?}'", raur_result.packages),
 				Err(e) => eprintln!("Error search package: {:?}", e)
 			}
 		}

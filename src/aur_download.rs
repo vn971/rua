@@ -1,3 +1,5 @@
+use crate::rua_dirs::PREFETCH_DIR;
+use crate::rua_dirs::REVIEWED_BUILD_DIR;
 use crate::util;
 
 use std::path::Path;
@@ -8,8 +10,6 @@ use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use regex::Regex;
 use rm_rf;
-
-pub const PREFETCH_DIR: &str = "aur.tmp";
 
 fn assert_command_success(command: &Output) {
 	assert!(
@@ -33,7 +33,7 @@ pub fn fresh_download(name: &str, dirs: &ProjectDirs) {
 		line!(),
 		name
 	);
-	let path = dirs.cache_dir().join(name);
+	let path = dirs.cache_dir().join(name).join(PREFETCH_DIR);
 	rm_rf::force_remove_all(&path, true).unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to clean cache dir {:?}, {}",
@@ -90,7 +90,16 @@ pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 			err,
 		)
 	});
-	fs::rename(PREFETCH_DIR, "build").unwrap_or_else(|err| {
+	rm_rf::force_remove_all(REVIEWED_BUILD_DIR, true).unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to clean build dir {:?}, {}",
+			file!(),
+			line!(),
+			REVIEWED_BUILD_DIR,
+			err,
+		)
+	});
+	fs::rename(PREFETCH_DIR, REVIEWED_BUILD_DIR).unwrap_or_else(|err| {
 		panic!(
 			"Failed to move temporary directory '{}' to 'build', {}",
 			PREFETCH_DIR, err,

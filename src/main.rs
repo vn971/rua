@@ -4,6 +4,7 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 mod aur_download;
 mod cli_args;
 mod pacman;
+mod rua_dirs;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod util;
@@ -24,6 +25,7 @@ use env_logger::Env;
 use fs2::FileExt;
 use log::{debug, error};
 use raur::{search, SearchStrategy};
+use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
@@ -107,7 +109,7 @@ fn main() {
 		exit(4)
 	}
 	assert!(
-		env::var("PKGDEST").is_err(),
+		env::var_os("PKGDEST").is_none(),
 		"PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it"
 	);
 	let is_extension_compatible = env::var_os("PKGEXT").map_or(true, |ext| {
@@ -156,10 +158,10 @@ fn main() {
 		include_bytes!("../res/wrap_args.sh"),
 	);
 	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
-	locked_file
-		.try_lock_exclusive()
-		.expect("Another RUA instance is already running.");
-
+	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
+		eprintln!("Another RUA instance already running.");
+		exit(2)
+	});
 	match my_struct_opts {
 		CliArgs::Install {
 			asdeps,
@@ -172,15 +174,18 @@ fn main() {
 			let target_str = target.to_str().unwrap_or_else(|| {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});
-			wrapped::build_directory(target_str, &dirs, offline, false);
-			for file in fs::read_dir("target").expect("'target' directory not found") {
+			wrapped::build_directory(target_str, &dirs, offline);
+			for file in fs::read_dir(TARGET_SUBDIR).expect("'target' directory not found") {
 				tar_check::tar_check(
 					&file
 						.expect("Failed to open file for tar_check analysis")
 						.path(),
 				);
 			}
-			eprintln!("Package built and checked in: {:?}", target.join("target"));
+			eprintln!(
+				"Package built and checked in: {:?}",
+				target.join(TARGET_SUBDIR)
+			);
 		}
 		CliArgs::Tarcheck { target } => {
 			tar_check::tar_check(&target);

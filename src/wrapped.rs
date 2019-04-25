@@ -1,6 +1,10 @@
 // Commands that are run inside "bubblewrap" jail
 
-use crate::aur_download::{self, PREFETCH_DIR};
+use crate::aur_download;
+use crate::rua_dirs::CHECKED_TARS;
+use crate::rua_dirs::PREFETCH_DIR;
+use crate::rua_dirs::REVIEWED_BUILD_DIR;
+use crate::rua_dirs::TARGET_SUBDIR;
 use crate::{pacman, tar_check, util};
 
 use directories::ProjectDirs;
@@ -19,7 +23,6 @@ use std::process::Command;
 use std::str;
 use std::{env, fs};
 
-const CHECKED_TARS: &str = "checked_tars";
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
 
 fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
@@ -65,58 +68,58 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 	assert!(command.success(), "Failed to build package");
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, lazy: bool) {
+pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 	env::set_current_dir(dir)
 		.unwrap_or_else(|e| panic!("cannot change the current directory to {}, {}", dir, e));
-	if Path::new(dir).join("target").exists() && lazy {
-		eprintln!(
-			"Skipping build for {} as 'target' directory is already present.",
-			dir
-		);
-	} else {
-		env::set_var(
-			"PKGDEST",
-			Path::new(".")
-				.canonicalize()
-				.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
-				.join("target"),
-		);
-		if offline {
-			download_srcinfo_sources(project_dirs);
-		}
-		build_local(project_dirs, offline);
+	env::set_var(
+		"PKGDEST",
+		Path::new(".")
+			.canonicalize()
+			.unwrap_or_else(|e| panic!("Failed to canonize target directory {}, {}", dir, e))
+			.join(TARGET_SUBDIR),
+	);
+	if offline {
+		download_srcinfo_sources(project_dirs);
 	}
+	build_local(project_dirs, offline);
 }
 
-fn package_tar_review(name: &str, dirs: &ProjectDirs) {
-	if dirs.cache_dir().join(name).join(CHECKED_TARS).exists() {
-		eprintln!(
-			"Skipping *.tar verification for package {} as it already has been verified before.",
-			name
-		);
-		return;
-	}
-	let expect = format!(
-		"target directory not found for package {}: {:?}",
-		name,
-		dirs.cache_dir().join(name).join("build/target")
-	);
-	for file in fs::read_dir(dirs.cache_dir().join(name).join("build/target")).expect(&expect) {
+fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
+	let build_target_dir = dirs
+		.cache_dir()
+		.join(name)
+		.join(REVIEWED_BUILD_DIR)
+		.join(TARGET_SUBDIR);
+	let checked_tars_dir = dirs.cache_dir().join(name).join(CHECKED_TARS);
+	rm_rf::force_remove_all(&checked_tars_dir, true).unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to clean checked tar files dir {:?}, {}",
+			file!(),
+			line!(),
+			CHECKED_TARS,
+			err,
+		)
+	});
+	let target_dir = fs::read_dir(&build_target_dir);
+	let target_dir = target_dir.unwrap_or_else(|err| {
+		panic!(
+			"target directory not found for package {}: {:?}. \
+			 \nDoes the PKGBUILD respect the environment variable PKGDEST ?\
+			 \n{}",
+			name, &build_target_dir, err,
+		)
+	});
+	for file in target_dir {
 		tar_check::tar_check(
 			&file
 				.expect("Failed to open file for tar_check analysis")
 				.path(),
 		);
 	}
-	fs::rename(
-		dirs.cache_dir().join(name).join("build/target"),
-		dirs.cache_dir().join(name).join(CHECKED_TARS),
-	)
-	.unwrap_or_else(|e| {
+	fs::rename(&build_target_dir, &checked_tars_dir).unwrap_or_else(|e| {
 		panic!(
-			"Failed to move 'build/target' (build artefacts) \
-			 to 'checked_tars' directory for package {}, {}",
-			name, e
+			"Failed to move {:?} (build artifacts) to {:?} for package {}, {}",
+			&build_target_dir, &checked_tars_dir, name, e,
 		)
 	});
 }
@@ -227,7 +230,7 @@ fn install_all(
 			build_directory(
 				dirs.cache_dir()
 					.join(&name)
-					.join("build")
+					.join(REVIEWED_BUILD_DIR)
 					.to_str()
 					.unwrap_or_else(|| {
 						panic!(
@@ -239,11 +242,10 @@ fn install_all(
 					}),
 				dirs,
 				offline,
-				true,
 			);
 		}
 		for name in &packages {
-			package_tar_review(name, dirs);
+			check_tars_and_move(name, dirs);
 		}
 		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
 		for name in packages {

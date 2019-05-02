@@ -1,5 +1,5 @@
-use prettytable::*;
 use prettytable::format::*;
+use prettytable::*;
 use raur::Package;
 
 pub fn print_package_table(packages: Vec<Package>) {
@@ -7,11 +7,7 @@ pub fn print_package_table(packages: Vec<Package>) {
 	table.set_titles(row!["Name", "Version", "Description"]);
 
 	for package in packages {
-		table.add_row(row![
-			package.name,
-			package.version,
-			package.description
-		]);
+		table.add_row(row![package.name, package.version, package.description]);
 	}
 
 	let separator: LineSeparator = LineSeparator::new('=', '+', '+', '+');

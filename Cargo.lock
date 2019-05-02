@@ -1213,7 +1213,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.13.2"
+version = "0.13.3"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "directories 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",

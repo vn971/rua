@@ -93,7 +93,7 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>, alpm_db: &Alp
 }
 
 // Some old functions that invoke shelling below.
-// Currently, using "libalpm" crate is prefered instead.
+// Currently, using "libalpm" crate is preferred instead.
 // These functions might get back in use should RUA-s move away from using libalpm (I don't know that yet).
 
 //pub fn is_package_installable(package: &str) -> bool {

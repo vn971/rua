@@ -3,11 +3,10 @@
 RUA is a build tool for ArchLinux, AUR. Its features:
 
 - Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-  * supports "offline" builds (no internet access given to PKGBUILD)
-  * uses isolated filesystem, e.g. no access to home directory (`~`). See [safety](#Safety) section below
-  * PKGBUILD script is run under seccomp rules
-  * filesystem is mounted with "nosuid", so a build script cannot e.g. call `sudo`
-  * etc
+  * supports "offline" builds (network namespace)
+  * builds in isolated filesystem, see [safety](#Safety) section below
+  * PKGBUILD script is run under seccomp rules (e.g. the build cannot call `ptrace`)
+  * filesystem is mounted with "nosuid" (e.g. the build cannot call `sudo`)
 - Show the user what they are about to install:
   * warn if SUID files are present, and show them
   * show INSTALL script (if present), executable and file list preview

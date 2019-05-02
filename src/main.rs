@@ -95,9 +95,9 @@ fn main() {
 	);
 	let my_struct_opts = cli_args::CliArgs::from_args();
 	if users::get_current_uid() == 0 {
-		error!("RUA should not be run as root.");
-		error!("Also, makepkg will not allow you building from root anyway.");
-		std::process::exit(1)
+		eprintln!("RUA should not be run as root.");
+		eprintln!("Also, makepkg will not allow you building from root anyway.");
+		exit(1)
 	}
 	if !Command::new("bwrap")
 		.args(&["--ro-bind", "/", "/", "true"])

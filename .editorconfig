@@ -1,0 +1,5 @@
+# this should be picked up by editors, github etc.
+
+[*]
+indent_style = tab
+indent_size = 2

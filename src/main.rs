@@ -25,7 +25,7 @@ use cli_args::CliArgs;
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
-use log::{debug, error};
+use log::debug;
 use raur::{search, SearchStrategy};
 use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;

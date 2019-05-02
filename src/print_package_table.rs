@@ -39,7 +39,7 @@ pub fn print_package_table(packages: Vec<Package>) {
 
 pub fn print_separate_packages(packages: Vec<Package>) {
 	for package in packages {
-		let license = package.license.unwrap_or_else(|| Vec::new());
+		let license = package.license.unwrap_or_else(Vec::new);
 		eprintln!("Name: {}", package.name);
 		eprintln!("Version: {}", package.version);
 		eprintln!("License: {}", license.join(" "));

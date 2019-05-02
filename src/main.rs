@@ -1,13 +1,10 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
-#[macro_use]
-extern crate prettytable;
-
 mod aur_download;
 mod cli_args;
-mod package_view;
 mod pacman;
+mod print_package_table;
 mod rua_dirs;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
@@ -22,7 +19,7 @@ use std::process::exit;
 use std::process::Command;
 use std::{env, fs};
 
-use crate::package_view::print_table_representation;
+use crate::print_package_table::print_package_table;
 use chrono::Utc;
 use cli_args::CliArgs;
 use directories::ProjectDirs;
@@ -199,8 +196,8 @@ fn main() {
 		CliArgs::Search { target } => {
 			let result = search(target, SearchStrategy::Name);
 			match result {
-				Ok(raur_result) => print_table_representation(raur_result.packages),
-				Err(e) => eprintln!("Error search package: {:?}", e),
+				Ok(result) => print_package_table(result.packages),
+				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
 	};

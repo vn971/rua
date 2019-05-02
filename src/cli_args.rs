@@ -34,14 +34,19 @@ pub enum CliArgs {
 		#[structopt(help = "Target directory", required = true)]
 		target: PathBuf,
 	},
-	#[structopt(name = "tarcheck", about = "Check *.tar or *.tar.xz archive")]
-	Tarcheck {
-		#[structopt(help = "Archive to check", required = true)]
-		target: PathBuf,
-	},
 	#[structopt(name = "search", about = "Opens AUR web search page")]
 	Search {
 		#[structopt(help = "Target to search for", required = true)]
 		target: String,
+	},
+	#[structopt(name = "show", about = "Show package information")]
+	Show {
+		#[structopt(help = "Target to show for", multiple = true, required = true)]
+		target: Vec<String>,
+	},
+	#[structopt(name = "tarcheck", about = "Check *.tar or *.tar.xz archive")]
+	Tarcheck {
+		#[structopt(help = "Archive to check", required = true)]
+		target: PathBuf,
 	},
 }

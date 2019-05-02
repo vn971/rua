@@ -19,14 +19,14 @@ use std::process::exit;
 use std::process::Command;
 use std::{env, fs};
 
-use crate::print_package_table::print_package_table;
+use crate::print_package_table::*;
 use chrono::Utc;
 use cli_args::CliArgs;
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::debug;
-use raur::{search, SearchStrategy};
+use raur::SearchStrategy;
 use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
@@ -189,16 +189,23 @@ fn main() {
 				target.join(TARGET_SUBDIR)
 			);
 		}
-		CliArgs::Tarcheck { target } => {
-			tar_check::tar_check(&target);
-			eprintln!("Package passed all checks: {:?}", target);
-		}
 		CliArgs::Search { target } => {
-			let result = search(target, SearchStrategy::Name);
+			let result = raur::search(target, SearchStrategy::Name);
 			match result {
 				Ok(result) => print_package_table(result.packages),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
+		}
+		CliArgs::Show { target } => {
+			let result = raur::info(&target);
+			match result {
+				Ok(result) => print_separate_packages(result.packages),
+				Err(e) => eprintln!("Search error: {:?}", e),
+			}
+		}
+		CliArgs::Tarcheck { target } => {
+			tar_check::tar_check(&target);
+			eprintln!("Package passed all checks: {:?}", target);
 		}
 	};
 }

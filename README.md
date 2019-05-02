@@ -24,6 +24,10 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua install --offline xcalib`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO only.
 
+`rua search rua`
+
+`rua show xcalib freecad`  # shows information on packages
+
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
 `rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.

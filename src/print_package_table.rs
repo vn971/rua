@@ -1,13 +1,31 @@
+use chrono::offset::TimeZone;
+use chrono::Utc;
 use prettytable::format::*;
 use prettytable::*;
 use raur::Package;
+
+const DATE_FORMAT: &str = "%Y-%m-%d %H:%M";
+
+fn trunc(s: &str, max_chars: usize) -> String {
+	match s.char_indices().nth(max_chars.max(2)) {
+		None => s.to_string(),
+		Some((idx, _)) => {
+			let substr = &s[..idx - 2];
+			format!("{}..", substr)
+		}
+	}
+}
 
 pub fn print_package_table(packages: Vec<Package>) {
 	let mut table = Table::new();
 	table.set_titles(row!["Name", "Version", "Description"]);
 
 	for package in packages {
-		table.add_row(row![package.name, package.version, package.description]);
+		table.add_row(row![
+			trunc(&package.name, 28),
+			trunc(&package.version, 12),
+			package.description
+		]);
 	}
 
 	let separator: LineSeparator = LineSeparator::new('=', '+', '+', '+');
@@ -17,4 +35,24 @@ pub fn print_package_table(packages: Vec<Package>) {
 		.build();
 	table.set_format(fmt);
 	table.printstd();
+}
+
+pub fn print_separate_packages(packages: Vec<Package>) {
+	for package in packages {
+		let license = package.license.unwrap_or_else(|| Vec::new());
+		eprintln!("Name: {}", package.name);
+		eprintln!("Version: {}", package.version);
+		eprintln!("License: {}", license.join(" "));
+		eprintln!("Description: {}", package.description);
+		eprintln!("Popularity: {}", package.popularity);
+		for subm in package.first_submitted {
+			let result = Utc.timestamp(subm as i64, 0).format(DATE_FORMAT);
+			eprintln!("FirstSubmitted: {}", result);
+		}
+		for subm in package.last_modified {
+			let result = Utc.timestamp(subm as i64, 0).format(DATE_FORMAT);
+			eprintln!("LastModified: {}", result);
+		}
+		eprintln!();
+	}
 }

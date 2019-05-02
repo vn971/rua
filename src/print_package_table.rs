@@ -45,12 +45,12 @@ pub fn print_separate_packages(packages: Vec<Package>) {
 		eprintln!("License: {}", license.join(" "));
 		eprintln!("Description: {}", package.description);
 		eprintln!("Popularity: {}", package.popularity);
-		for subm in package.first_submitted {
-			let result = Utc.timestamp(subm as i64, 0).format(DATE_FORMAT);
+		if let Some(time) = package.first_submitted {
+			let result = Utc.timestamp(i64::from(time), 0).format(DATE_FORMAT);
 			eprintln!("FirstSubmitted: {}", result);
 		}
-		for subm in package.last_modified {
-			let result = Utc.timestamp(subm as i64, 0).format(DATE_FORMAT);
+		if let Some(time) = package.last_modified {
+			let result = Utc.timestamp(i64::from(time), 0).format(DATE_FORMAT);
 			eprintln!("LastModified: {}", result);
 		}
 		eprintln!();

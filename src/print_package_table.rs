@@ -16,7 +16,8 @@ fn trunc(s: &str, max_chars: usize) -> String {
 	}
 }
 
-pub fn print_package_table(packages: Vec<Package>) {
+pub fn print_package_table(mut packages: Vec<Package>) {
+	packages.sort_unstable_by(|a, b| b.popularity.partial_cmp(&a.popularity).unwrap());
 	let mut table = Table::new();
 	table.set_titles(row!["Name", "Version", "Description"]);
 

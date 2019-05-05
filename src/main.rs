@@ -26,7 +26,7 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::debug;
-use raur::SearchStrategy;
+use raur::SearchBy;
 use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
@@ -190,16 +190,16 @@ fn main() {
 			);
 		}
 		CliArgs::Search { target } => {
-			let result = raur::search(target, SearchStrategy::Name);
+			let result = raur::search_by(target, SearchBy::Name);
 			match result {
-				Ok(result) => print_package_table(result.packages),
+				Ok(result) => print_package_table(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
 		CliArgs::Show { target } => {
 			let result = raur::info(&target);
 			match result {
-				Ok(result) => print_separate_packages(result.packages),
+				Ok(result) => print_separate_packages(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}

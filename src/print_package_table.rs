@@ -25,7 +25,7 @@ pub fn print_package_table(mut packages: Vec<Package>) {
 		table.add_row(row![
 			trunc(&package.name, 28),
 			trunc(&package.version, 12),
-			package.description
+			package.description.unwrap_or_default()
 		]);
 	}
 
@@ -40,20 +40,17 @@ pub fn print_package_table(mut packages: Vec<Package>) {
 
 pub fn print_separate_packages(packages: Vec<Package>) {
 	for package in packages {
-		let license = package.license.unwrap_or_else(Vec::new);
 		eprintln!("Name: {}", package.name);
 		eprintln!("Version: {}", package.version);
-		eprintln!("License: {}", license.join(" "));
-		eprintln!("Description: {}", package.description);
+		eprintln!("License: {}", package.license.join(" "));
+		eprintln!("Description: {}", package.description.unwrap_or_default());
 		eprintln!("Popularity: {}", package.popularity);
-		if let Some(time) = package.first_submitted {
-			let result = Utc.timestamp(i64::from(time), 0).format(DATE_FORMAT);
-			eprintln!("FirstSubmitted: {}", result);
-		}
-		if let Some(time) = package.last_modified {
-			let result = Utc.timestamp(i64::from(time), 0).format(DATE_FORMAT);
-			eprintln!("LastModified: {}", result);
-		}
+		let result = Utc
+			.timestamp(package.first_submitted, 0)
+			.format(DATE_FORMAT);
+		eprintln!("FirstSubmitted: {}", result);
+		let result = Utc.timestamp(package.last_modified, 0).format(DATE_FORMAT);
+		eprintln!("LastModified: {}", result);
 		eprintln!();
 	}
 }

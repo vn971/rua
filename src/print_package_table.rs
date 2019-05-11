@@ -43,7 +43,10 @@ pub fn print_separate_packages(packages: Vec<Package>) {
 		eprintln!("Name: {}", package.name);
 		eprintln!("Version: {}", package.version);
 		eprintln!("License: {}", package.license.join(" "));
-		eprintln!("Description: {}", package.description.unwrap_or_else(|| String::from("")));
+		eprintln!(
+			"Description: {}",
+			package.description.unwrap_or_else(|| String::from(""))
+		);
 		eprintln!("Popularity: {}", package.popularity);
 		let result = Utc
 			.timestamp(package.first_submitted, 0)

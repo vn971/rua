@@ -25,7 +25,7 @@ pub fn print_package_table(mut packages: Vec<Package>) {
 		table.add_row(row![
 			trunc(&package.name, 28),
 			trunc(&package.version, 12),
-			package.description.unwrap_or_default()
+			package.description.unwrap_or_else(|| String::from(""))
 		]);
 	}
 
@@ -43,7 +43,7 @@ pub fn print_separate_packages(packages: Vec<Package>) {
 		eprintln!("Name: {}", package.name);
 		eprintln!("Version: {}", package.version);
 		eprintln!("License: {}", package.license.join(" "));
-		eprintln!("Description: {}", package.description.unwrap_or_default());
+		eprintln!("Description: {}", package.description.unwrap_or_else(|| String::from("")));
 		eprintln!("Popularity: {}", package.popularity);
 		let result = Utc
 			.timestamp(package.first_submitted, 0)

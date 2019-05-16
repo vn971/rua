@@ -93,11 +93,16 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-	let my_struct_opts = cli_args::CliArgs::from_args();
-	if users::get_current_uid() == 0 {
-		eprintln!("RUA should not be run as root.");
-		eprintln!("Also, makepkg will not allow you building from root anyway.");
-		exit(1)
+	let my_struct_opts: CliArgs = cli_args::CliArgs::from_args();
+	match my_struct_opts {
+		CliArgs::Install { .. } | CliArgs::JailBuild { .. } => {
+			if users::get_current_uid() == 0 {
+				eprintln!("RUA should not be run as root.");
+				eprintln!("Also, makepkg will not allow you building from root anyway.");
+				exit(1)
+			}
+		}
+		_ => {}
 	}
 	if !Command::new("bwrap")
 		.args(&["--ro-bind", "/", "/", "true"])

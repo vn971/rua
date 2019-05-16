@@ -8,7 +8,7 @@ mod print_package_table;
 mod rua_dirs;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
-mod util;
+mod terminal_util;
 mod wrapped;
 
 use std::fs::{File, OpenOptions, Permissions};
@@ -210,7 +210,7 @@ fn main() {
 		}
 		CliArgs::Tarcheck { target } => {
 			tar_check::tar_check(&target);
-			eprintln!("Package passed all checks: {:?}", target);
+			eprintln!("Finished checking pachage: {:?}", target);
 		}
 	};
 }

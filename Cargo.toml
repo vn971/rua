@@ -20,6 +20,7 @@ structopt = "0.2.15"
 
 [dependencies]
 chrono = "0.4.6"
+colored = "1.8"
 directories = "1.0.2"
 env_logger = "0.6.1"
 fs2 = "0.4.3"

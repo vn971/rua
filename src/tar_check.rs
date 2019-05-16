@@ -1,11 +1,11 @@
-use crate::util;
+use crate::terminal_util;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-
 use tar::*;
 use xz2::read::XzDecoder;
+use colored::*;
 
 pub fn tar_check(tar_file: &Path) {
 	let tar_str = tar_file
@@ -74,21 +74,20 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	let has_install = !install_file.is_empty();
 	loop {
 		if suid_files.is_empty() {
-			eprint!("\nPackage {} has no SUID files.\n", path_str);
-		} else {
-			eprint!(
-				"\n!!!WARNING!!! Package {} has SUID files.\n[S]=list SUID files, ",
-				path_str
-			)
-		};
+			eprint!("Package has no SUID files.\n");
+		}
+		eprint!(
+			"[E]=list executable files, [L]=list all files, \
+			 [T]=run shell to inspect, "
+		);
 		if has_install {
 			eprint!("[I]=show install file, ");
 		};
-		eprint!(
-			"[E]=list executable files, [L]=list all files, \
-			 [T]=run shell to inspect, [O]=ok, proceed. "
-		);
-		let string = util::console_get_line();
+		if !suid_files.is_empty() {
+			eprint!("{}", "!!! [S]=list SUID files!!!, ".red())
+		};
+		eprint!("[O]=ok, proceed. ");
+		let string = terminal_util::console_get_line();
 		eprintln!();
 		if string == "s" && !suid_files.is_empty() {
 			for path in &suid_files {
@@ -106,9 +105,12 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprintln!("{}", &install_file);
 		} else if string == "t" {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
-			util::run_env_command("SHELL", "bash", &[]);
+			terminal_util::run_env_command("SHELL", "bash", &[]);
 		} else if string == "o" {
 			break;
+		} else if string == "q" {
+			eprintln!("Exiting...");
+			std::process::exit(-1);
 		}
 	}
 }

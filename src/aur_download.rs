@@ -1,6 +1,6 @@
 use crate::rua_dirs::PREFETCH_DIR;
 use crate::rua_dirs::REVIEWED_BUILD_DIR;
-use crate::util;
+use crate::terminal_util;
 
 use std::path::Path;
 use std::process::{Command, Output};
@@ -69,15 +69,15 @@ pub fn review_repo(name: &str, dirs: &ProjectDirs) {
 			 [I]=run shell to inspect, [O]=ok, use package: ",
 			name
 		);
-		let string = util::console_get_line();
+		let string = terminal_util::console_get_line();
 
 		if string == "v" {
-			util::run_env_command("PAGER", "less", &["PKGBUILD"]);
+			terminal_util::run_env_command("PAGER", "less", &["PKGBUILD"]);
 		} else if string == "e" {
-			util::run_env_command("EDITOR", "nano", &["PKGBUILD"]);
+			terminal_util::run_env_command("EDITOR", "nano", &["PKGBUILD"]);
 		} else if string == "i" {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
-			util::run_env_command("SHELL", "bash", &[]);
+			terminal_util::run_env_command("SHELL", "bash", &[]);
 		} else if string == "o" {
 			break;
 		}

@@ -5,7 +5,7 @@ use crate::rua_dirs::CHECKED_TARS;
 use crate::rua_dirs::PREFETCH_DIR;
 use crate::rua_dirs::REVIEWED_BUILD_DIR;
 use crate::rua_dirs::TARGET_SUBDIR;
-use crate::{pacman, tar_check, util};
+use crate::{pacman, tar_check, terminal_util};
 
 use directories::ProjectDirs;
 use itertools::Itertools;
@@ -208,7 +208,7 @@ fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<St
 	);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
-		let string = util::console_get_line();
+		let string = terminal_util::console_get_line();
 		if string == "o" {
 			break;
 		}

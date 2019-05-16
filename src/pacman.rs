@@ -1,4 +1,4 @@
-use crate::util;
+use crate::terminal_util;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -54,7 +54,7 @@ fn ensure_packages_installed(
 				list.join(" ")
 			);
 			eprint!("Enter S to `sudo` install it, or install manually and press M when done. ");
-			let string = util::console_get_line();
+			let string = terminal_util::console_get_line();
 			if string == "s" {
 				Command::new("sudo")
 					.arg("pacman")

@@ -1,11 +1,11 @@
 use crate::terminal_util;
 
+use colored::*;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use tar::*;
 use xz2::read::XzDecoder;
-use colored::*;
 
 pub fn tar_check(tar_file: &Path) {
 	let tar_str = tar_file

@@ -65,7 +65,16 @@ fn build_local(dirs: &ProjectDirs, is_offline: bool) {
 			dir, e,
 		)
 	});
-	assert!(command.success(), "Failed to build package");
+	if !command.success() {
+		eprintln!(
+			"Build failed with exit code {} in {}",
+			command
+				.code()
+				.map_or_else(|| "???".to_owned(), |c| c.to_string()),
+			dir,
+		);
+		std::process::exit(command.code().unwrap_or(1));
+	}
 }
 
 pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {

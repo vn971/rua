@@ -27,5 +27,5 @@ exec nice -n19 \
   "${wrap_args[@]}" \
   --ro-bind ~/.config/rua ~/.config/rua \
   --ro-bind "$PWD" "$PWD" \
-  --seccomp 3 \
-  "$@" 3< "$RUA_SECCOMP_FILE"
+  --seccomp 3 3< "$RUA_SECCOMP_FILE" \
+  "$@"

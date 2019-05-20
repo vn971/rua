@@ -8,7 +8,7 @@ const DATE_FORMAT: &str = "%Y-%m-%d %H:%M";
 
 fn trunc(s: &str, max_chars: usize) -> String {
 	match s.char_indices().nth(max_chars.max(2)) {
-		None => s.to_string(),
+		None => s.to_owned(),
 		Some((idx, _)) => {
 			let substr = &s[..idx - 2];
 			format!("{}..", substr)

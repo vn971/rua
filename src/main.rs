@@ -2,7 +2,7 @@
 static GLOBAL: std::alloc::System = std::alloc::System;
 
 mod aur_download;
-mod cli_args;
+mod config;
 mod pacman;
 mod print_package_table;
 mod rua_dirs;
@@ -21,7 +21,7 @@ use std::{env, fs};
 
 use crate::print_package_table::*;
 use chrono::Utc;
-use cli_args::CliArgs;
+use config::{Action, Config};
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
@@ -93,9 +93,9 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-	let my_struct_opts: CliArgs = cli_args::CliArgs::from_args();
-	match my_struct_opts {
-		CliArgs::Install { .. } | CliArgs::Jailbuild { .. } => {
+	let my_struct_opts: Config = Config::from_args();
+	match my_struct_opts.action {
+		Action::Install { .. } | Action::Jailbuild { .. } => {
 			if users::get_current_uid() == 0 {
 				eprintln!("RUA should not be run as root.");
 				eprintln!("Also, makepkg will not allow you building from root anyway.");
@@ -169,15 +169,15 @@ fn main() {
 		eprintln!("Another RUA instance already running.");
 		exit(2)
 	});
-	match my_struct_opts {
-		CliArgs::Install {
+	match my_struct_opts.action {
+		Action::Install {
 			asdeps,
 			offline,
 			target,
 		} => {
 			wrapped::install(target, &dirs, offline, asdeps);
 		}
-		CliArgs::Jailbuild { offline, target } => {
+		Action::Jailbuild { offline, target } => {
 			let target_str = target.to_str().unwrap_or_else(|| {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});
@@ -194,21 +194,21 @@ fn main() {
 				target.join(TARGET_SUBDIR)
 			);
 		}
-		CliArgs::Search { target } => {
+		Action::Search { target } => {
 			let result = raur::search_by(target, SearchBy::Name);
 			match result {
 				Ok(result) => print_package_table(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
-		CliArgs::Show { target } => {
+		Action::Show { target } => {
 			let result = raur::info(&target);
 			match result {
 				Ok(result) => print_separate_packages(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
-		CliArgs::Tarcheck { target } => {
+		Action::Tarcheck { target } => {
 			tar_check::tar_check(&target);
 			eprintln!("Finished checking pachage: {:?}", target);
 		}

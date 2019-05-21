@@ -3,7 +3,14 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(rename_all = "kebab-case")]
-pub enum CliArgs {
+pub struct Config {
+	#[structopt(subcommand)]
+	pub action: Action,
+}
+
+#[derive(StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+pub enum Action {
 	#[structopt(about = "Download a package by name and build it in jail")]
 	Install {
 		#[structopt(long = "asdeps", help = "Install package as dependency")]

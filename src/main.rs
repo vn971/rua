@@ -95,7 +95,7 @@ fn main() {
 	);
 	let my_struct_opts: CliArgs = cli_args::CliArgs::from_args();
 	match my_struct_opts {
-		CliArgs::Install { .. } | CliArgs::JailBuild { .. } => {
+		CliArgs::Install { .. } | CliArgs::Jailbuild { .. } => {
 			if users::get_current_uid() == 0 {
 				eprintln!("RUA should not be run as root.");
 				eprintln!("Also, makepkg will not allow you building from root anyway.");
@@ -177,7 +177,7 @@ fn main() {
 		} => {
 			wrapped::install(target, &dirs, offline, asdeps);
 		}
-		CliArgs::JailBuild { offline, target } => {
+		CliArgs::Jailbuild { offline, target } => {
 			let target_str = target.to_str().unwrap_or_else(|| {
 				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
 			});

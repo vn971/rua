@@ -17,6 +17,8 @@ build = "build.rs"
 
 [build-dependencies]
 structopt = "0.2.15"
+ansi_term = "0.11.0"
+atty = "0.2.11"
 
 [dependencies]
 chrono = "0.4.6"
@@ -38,6 +40,10 @@ tar = "0.4.26"
 uname = "0.1.1"
 users = "0.9.1"
 xz2 = "0.1.6"
+ansi_term = "0.11.0"
+atty = "0.2.11"
+failure = "0.1.5"
+term_size = "0.3.1"
 
 [profile.release]
 lto = true

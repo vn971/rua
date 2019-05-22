@@ -1,9 +1,19 @@
+use ansi_term::Color::Red;
+use ansi_term::Style;
+use atty::Stream::Stdout;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 pub struct Config {
+	#[structopt(
+		parse(from_str = "parse_color"),
+		default_value = "auto",
+		raw(possible_values = "&[\"never\", \"auto\", \"always\"]"),
+		long = "color"
+	)]
+	pub color: Colors,
 	#[structopt(subcommand)]
 	pub action: Action,
 }
@@ -50,4 +60,27 @@ pub enum Action {
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,
 	},
+}
+
+fn parse_color(s: &str) -> Colors {
+	match s {
+		"auto" if atty::is(Stdout) => Colors::new(),
+		"always" => Colors::new(),
+		_ => Colors::default(),
+	}
+}
+
+#[derive(Default)]
+pub struct Colors {
+	pub field: Style,
+	pub error: Style,
+}
+
+impl Colors {
+	pub fn new() -> Colors {
+		Colors {
+			field: Style::new().bold(),
+			error: Style::new().fg(Red),
+		}
+	}
 }

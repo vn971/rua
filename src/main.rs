@@ -10,6 +10,8 @@ mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
 mod wrapped;
+mod info;
+mod fmt;
 
 use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
@@ -20,6 +22,7 @@ use std::process::Command;
 use std::{env, fs};
 
 use crate::print_package_table::*;
+use crate::info::info;
 use chrono::Utc;
 use config::{Action, Config};
 use directories::ProjectDirs;
@@ -93,8 +96,8 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-	let my_struct_opts: Config = Config::from_args();
-	match my_struct_opts.action {
+	let config: Config = Config::from_args();
+	match config.action {
 		Action::Install { .. } | Action::Jailbuild { .. } => {
 			if users::get_current_uid() == 0 {
 				eprintln!("RUA should not be run as root.");
@@ -169,7 +172,7 @@ fn main() {
 		eprintln!("Another RUA instance already running.");
 		exit(2)
 	});
-	match my_struct_opts.action {
+	match config.action {
 		Action::Install {
 			asdeps,
 			offline,
@@ -201,12 +204,8 @@ fn main() {
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
-		Action::Show { target } => {
-			let result = raur::info(&target);
-			match result {
-				Ok(result) => print_separate_packages(result),
-				Err(e) => eprintln!("Search error: {:?}", e),
-			}
+		Action::Show { ref target } => {
+            info(&config, target, false).unwrap();
 		}
 		Action::Tarcheck { target } => {
 			tar_check::tar_check(&target);

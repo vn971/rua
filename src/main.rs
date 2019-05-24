@@ -19,7 +19,6 @@ use std::process::exit;
 use std::process::Command;
 use std::{env, fs};
 
-use crate::print_package_table::*;
 use chrono::Utc;
 use cli_args::CliArgs;
 use directories::ProjectDirs;
@@ -197,14 +196,14 @@ fn main() {
 		CliArgs::Search { target } => {
 			let result = raur::search_by(target, SearchBy::Name);
 			match result {
-				Ok(result) => print_package_table(result),
+				Ok(result) => print_package_table::print_package_table(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
 		CliArgs::Show { target } => {
 			let result = raur::info(&target);
 			match result {
-				Ok(result) => print_separate_packages(result),
+				Ok(result) => print_package_table::print_separate_packages(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}

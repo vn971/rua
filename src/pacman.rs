@@ -1,6 +1,5 @@
 use crate::terminal_util;
 
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
@@ -31,7 +30,7 @@ pub fn get_repository_list() -> Vec<String> {
 	output.lines().map(ToOwned::to_owned).collect()
 }
 
-fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, base_args: &[&str]) {
+fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
 	let mut attempt = 0;
 	while !packages.is_empty() {
 		{
@@ -55,7 +54,7 @@ fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, base_args: 
 					"Enter S to `sudo` install it, or install manually and press M when done. "
 				);
 			} else {
-				eprint!("Enter S to `sudo` install it, or enter X to skip installation,");
+				eprint!("Enter S to `sudo` install it, X to skip installation, ");
 				eprint!("or install manually and enter M when done. ");
 			}
 			attempt += 1;
@@ -85,12 +84,12 @@ fn ensure_packages_installed(mut packages: HashMap<String, PathBuf>, base_args: 
 				err
 			)
 		});
-		packages.retain(|name, _| !is_package_installed(&alpm, name));
+		packages.retain(|(name, _)| !is_package_installed(&alpm, name));
 		eprintln!("{:?}", &packages);
 	}
 }
 
-pub fn ensure_aur_packages_installed(packages: HashMap<String, PathBuf>, is_dependency: bool) {
+pub fn ensure_aur_packages_installed(packages: Vec<(String, PathBuf)>, is_dependency: bool) {
 	if is_dependency {
 		ensure_packages_installed(packages, &["-U", "--asdeps"]);
 	} else {
@@ -99,10 +98,10 @@ pub fn ensure_aur_packages_installed(packages: HashMap<String, PathBuf>, is_depe
 }
 
 pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
-	let mut map: HashMap<String, PathBuf> = HashMap::new();
+	let mut map: Vec<(String, PathBuf)> = Vec::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
-		map.insert(package, path);
+		map.push((package, path));
 	}
 	ensure_packages_installed(map, &["-S", "--asdeps"]);
 }

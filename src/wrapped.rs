@@ -251,7 +251,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 		for name in &packages {
 			check_tars_and_move(name, dirs);
 		}
-		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
+		let mut packages_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for name in packages {
 			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
@@ -261,11 +261,11 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 				)
 			});
 			for file in read_dir_iterator {
-				packages_to_install.insert(
+				packages_to_install.push((
 					name.to_owned(),
 					file.expect("Failed to open file for tar_check analysis")
 						.path(),
-				);
+				));
 			}
 		}
 		pacman::ensure_aur_packages_installed(packages_to_install, asdeps || depth > 0);

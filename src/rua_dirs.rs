@@ -1,5 +1,5 @@
 /// Directory to `git clone` into, first step of the build pipeline
-pub const PREFETCH_DIR: &str = "aur.tmp";
+pub const PREFETCH_DIR: &str = "clone";
 
 /// Directory from AUR that passed user review
 pub const REVIEWED_BUILD_DIR: &str = "build";

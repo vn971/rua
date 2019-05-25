@@ -96,10 +96,11 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 	let build_target_dir = dirs
 		.cache_dir()
-		.join(name)
 		.join(REVIEWED_BUILD_DIR)
+		.join(name)
 		.join(TARGET_SUBDIR);
-	let checked_tars_dir = dirs.cache_dir().join(name).join(CHECKED_TARS);
+	let checked_tars_dir = dirs.cache_dir().join(CHECKED_TARS).join(name);
+	fs::create_dir_all(dirs.cache_dir().join(CHECKED_TARS)).unwrap();
 	rm_rf::force_remove_all(&checked_tars_dir, true).unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to clean checked tar files dir {:?}, {}",
@@ -148,11 +149,11 @@ fn prefetch_aur(
 		return;
 	}
 	aur_packages.insert(name.to_owned(), depth);
-	aur_download::fresh_download(&name, &dirs);
+	aur_download::download(&name, &dirs);
 	let srcinfo_path = dirs
-		.cache_dir()
-		.join(name)
+		.config_dir()
 		.join(PREFETCH_DIR)
+		.join(name)
 		.join(".SRCINFO");
 	let info = Srcinfo::parse_file(&srcinfo_path).unwrap_or_else(|err| {
 		panic!(
@@ -229,8 +230,8 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 		for name in &packages {
 			build_directory(
 				dirs.cache_dir()
-					.join(&name)
 					.join(REVIEWED_BUILD_DIR)
+					.join(&name)
 					.to_str()
 					.unwrap_or_else(|| {
 						panic!(
@@ -249,7 +250,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 		}
 		let mut packages_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for name in packages {
-			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
+			let checked_tars = dirs.cache_dir().join(CHECKED_TARS).join(name);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
 				panic!(
 					"Failed to read 'checked_tars' directory for {}, {}",

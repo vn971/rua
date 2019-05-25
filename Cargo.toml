@@ -40,6 +40,7 @@ term_size = "0.3.1"
 uname = "0.1.1"
 users = "0.9.1"
 xz2 = "0.1.6"
+aur-fetch = "0.5.0"
 
 [profile.release]
 lto = true

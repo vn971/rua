@@ -107,7 +107,7 @@ fn main() {
 		}
 		_ => {}
 	}
-	match config.color_type {
+	match config.color {
 		// see "colored" crate and referenced specs
 		CLIColorType::Never => {
 			env::set_var("NOCOLOR", "1");

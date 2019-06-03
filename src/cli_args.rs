@@ -21,9 +21,9 @@ pub struct CliArgs {
 			default_value = "\"auto\"",
 		),
 		long = "color",
-		help = "set color", // the rest of the description is filled in by clap/structopt
+		help = "set color", // the rest of the description is filled in by structopt
 	)]
-	pub color_type: CLIColorType,
+	pub color: CLIColorType,
 	#[structopt(subcommand)]
 	pub action: Action,
 }

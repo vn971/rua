@@ -225,13 +225,7 @@ fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<St
 	}
 }
 
-fn install_all(
-	dirs: &ProjectDirs,
-	packages: HashMap<String, i32>,
-	offline: bool,
-	alpm: &Alpm,
-	asdeps: bool,
-) {
+fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool, asdeps: bool) {
 	let mut packages = packages.iter().collect::<Vec<_>>();
 	packages.sort_by_key(|pair| -*pair.1);
 	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
@@ -257,7 +251,7 @@ fn install_all(
 		for name in &packages {
 			check_tars_and_move(name, dirs);
 		}
-		let mut packages_to_install: HashMap<String, PathBuf> = HashMap::new();
+		let mut packages_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for name in packages {
 			let checked_tars = dirs.cache_dir().join(name).join(CHECKED_TARS);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
@@ -267,14 +261,14 @@ fn install_all(
 				)
 			});
 			for file in read_dir_iterator {
-				packages_to_install.insert(
+				packages_to_install.push((
 					name.to_owned(),
 					file.expect("Failed to open file for tar_check analysis")
 						.path(),
-				);
+				));
 			}
 		}
-		pacman::ensure_aur_packages_installed(packages_to_install, asdeps || depth > 0, alpm);
+		pacman::ensure_aur_packages_installed(packages_to_install, asdeps || depth > 0);
 	}
 }
 
@@ -282,7 +276,14 @@ pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdep
 	let mut pacman_deps = HashSet::new();
 	let mut aur_packages = HashMap::new();
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-	let alpm = alpm.expect("Failed to initialize alpm library");
+	let alpm = alpm.unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to initialize alpm library, {}",
+			file!(),
+			line!(),
+			err
+		)
+	});
 	for repo in pacman::get_repository_list() {
 		alpm.register_sync_db(&repo, &SigLevel::default())
 			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
@@ -302,6 +303,6 @@ pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdep
 	for name in aur_packages.keys() {
 		aur_download::review_repo(name, dirs);
 	}
-	pacman::ensure_pacman_packages_installed(pacman_deps, &alpm);
-	install_all(dirs, aur_packages, is_offline, &alpm, asdeps);
+	pacman::ensure_pacman_packages_installed(pacman_deps);
+	install_all(dirs, aur_packages, is_offline, asdeps);
 }

@@ -3,11 +3,11 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 
 mod aur_download;
 mod cli_args;
-mod print_format;
 mod pacman;
+mod print_format;
+mod print_package_info;
 mod print_package_table;
 mod rua_dirs;
-mod print_package_info;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
@@ -22,7 +22,6 @@ use std::process::Command;
 use std::{env, fs};
 
 use crate::cli_args::CLIColorType;
-use crate::print_package_table::*;
 use crate::print_package_info::info;
 use chrono::Utc;
 use cli_args::{Action, CliArgs};
@@ -219,7 +218,7 @@ fn main() {
 		Action::Search { target } => {
 			let result = raur::search_by(target, SearchBy::Name);
 			match result {
-				Ok(result) => print_package_table(result),
+				Ok(result) => print_package_table::print_package_table(result),
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}

@@ -61,7 +61,7 @@ pub enum Action {
 		target: String,
 	},
 	#[structopt(about = "Show package information")]
-	Show {
+	Info {
 		#[structopt(help = "Target to show for", multiple = true, required = true)]
 		target: Vec<String>,
 	},

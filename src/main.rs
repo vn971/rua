@@ -222,7 +222,7 @@ fn main() {
 				Err(e) => eprintln!("Search error: {:?}", e),
 			}
 		}
-		Action::Show { ref target } => {
+		Action::Info { ref target } => {
 			info(target, false).unwrap();
 		}
 		Action::Tarcheck { target } => {

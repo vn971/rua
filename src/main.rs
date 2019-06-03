@@ -2,16 +2,16 @@
 static GLOBAL: std::alloc::System = std::alloc::System;
 
 mod aur_download;
-mod config;
+mod cli_args;
+mod print_format;
 mod pacman;
 mod print_package_table;
 mod rua_dirs;
+mod print_package_info;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
 mod wrapped;
-mod info;
-mod fmt;
 
 use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
@@ -21,10 +21,11 @@ use std::process::exit;
 use std::process::Command;
 use std::{env, fs};
 
+use crate::cli_args::CLIColorType;
 use crate::print_package_table::*;
-use crate::info::info;
+use crate::print_package_info::info;
 use chrono::Utc;
-use config::{Action, Config};
+use cli_args::{Action, CliArgs};
 use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
@@ -96,7 +97,7 @@ fn main() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-	let config: Config = Config::from_args();
+	let config: CliArgs = CliArgs::from_args();
 	match config.action {
 		Action::Install { .. } | Action::Jailbuild { .. } => {
 			if users::get_current_uid() == 0 {
@@ -106,6 +107,24 @@ fn main() {
 			}
 		}
 		_ => {}
+	}
+	match config.color_type {
+		// see "colored" crate and referenced specs
+		CLIColorType::Never => {
+			env::set_var("NOCOLOR", "1");
+			env::remove_var("CLICOLOR_FORCE");
+			env::set_var("CLICOLOR", "0");
+		}
+		CLIColorType::Always => {
+			env::remove_var("NOCOLOR");
+			env::set_var("CLICOLOR_FORCE", "1");
+			env::remove_var("CLICOLOR");
+		}
+		CLIColorType::Auto => {
+			env::remove_var("NOCOLOR");
+			env::remove_var("CLICOLOR_FORCE");
+			env::remove_var("CLICOLOR");
+		}
 	}
 	if !Command::new("bwrap")
 		.args(&["--ro-bind", "/", "/", "true"])
@@ -205,7 +224,7 @@ fn main() {
 			}
 		}
 		Action::Show { ref target } => {
-            info(&config, target, false).unwrap();
+			info(target, false).unwrap();
 		}
 		Action::Tarcheck { target } => {
 			tar_check::tar_check(&target);

@@ -1,24 +1,34 @@
-use ansi_term::Color::Red;
-use ansi_term::Style;
-use atty::Stream::Stdout;
+extern crate clap;
+
+use clap::arg_enum;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-#[derive(StructOpt)]
+arg_enum! {
+	#[derive(Debug)]
+	pub enum CLIColorType {
+		Never, Auto, Always
+	}
+}
+
+#[derive(StructOpt, Debug)]
 #[structopt(rename_all = "kebab-case")]
-pub struct Config {
+pub struct CliArgs {
 	#[structopt(
-		parse(from_str = "parse_color"),
-		default_value = "auto",
-		raw(possible_values = "&[\"never\", \"auto\", \"always\"]"),
-		long = "color"
+		raw(
+			possible_values = "&CLIColorType::variants()",
+			case_insensitive = "true",
+			default_value = "\"auto\"",
+		),
+		long = "color",
+		help = "set color", // the rest of the description is filled in by clap/structopt
 	)]
-	pub color: Colors,
+	pub color_type: CLIColorType,
 	#[structopt(subcommand)]
 	pub action: Action,
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 #[structopt(rename_all = "kebab-case")]
 pub enum Action {
 	#[structopt(about = "Download a package by name and build it in jail")]
@@ -60,27 +70,4 @@ pub enum Action {
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,
 	},
-}
-
-fn parse_color(s: &str) -> Colors {
-	match s {
-		"auto" if atty::is(Stdout) => Colors::new(),
-		"always" => Colors::new(),
-		_ => Colors::default(),
-	}
-}
-
-#[derive(Default)]
-pub struct Colors {
-	pub field: Style,
-	pub error: Style,
-}
-
-impl Colors {
-	pub fn new() -> Colors {
-		Colors {
-			field: Style::new().bold(),
-			error: Style::new().fg(Red),
-		}
-	}
 }

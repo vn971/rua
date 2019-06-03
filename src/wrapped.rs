@@ -146,7 +146,8 @@ fn prefetch_aur(
 	alpm: &Alpm,
 ) {
 	if let Some(old_depth) = aur_packages.get(name) {
-		aur_packages.insert(name.to_owned(), cmp::max(depth + 1, *old_depth));
+		let old_depth = *old_depth;
+		aur_packages.insert(name.to_owned(), cmp::max(depth + 1, old_depth));
 		eprintln!("Skipping already fetched package {}", name);
 		return;
 	}

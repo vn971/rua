@@ -109,19 +109,19 @@ fn main() {
 	}
 	match config.color {
 		// see "colored" crate and referenced specs
-		CLIColorType::Never => {
+		CLIColorType::auto => {
+			env::remove_var("NOCOLOR");
+			env::remove_var("CLICOLOR_FORCE");
+			env::remove_var("CLICOLOR");
+		}
+		CLIColorType::never => {
 			env::set_var("NOCOLOR", "1");
 			env::remove_var("CLICOLOR_FORCE");
 			env::set_var("CLICOLOR", "0");
 		}
-		CLIColorType::Always => {
+		CLIColorType::always => {
 			env::remove_var("NOCOLOR");
 			env::set_var("CLICOLOR_FORCE", "1");
-			env::remove_var("CLICOLOR");
-		}
-		CLIColorType::Auto => {
-			env::remove_var("NOCOLOR");
-			env::remove_var("CLICOLOR_FORCE");
 			env::remove_var("CLICOLOR");
 		}
 	}

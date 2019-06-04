@@ -1,13 +1,12 @@
-extern crate clap;
-
-use clap::arg_enum;
 use std::path::PathBuf;
+use structopt::clap::arg_enum;
 use structopt::StructOpt;
 
 arg_enum! {
+	#[allow(non_camel_case_types)]
 	#[derive(Debug)]
 	pub enum CLIColorType {
-		Never, Auto, Always
+		auto, never, always
 	}
 }
 
@@ -15,13 +14,11 @@ arg_enum! {
 #[structopt(rename_all = "kebab-case")]
 pub struct CliArgs {
 	#[structopt(
-		raw(
-			possible_values = "&CLIColorType::variants()",
-			case_insensitive = "true",
-			default_value = "\"auto\"",
-		),
+		raw(possible_values = "&CLIColorType::variants()"),
+		case_insensitive = true,
+		default_value = "auto",
 		long = "color",
-		help = "set color", // the rest of the description is filled in by structopt
+		help = "set colors", // the rest of the description is filled in by structopt
 	)]
 	pub color: CLIColorType,
 	#[structopt(subcommand)]

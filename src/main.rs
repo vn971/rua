@@ -104,6 +104,17 @@ fn main() {
 				eprintln!("Also, makepkg will not allow you building from root anyway.");
 				exit(1)
 			}
+			if !Command::new("bwrap")
+				.args(&["--ro-bind", "/", "/", "true"])
+				.status()
+				.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
+				.success()
+			{
+				eprintln!("Failed to run bwrap.");
+				eprintln!("A possible cause for this is if RUA itself is run in jail (docker, bwrap, firejail,..).");
+				eprintln!("If so, see https://github.com/vn971/rua/issues/8");
+				exit(4)
+			}
 		}
 		_ => {}
 	}
@@ -124,17 +135,6 @@ fn main() {
 			env::set_var("CLICOLOR_FORCE", "1");
 			env::remove_var("CLICOLOR");
 		}
-	}
-	if !Command::new("bwrap")
-		.args(&["--ro-bind", "/", "/", "true"])
-		.status()
-		.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
-		.success()
-	{
-		eprintln!("Failed to run bwrap.");
-		eprintln!("Is RUA itself run in jail (docker, bwrap, firejail,..) ?");
-		eprintln!("If so, see https://github.com/vn971/rua/issues/8");
-		exit(4)
 	}
 	assert!(
 		env::var_os("PKGDEST").is_none(),

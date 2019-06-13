@@ -4,7 +4,9 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::str;
 
+use lazy_static::lazy_static;
 use libalpm::Alpm;
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
@@ -117,13 +119,15 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
 //		.success()
 //}
 
-///// Architecture as defined in the local pacman configuration
-//static ref pacman_arch: String = {
-//let process_output: Output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
-//if !process_output.status.success() {
-//panic!("pacman-conf call failed with an non-zero status");
-//}
-//let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
-//// Trim away the "/n" & convert into a String
-//arch.trim().into()
-//};
+// Architecture as defined in the local pacman configuration
+lazy_static! {
+	pub static ref PACMAN_ARCH: String = {
+		let process_output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
+		if !process_output.status.success() {
+		panic!("pacman-conf call failed with an non-zero status");
+		}
+		let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
+		// Trim away the "/n" & convert into a String
+		arch.trim().into()
+	};
+}

@@ -1,6 +1,7 @@
 // Commands that are run inside "bubblewrap" jail
 
 use crate::aur_download;
+use crate::pacman::PACMAN_ARCH;
 use crate::rua_dirs::CHECKED_TARS;
 use crate::rua_dirs::PREFETCH_DIR;
 use crate::rua_dirs::REVIEWED_BUILD_DIR;
@@ -9,7 +10,6 @@ use crate::{pacman, tar_check, terminal_util};
 
 use directories::ProjectDirs;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use libalpm::{Alpm, SigLevel};
 use log::debug;
 use srcinfo::Srcinfo;
@@ -131,10 +131,6 @@ fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 			&build_target_dir, &checked_tars_dir, name, e,
 		)
 	});
-}
-
-lazy_static! {
-	static ref PACMAN_ARCH: String = libalpm::util::uname().machine().to_owned();
 }
 
 fn prefetch_aur(

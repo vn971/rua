@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.13.9"
+version = "0.13.10"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -16,12 +16,12 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [build-dependencies]
-structopt = "0.2.15"
+structopt = "0.2.16"
 
 [dependencies]
 chrono = "0.4.6"
 colored = "1.8.0"
-directories = "1.0.2"
+directories = "2.0.1"
 env_logger = "0.6.1"
 failure = "0.1.5"
 fs2 = "0.4.3"
@@ -30,11 +30,11 @@ lazy_static = "1.3.0"
 libalpm = { package = "libalpm-fork", version = "0.1.4" }
 log = "0.4.6"
 prettytable-rs = "0.8.0"
-raur = "1.0.1"
-regex = "1.1.6"
+raur = "1.0.2"
+regex = "1.1.7"
 rm_rf = "0.2.4"
 srcinfo = "0.3.2"
-structopt = "0.2.15"
+structopt = "0.2.16"
 tar = "0.4.26"
 term_size = "0.3.1"
 uname = "0.1.1"

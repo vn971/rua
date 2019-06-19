@@ -1,6 +1,7 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
+mod action_search;
 mod aur_download;
 mod cli_args;
 mod pacman;
@@ -29,7 +30,6 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::debug;
-use raur::SearchBy;
 use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
@@ -215,13 +215,7 @@ fn main() {
 				target.join(TARGET_SUBDIR)
 			);
 		}
-		Action::Search { target } => {
-			let result = raur::search_by(target, SearchBy::Name);
-			match result {
-				Ok(result) => print_package_table::print_package_table(result),
-				Err(e) => eprintln!("Search error: {:?}", e),
-			}
-		}
+		Action::Search { target } => action_search::action_search(target),
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
 		}

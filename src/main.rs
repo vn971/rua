@@ -1,6 +1,7 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
+mod action_jailbuild;
 mod action_search;
 mod aur_download;
 mod cli_args;
@@ -30,7 +31,6 @@ use directories::ProjectDirs;
 use env_logger::Env;
 use fs2::FileExt;
 use log::debug;
-use rua_dirs::TARGET_SUBDIR;
 use structopt::StructOpt;
 
 fn default_env(key: &str, value: &str) {
@@ -199,21 +199,7 @@ fn main() {
 			wrapped::install(target, &dirs, offline, asdeps);
 		}
 		Action::Jailbuild { offline, target } => {
-			let target_str = target.to_str().unwrap_or_else(|| {
-				panic!("{}:{} Cannot parse CLI target directory", file!(), line!())
-			});
-			wrapped::build_directory(target_str, &dirs, offline);
-			for file in fs::read_dir(TARGET_SUBDIR).expect("'target' directory not found") {
-				tar_check::tar_check(
-					&file
-						.expect("Failed to open file for tar_check analysis")
-						.path(),
-				);
-			}
-			eprintln!(
-				"Package built and checked in: {:?}",
-				target.join(TARGET_SUBDIR)
-			);
+			action_jailbuild::action_jailbuild(offline, target, &dirs)
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Info { ref target } => {

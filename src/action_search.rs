@@ -10,7 +10,8 @@ fn is_package_ok(pkg: &Package, filter: &str) -> bool {
 			.any(|descr| descr.to_lowercase().contains(filter.as_str()))
 }
 
-pub fn action_search(target: Vec<String>) {
+pub fn action_search(mut target: Vec<String>) {
+	target.sort_by_key(|t| -(t.len() as i64));
 	let query = target
 		.first()
 		.expect("Zero search arguments, should be impossible in structopt");

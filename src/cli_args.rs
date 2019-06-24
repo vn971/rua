@@ -54,11 +54,7 @@ pub enum Action {
 	},
 	#[structopt(about = "Opens AUR web search page")]
 	Search {
-		#[structopt(
-			help = "Target to search for. If multiple arguments are specified, RUA will search by the first and filter by the rest (logical AND).",
-			multiple = true,
-			required = true
-		)]
+		#[structopt(help = "Target to search for", multiple = true, required = true)]
 		target: Vec<String>,
 	},
 	#[structopt(about = "Show package information")]

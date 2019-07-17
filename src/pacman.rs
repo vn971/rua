@@ -76,7 +76,6 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				break;
 			}
 		}
-		eprintln!("{:?}", &packages);
 		let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
 		let alpm = alpm.unwrap_or_else(|err| {
 			panic!(
@@ -87,7 +86,6 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 			)
 		});
 		packages.retain(|(name, _)| !is_package_installed(&alpm, name));
-		eprintln!("{:?}", &packages);
 	}
 }
 

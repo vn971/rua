@@ -101,7 +101,7 @@ fn main() {
 	let config: CliArgs = CliArgs::from_args();
 	match config.action {
 		Action::Install { .. } | Action::Jailbuild { .. } => prepare_for_jailed_action(&dirs),
-		_ => {},
+		_ => {}
 	}
 	match config.color {
 		// see "colored" crate and referenced specs

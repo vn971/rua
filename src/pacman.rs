@@ -36,15 +36,14 @@ fn get_repository_list() -> Vec<String> {
 /// Create `Alpm` instance with no registered databases except local
 fn create_local_alpm() -> Alpm {
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-	let alpm = alpm.unwrap_or_else(|err| {
+	alpm.unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to initialize alpm library, {}",
 			file!(),
 			line!(),
 			err
 		)
-	});
-	alpm
+	})
 }
 
 pub fn create_alpm() -> Alpm {

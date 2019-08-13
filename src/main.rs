@@ -1,6 +1,7 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
+mod action_install;
 mod action_jailbuild;
 mod action_search;
 mod aur_download;
@@ -147,7 +148,7 @@ fn main() {
 			offline,
 			target,
 		} => {
-			wrapped::install(target, &dirs, offline, asdeps);
+			action_install::install(target, &dirs, offline, asdeps);
 		}
 		Action::Jailbuild { offline, target } => {
 			action_jailbuild::action_jailbuild(offline, target, &dirs)

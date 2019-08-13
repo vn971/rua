@@ -26,7 +26,7 @@ Planned features include AUR upstream git diff and local patch application.
 
 `rua search rua`
 
-`rua show xcalib freecad`  # shows information on packages
+`rua info xcalib freecad`  # shows information on packages
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 

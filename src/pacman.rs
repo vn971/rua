@@ -8,6 +8,7 @@ use std::str;
 
 use lazy_static::lazy_static;
 use libalpm::Alpm;
+use libalpm::SigLevel;
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
 	alpm.local_db()
@@ -22,7 +23,7 @@ pub fn is_package_installable(alpm: &Alpm, name: &str) -> bool {
 		.is_some()
 }
 
-pub fn get_repository_list() -> Vec<String> {
+fn get_repository_list() -> Vec<String> {
 	let cmd = Command::new("pacman-conf")
 		.arg("--repo-list")
 		.output()
@@ -30,6 +31,29 @@ pub fn get_repository_list() -> Vec<String> {
 	let output = String::from_utf8(cmd.stdout)
 		.expect("Failed to get repo list from `pacman-conf --repo-list`");
 	output.lines().map(ToOwned::to_owned).collect()
+}
+
+/// Create `Alpm` instance with no registered databases except local
+fn create_local_alpm() -> Alpm {
+	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
+	let alpm = alpm.unwrap_or_else(|err| {
+		panic!(
+			"{}:{} Failed to initialize alpm library, {}",
+			file!(),
+			line!(),
+			err
+		)
+	});
+	alpm
+}
+
+pub fn create_alpm() -> Alpm {
+	let alpm = create_local_alpm();
+	for repo in get_repository_list() {
+		alpm.register_sync_db(&repo, &SigLevel::default())
+			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
+	}
+	alpm
 }
 
 fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
@@ -76,15 +100,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				break;
 			}
 		}
-		let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-		let alpm = alpm.unwrap_or_else(|err| {
-			panic!(
-				"{}:{} Failed to initialize alpm library, {}",
-				file!(),
-				line!(),
-				err
-			)
-		});
+		let alpm = create_local_alpm();
 		packages.retain(|(name, _)| !is_package_installed(&alpm, name));
 	}
 }
@@ -120,9 +136,10 @@ pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
 // Architecture as defined in the local pacman configuration
 lazy_static! {
 	pub static ref PACMAN_ARCH: String = {
-		let process_output = Command::new("pacman-conf").arg("architecture").output().expect("Failed to get system architecture via pacman-conf");
+		let process_output = Command::new("pacman-conf").arg("architecture").output()
+			.expect("Failed to get system architecture via pacman-conf");
 		if !process_output.status.success() {
-		panic!("pacman-conf call failed with an non-zero status");
+			panic!("pacman-conf call failed with an non-zero status");
 		}
 		let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
 		// Trim away the "/n" & convert into a String

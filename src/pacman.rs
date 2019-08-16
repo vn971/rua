@@ -83,7 +83,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				eprint!("or install manually and enter M when done. ");
 			}
 			attempt += 1;
-			let string = terminal_util::console_get_line();
+			let string = terminal_util::read_line_lowercase();
 			if string == "s" {
 				let exit_status = Command::new("sudo")
 					.arg("pacman")

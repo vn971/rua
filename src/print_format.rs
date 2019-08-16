@@ -44,5 +44,5 @@ pub fn print_indent<'a>(
 		_ => print!("{}", v.collect::<Vec<_>>().join(" ")),
 	}
 
-	println!();
+	eprintln!();
 }

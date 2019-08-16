@@ -21,7 +21,7 @@ pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
 		if let Some(pkg) = hm.get(pkg) {
 			all_pkgs.push(pkg)
 		} else {
-			println!("{} package '{}' was not found", "error:".red(), pkg);
+			eprintln!("{} package '{}' was not found", "error:".red(), pkg);
 		}
 	}
 
@@ -64,7 +64,7 @@ pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
 			print("Snapshot URL", &pkg.url_path);
 		}
 
-		println!();
+		eprintln!();
 	}
 
 	Ok(())

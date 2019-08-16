@@ -1,0 +1,64 @@
+#!/bin/bash -euET
+
+## use as:
+## shellcheck --check-sourced --norc -x < shellcheck-wrapper
+
+# declare variables used by PKGBUILD
+srcdir=
+pkgdir=
+
+# source it!
+source PKGBUILD
+
+# ensure that obligatory PKGBUILD values are defined, and avoid "unused" warning for them:
+test "${#pkgname[@]}" -gt 0
+test "${#pkgver[@]}" -gt 0
+test "${#pkgrel[@]}" -gt 0
+test "${#arch[@]}" -gt 0
+
+# avoid "unused" warning for optional PKGBUILD variables:
+export epoch
+export pkgdesc
+export url
+export license
+export install
+export changelog
+export source
+export source_x86_64
+export source_i686
+export validpgpkeys
+export noextract
+export md5sums
+export sha1sums
+export sha224sums
+export sha256sums
+export sha384sums
+export sha512sums
+export groups
+export backup
+export depends
+export depends_x86_64
+export depends_i686
+export makedepends
+export makedepends_x86_64
+export makedepends_i686
+export checkdepends
+export checkdepends_x86_64
+export checkdepends_i686
+export optdepends
+export optdepends_x86_64
+export optdepends_i686
+export conflicts
+export conflicts_x86_64
+export conflicts_i686
+export provides
+export provides_x86_64
+export provides_i686
+export replaces
+export replaces_x86_64
+export replaces_i686
+export options
+
+# avoid "unused" warning for variables defined _for_ PKGBUILD
+export srcdir
+export pkgdir

@@ -1,27 +1,31 @@
 use crate::terminal_util;
 
 use colored::*;
+use log::debug;
+use log::trace;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check(tar_file: &Path) {
+pub fn tar_check(tar_file: &Path) -> Option<PathBuf> {
 	let tar_str = tar_file
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));
 	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
+		debug!("Checked package tar file {}", tar_str);
+		Some(tar_file.to_path_buf())
 	} else if tar_str.ends_with(".tar") {
 		tar_check_archive(Archive::new(archive), tar_str);
+		debug!("Checked package tar file {}", tar_str);
+		Some(tar_file.to_path_buf())
 	} else {
-		panic!(
-			"Unsupported file format for tar_check function: {}",
-			tar_str
-		)
-	};
+		trace!("Skipping non-tar file {}", tar_str);
+		None
+	}
 }
 
 fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
@@ -87,7 +91,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprint!("{}", "!!! [S]=list SUID files!!!, ".red())
 		};
 		eprint!("[O]=ok, proceed. ");
-		let string = terminal_util::console_get_line();
+		let string = terminal_util::read_line_lowercase();
 		eprintln!();
 		if string == "s" && !suid_files.is_empty() {
 			for path in &suid_files {
@@ -104,8 +108,10 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		} else if string == "i" && has_install {
 			eprintln!("{}", &install_file);
 		} else if string == "t" {
+			let dir = PathBuf::from(path_str);
+			let dir = dir.parent().unwrap_or_else(|| Path::new("."));
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
-			terminal_util::run_env_command("SHELL", "bash", &[]);
+			terminal_util::run_env_command(&dir.to_path_buf(), "SHELL", "bash", &[]);
 		} else if string == "o" {
 			break;
 		} else if string == "q" {

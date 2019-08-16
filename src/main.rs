@@ -4,13 +4,14 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 mod action_install;
 mod action_jailbuild;
 mod action_search;
-mod aur_download;
 mod cli_args;
+mod git_utils;
 mod pacman;
 mod print_format;
 mod print_package_info;
 mod print_package_table;
-mod rua_dirs;
+mod reviewing;
+mod rua_files;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
@@ -19,13 +20,14 @@ mod wrapped;
 use std::fs::{File, OpenOptions, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::exit;
 use std::process::Command;
 use std::{env, fs};
 
 use crate::cli_args::CLIColorType;
 use crate::print_package_info::info;
+use crate::wrapped::shellcheck;
 use chrono::Utc;
 use cli_args::{Action, CliArgs};
 use directories::ProjectDirs;
@@ -157,6 +159,15 @@ fn main() {
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
 		}
+		Action::Shellcheck { target } => {
+			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));
+			result
+				.map_err(|err| {
+					eprintln!("{}", err);
+					exit(1);
+				})
+				.ok();
+		}
 		Action::Tarcheck { target } => {
 			tar_check::tar_check(&target);
 			eprintln!("Finished checking pachage: {:?}", target);
@@ -189,11 +200,11 @@ fn prepare_for_jailed_action(dirs: &ProjectDirs) {
 		.expect("Failed to create project config directory");
 	overwrite_file(
 		&dirs.config_dir().join(".system/seccomp-i686.bpf"),
-		include_bytes!("../res/seccomp-i686.bpf"),
+		rua_files::SECCOMP_I686,
 	);
 	overwrite_file(
 		&dirs.config_dir().join(".system/seccomp-x86_64.bpf"),
-		include_bytes!("../res/seccomp-x86_64.bpf"),
+		rua_files::SECCOMP_X86_64,
 	);
 	let seccomp_path = format!(
 		".system/seccomp-{}.bpf",
@@ -207,10 +218,10 @@ fn prepare_for_jailed_action(dirs: &ProjectDirs) {
 	);
 	overwrite_script(
 		&dirs.config_dir().join(wrapped::WRAP_SCRIPT_PATH),
-		include_bytes!("../res/wrap.sh"),
+		rua_files::WRAP_SH,
 	);
 	ensure_script(
 		&dirs.config_dir().join(".system/wrap_args.sh.example"),
-		include_bytes!("../res/wrap_args.sh"),
+		rua_files::WRAP_ARGS_EXAMPLE,
 	);
 }

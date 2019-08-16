@@ -1,8 +1,9 @@
 use std::env;
 use std::io;
+use std::path::PathBuf;
 use std::process::Command;
 
-pub fn console_get_line() -> String {
+pub fn read_line_lowercase() -> String {
 	let mut string = String::new();
 	io::stdin()
 		.read_line(&mut string)
@@ -11,7 +12,12 @@ pub fn console_get_line() -> String {
 }
 
 /// For example: SHELL, PAGER, EDITOR.
-pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, arguments: &[&str]) {
+pub fn run_env_command(
+	dir: &PathBuf,
+	env_variable_name: &str,
+	alternative_executable: &str,
+	arguments: &[&str],
+) {
 	let command = env::var(env_variable_name)
 		.ok()
 		.map(|s| s.trim().to_owned());
@@ -29,6 +35,7 @@ pub fn run_env_command(env_variable_name: &str, alternative_executable: &str, ar
 		Command::new(alternative_executable)
 	};
 	command.args(arguments);
+	command.current_dir(dir);
 	let command = command.status();
 	if let Some(err) = command.err() {
 		eprintln!("Failed to run command, error: {}", err);

@@ -2,13 +2,15 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
-- Uses a namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
+- Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
   * supports "offline" builds (network namespace)
   * builds in isolated filesystem, see [safety](#Safety) section below
   * PKGBUILD script is run under seccomp rules (e.g. the build cannot call `ptrace`)
   * filesystem is mounted with "nosuid" (e.g. the build cannot call `sudo`)
-- Show the user what they are about to install:
-  * warn if SUID files are present, and show them
+- Provides detailed information:
+  * upstream diff is shown before building, or full diff if the package is new
+  * warn if SUID files are present in the already built package, and show them
+  * see code problems in PKGBUILD via `shellcheck` (taking care of special variables)
   * show INSTALL script (if present), executable and file list preview
 - Minimize user interaction:
   * verify all PKGBUILD-s once, build without interruptions
@@ -27,6 +29,8 @@ Planned features include AUR upstream git diff and local patch application.
 `rua search rua`
 
 `rua info xcalib freecad`  # shows information on packages
+
+`rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes special care for PKGBUILD variables.
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 

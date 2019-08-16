@@ -62,6 +62,13 @@ pub enum Action {
 		#[structopt(help = "Target to show for", multiple = true, required = true)]
 		target: Vec<String>,
 	},
+	#[structopt(
+		about = "Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables"
+	)]
+	Shellcheck {
+		#[structopt(help = "PKGBUILD to check (or ./PKGBUILD if not provided)")]
+		target: Option<PathBuf>,
+	},
 	#[structopt(about = "Check *.tar or *.tar.xz archive")]
 	Tarcheck {
 		#[structopt(help = "Archive to check", required = true)]

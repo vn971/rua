@@ -18,6 +18,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Allows local patch application
 - Written in Rust
 
+
 # Use
 
 `rua install xcalib`  # install AUR package (with user confirmation)
@@ -28,7 +29,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua info xcalib freecad`  # shows information on packages
 
-`rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes special care for PKGBUILD variables.
+`rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of special PKGBUILD variables.
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
@@ -60,25 +61,45 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 There won't be bash/zsh/fish completions this way, but everything else should work.
 
 
-## How it works
-We'll consider the "install" command. RUA will:
+## How it works / reviewing
+When a new AUR package is fetched by RUA for the first time, it is stored in `~/.config/rua/pkg/pkg_name`.
+This is done via git, with remote being the AUR remote, and the local branch NOT tracking it, but rather being empty.
+
+If you review the changes and accept them, upstream is merged into your local branch.
+RUA will only allow you building once you have upstream as your ancestor, making sure you merged it.
+
+When you later install a new version of the package, RUA will fetch the new version and show you the diff since your last review.
+
+## How it works / dependency grouping and installation
+RUA will:
 
 1. Fetch the AUR package and all recursive dependencies.
 1. Prepare a summary of all pacman and AUR packages that will need installing.
   Show the summary to the user, confirm proceeding.
-1. Iterate over all AUR dependencies and ask to review the repo-s (PKGBUILDs, etc).
-1. Propose installing all pacman dependencies in one batch.
-  (No need to do it for each AUR package individually, save user-s time).
+1. Iterate over all AUR dependencies and ask to review the repo-s. 
+  Once we know that user really accepts all recursive changes, proceed.
+1. Propose installing all pacman dependencies.
 1. Build all AUR packages of maximum dependency "depth".
 1. Let the user review built artifacts (in batch).
 1. Install them. If any more packages are left, go two steps up.
 
+If you have a dependency structure like this:
+```
+your_original_package
+├── dependency_a
+│   ├── a1
+│   └── a2
+└── dependency_b
+    ├── b1
+    └── b2
+```
+RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. Also won't allow first step if it knows recursion breaks down the line.
+
 ## Limitations
 
-* Smart caching is not implemented yet. To avoid outdated builds, RUA wipes caches in case of possible conflict. This may change in the future.
-* Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD. This may change in the future.
+* Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
 * The tool does not show you outdated packages yet (those that have updates in AUR). Pull requests are welcomed.
-* Unless you explicitly enable it, builds do not share user home (~). This may result in rust/maven/npm/whatever packages being re-downloaded each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
+* Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever re-downloading dependencies with each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
 ## Safety

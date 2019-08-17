@@ -93,7 +93,7 @@ your_original_package
     ├── b1
     └── b2
 ```
-RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. Also won't allow first step if it knows recursion breaks down the line.
+RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. It also won't disrupt you if it knows recursion breaks down the line (with unsatisfiable dependencies).
 
 ## Limitations
 

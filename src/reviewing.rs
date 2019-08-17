@@ -37,8 +37,14 @@ pub fn review_repo(dir: &PathBuf, pkg_name: &str, dirs: &ProjectDirs) {
 	loop {
 		eprintln!("Reviewing {:?}. ", dir);
 		let is_upstream_merged = git_utils::is_upstream_merged(&dir);
+		let identical_to_upstream = is_upstream_merged && git_utils::identical_to_upstream(dir);
 		if is_upstream_merged {
-			eprint!("[S]=run shellcheck linter on PKGBUILD, ");
+			eprint!("[S]=run shellcheck on PKGBUILD, ");
+			if identical_to_upstream {
+				eprint!("[D]=(identical to upstream, empty diff), ");
+			} else {
+				eprint!("[D]=view diff to your local changes");
+			};
 		} else {
 			eprint!("[D]=view changes since your last review, ");
 			eprint!("[M]=accept/merge upstream changes, ");
@@ -59,7 +65,7 @@ pub fn review_repo(dir: &PathBuf, pkg_name: &str, dirs: &ProjectDirs) {
 			wrapped::shellcheck(&dir.join("PKGBUILD"))
 				.map_err(|err| eprintln!("{}", err))
 				.ok();
-		} else if string == "d" && !is_upstream_merged {
+		} else if string == "d" {
 			git_utils::show_upstream_diff(dir);
 		} else if string == "m" && !is_upstream_merged {
 			git_utils::merge_upstream(dir);

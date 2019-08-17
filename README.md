@@ -15,10 +15,8 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Minimize user interaction:
   * verify all PKGBUILD-s once, build without interruptions
   * group built dependencies for batch review/install
+- Allows local patch application
 - Written in Rust
-
-Planned features include AUR upstream git diff and local patch application.
-
 
 # Use
 
@@ -43,7 +41,7 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/ .
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed git base-devel bubblewrap cargo
+sudo pacman -S --needed git base-devel bubblewrap-suid shellcheck cargo
 ```
 
 

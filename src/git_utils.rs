@@ -42,6 +42,14 @@ pub fn show_upstream_diff(dir: &PathBuf) {
 		.ok();
 }
 
+pub fn identical_to_upstream(dir: &PathBuf) -> bool {
+	git(dir)
+		.args(&["diff", "--quiet", "upstream/master"])
+		.status()
+		.map(|t| t.success())
+		.unwrap_or(false)
+}
+
 pub fn merge_upstream(dir: &PathBuf) {
 	git(dir).args(&["merge", "upstream/master"]).status().ok();
 }

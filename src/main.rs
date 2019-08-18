@@ -1,8 +1,8 @@
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;
 
-mod action_install;
 mod action_builddir;
+mod action_install;
 mod action_search;
 mod action_upgrade;
 mod cli_args;
@@ -142,9 +142,7 @@ fn main() {
 		} => {
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
-		Action::Builddir { offline, target } => {
-			action_builddir::build_dir(offline, target, &dirs)
-		}
+		Action::Builddir { offline, target } => action_builddir::build_dir(offline, target, &dirs),
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
 			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));

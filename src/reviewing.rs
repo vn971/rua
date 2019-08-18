@@ -30,7 +30,7 @@ pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 			"If you continue, the build directory will be removed and the build will be re-run."
 		);
 		eprintln!("If you don't want that, consider resolving the situation manually,");
-		eprintln!("for example:    rua jailbuild {:?}", build_dir);
+		eprintln!("for example:    rua builddir {:?}", build_dir);
 		eprintln!();
 	}
 

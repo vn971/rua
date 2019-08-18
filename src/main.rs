@@ -2,7 +2,7 @@
 static GLOBAL: std::alloc::System = std::alloc::System;
 
 mod action_install;
-mod action_jailbuild;
+mod action_builddir;
 mod action_search;
 mod action_upgrade;
 mod cli_args;
@@ -104,7 +104,7 @@ fn main() {
 		.expect("Failed to determine XDG directories");
 	let config: CliArgs = CliArgs::from_args();
 	match config.action {
-		Action::Install { .. } | Action::Jailbuild { .. } => prepare_for_jailed_action(&dirs),
+		Action::Install { .. } | Action::Builddir { .. } => prepare_for_jailed_action(&dirs),
 		_ => {}
 	}
 	match config.color {
@@ -142,8 +142,8 @@ fn main() {
 		} => {
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
-		Action::Jailbuild { offline, target } => {
-			action_jailbuild::action_jailbuild(offline, target, &dirs)
+		Action::Builddir { offline, target } => {
+			action_builddir::build_dir(offline, target, &dirs)
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {

@@ -47,7 +47,7 @@ pub enum Action {
 		target: Vec<String>,
 	},
 	#[structopt(about = "Build package in specified directory, in jail")]
-	Jailbuild {
+	Builddir {
 		#[structopt(
 			short = "o",
 			long = "offline",

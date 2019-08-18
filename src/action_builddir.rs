@@ -2,7 +2,7 @@ use crate::{tar_check, wrapped};
 use directories::ProjectDirs;
 use std::path::PathBuf;
 
-pub fn action_jailbuild(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
+pub fn build_dir(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));

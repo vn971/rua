@@ -21,19 +21,19 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 # Use
 
-`rua install xcalib`  # install AUR package (with user confirmation)
+`rua install xcalib`
 
-`rua install --offline xcalib`  # same as above, but PKGBUILD is run without internet access. Sources are downloaded using .SRCINFO only.
+`rua search wesnoth`
 
-`rua search rua`
+`rua info freecad`
 
-`rua info xcalib freecad`  # shows information on packages
+`rua upgrade`  # find outdated AUR packages and offer upgrade
 
 `rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of special PKGBUILD variables.
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
-`rua jailbuild --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
+`rua builddir --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
 `rua --help && rua install --help`  # shows CLI help
 
@@ -56,16 +56,18 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 
 ## Install (the Rust way)
-* `cargo install rua`
+```sh
+cargo install rua
+```
 
-There won't be bash/zsh/fish completions this way, but everything else should work.
+Does not include bash/zsh/fish completions, but everything else should work.
 
 
 ## How it works / reviewing
 When a new AUR package is fetched by RUA for the first time, it is stored in `~/.config/rua/pkg/pkg_name`.
-This is done via git, with remote being the AUR remote, and the local branch NOT tracking it, but rather being empty.
+This is done via git, with an empty branch as your currently accepted state.
 
-If you review the changes and accept them, upstream is merged into your local branch.
+If you review upstream changes and accept them, upstream is merged into your local branch.
 RUA will only allow you building once you have upstream as your ancestor, making sure you merged it.
 
 When you later install a new version of the package, RUA will fetch the new version and show you the diff since your last review.

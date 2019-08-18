@@ -118,6 +118,12 @@ When building packages, RUA uses the following filesystem isolation by default:
 
 The RUA name can be read as "RUst Aur jail", also an inversion of "AUR".
 
+This work was made possible by the excellent libraries of
+[raur](https://gitlab.com/davidbittner/raur),
+[libalpm](https://github.com/jameslzhu/alpm),
+[srcinfo](https://github.com/jameslzhu/alpm)
+and many others.
+
 IRC: #rua @freenode.net  (no promises are made for availability)
 
 Project is shared under GPLv3+.

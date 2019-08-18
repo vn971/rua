@@ -4,6 +4,7 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 mod action_install;
 mod action_jailbuild;
 mod action_search;
+mod action_upgrade;
 mod cli_args;
 mod git_utils;
 mod pacman;
@@ -131,20 +132,20 @@ fn main() {
 		exit(2)
 	});
 	match config.action {
+		Action::Info { ref target } => {
+			info(target, false).unwrap();
+		}
 		Action::Install {
 			asdeps,
 			offline,
 			target,
 		} => {
-			action_install::install(target, &dirs, offline, asdeps);
+			action_install::install(&target, &dirs, offline, asdeps);
 		}
 		Action::Jailbuild { offline, target } => {
 			action_jailbuild::action_jailbuild(offline, target, &dirs)
 		}
 		Action::Search { target } => action_search::action_search(target),
-		Action::Info { ref target } => {
-			info(target, false).unwrap();
-		}
 		Action::Shellcheck { target } => {
 			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));
 			result
@@ -157,6 +158,9 @@ fn main() {
 		Action::Tarcheck { target } => {
 			tar_check::tar_check(&target);
 			eprintln!("Finished checking pachage: {:?}", target);
+		}
+		Action::Upgrade {} => {
+			action_upgrade::upgrade(&dirs);
 		}
 	};
 }

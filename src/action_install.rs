@@ -19,7 +19,7 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
+pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let mut pacman_deps = HashSet::new();
 	let mut split_to_depth = HashMap::new();
 	let mut split_to_pkgbase = HashMap::new();
@@ -256,7 +256,7 @@ fn resolve_dependencies(
 		info!("Skipping already resolved package {}", split_name);
 	} else {
 		split_to_depth.insert(split_name.to_owned(), depth);
-		let info = raur_info(&split_name);
+		let info = raur_info_assert_one(&split_name);
 		split_to_pkgbase.insert(split_name.to_string(), info.package_base);
 		split_to_version.insert(split_name.to_string(), info.version);
 		let deps = info
@@ -288,7 +288,17 @@ fn resolve_dependencies(
 	}
 }
 
-fn raur_info(pkg: &str) -> Package {
+fn raur_info_assert_one(pkg: &str) -> Package {
+	match raur_info(pkg) {
+		Some(pkg) => pkg,
+		None => {
+			eprintln!("Package {} not found in AUR", pkg);
+			std::process::exit(1)
+		}
+	}
+}
+
+pub fn raur_info(pkg: &str) -> Option<Package> {
 	trace!(
 		"{}:{} Fetching AUR information for package {}",
 		file!(),
@@ -297,11 +307,5 @@ fn raur_info(pkg: &str) -> Package {
 	);
 	let info = raur::info(&[pkg]);
 	let info = info.unwrap_or_else(|e| panic!("Failed to fetch info for package {}, {}", &pkg, e));
-	match info.into_iter().next() {
-		Some(pkg) => pkg,
-		None => {
-			eprintln!("Package {} not found in AUR", pkg);
-			std::process::exit(1)
-		}
-	}
+	info.into_iter().next()
 }

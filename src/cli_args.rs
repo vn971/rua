@@ -28,6 +28,11 @@ pub struct CliArgs {
 #[derive(StructOpt, Debug)]
 #[structopt(rename_all = "kebab-case")]
 pub enum Action {
+	#[structopt(about = "Show package information")]
+	Info {
+		#[structopt(help = "Target to show for", multiple = true, required = true)]
+		target: Vec<String>,
+	},
 	#[structopt(about = "Download a package by name and build it in jail")]
 	Install {
 		#[structopt(long = "asdeps", help = "Install package as dependency")]
@@ -57,11 +62,6 @@ pub enum Action {
 		#[structopt(help = "Target to search for", multiple = true, required = true)]
 		target: Vec<String>,
 	},
-	#[structopt(about = "Show package information")]
-	Info {
-		#[structopt(help = "Target to show for", multiple = true, required = true)]
-		target: Vec<String>,
-	},
 	#[structopt(
 		about = "Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables"
 	)]
@@ -74,4 +74,6 @@ pub enum Action {
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,
 	},
+	#[structopt(about = "Upgrade AUR packages")]
+	Upgrade {},
 }

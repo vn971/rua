@@ -142,6 +142,6 @@ lazy_static! {
 		}
 		let arch = str::from_utf8(&process_output.stdout).expect("Found non-utf8 in pacman-conf output");
 		// Trim away the "/n" & convert into a String
-		arch.trim().into()
+		arch.trim().to_string()
 	};
 }

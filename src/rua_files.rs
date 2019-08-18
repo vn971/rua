@@ -6,8 +6,8 @@ pub fn global_review_dir(dirs: &ProjectDirs) -> PathBuf {
 	dirs.config_dir().join("pkg")
 }
 
-pub fn review_dir(dirs: &ProjectDirs, pkg_name: &str) -> PathBuf {
-	global_review_dir(dirs).join(pkg_name)
+pub fn review_dir(dirs: &ProjectDirs, pkgbase: &str) -> PathBuf {
+	global_review_dir(dirs).join(pkgbase)
 }
 
 /// Directory where packages are built after review

@@ -17,6 +17,7 @@ test "${#pkgrel[@]}" -gt 0
 test "${#arch[@]}" -gt 0
 
 # avoid "unused" warning for optional PKGBUILD variables:
+export pkgbase
 export epoch
 export pkgdesc
 export url

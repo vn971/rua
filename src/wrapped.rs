@@ -80,7 +80,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 
 pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
 	if !target.exists() {
-		return Err("Cannot find target for shellcheck, aborting".into());
+		return Err("Cannot find target for shellcheck, aborting".to_string());
 	};
 	let mut command = Command::new("bwrap");
 	command.args(&["--ro-bind", "/", "/"]);
@@ -91,6 +91,7 @@ pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
 		"--check-sourced",
 		"--norc",
 		"--external-sources",
+		// "--exclude", "SC2128"  // this would avoid warning for split packages, where $pkgname looks like an array to shellcheck, but it isn't an array later with `makepkg`
 		"/dev/stdin",
 	]);
 	command.stdin(Stdio::piped());
@@ -118,6 +119,6 @@ pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
 	if child.status.success() {
 		Ok(())
 	} else {
-		Err("".into())
+		Err("".to_string())
 	}
 }

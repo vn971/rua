@@ -6,7 +6,7 @@ use directories::ProjectDirs;
 use log::debug;
 use std::path::PathBuf;
 
-pub fn review_repo(dir: &PathBuf, pkg_name: &str, dirs: &ProjectDirs) {
+pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to read directory for reviewing, {}",
@@ -17,13 +17,13 @@ pub fn review_repo(dir: &PathBuf, pkg_name: &str, dirs: &ProjectDirs) {
 	});
 	if dir_contents.next().is_none() {
 		debug!("Directory {:?} is empty, using git clone", &dir);
-		git_utils::init_repo(pkg_name, &dir);
+		git_utils::init_repo(pkgbase, &dir);
 	} else {
 		debug!("Directory {:?} is not empty, fetching new version", &dir);
 		git_utils::fetch(&dir);
 	}
 
-	let build_dir = rua_files::build_dir(dirs, pkg_name);
+	let build_dir = rua_files::build_dir(dirs, pkgbase);
 	if build_dir.exists() && git_utils::is_upstream_merged(&dir) {
 		eprintln!("WARNING: your AUR repo is up-to-date.");
 		eprintln!(

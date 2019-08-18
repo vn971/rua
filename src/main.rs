@@ -124,20 +124,6 @@ fn main() {
 			env::remove_var("CLICOLOR");
 		}
 	}
-	assert!(
-		env::var_os("PKGDEST").is_none(),
-		"PKGDEST environment is set, but RUA needs to modify it. Please run RUA without it"
-	);
-	let is_extension_compatible = env::var_os("PKGEXT").map_or(true, |ext| {
-		let ext = ext.to_string_lossy();
-		ext.ends_with(".tar") || ext.ends_with(".tar.xz")
-	});
-	assert!(
-		is_extension_compatible,
-		"PKGEXT environment is set to an incompatible value. \
-		 Only *.tar and *.tar.xz are supported."
-	);
-	set_env_if_not_set("PKGEXT", ".pkg.tar.xz");
 
 	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
 	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
@@ -181,6 +167,28 @@ fn prepare_for_jailed_action(dirs: &ProjectDirs) {
 		eprintln!("Also, makepkg will not allow you building as root anyway.");
 		exit(1)
 	}
+	assert!(
+		env::var_os("PKGDEST").is_none(),
+		"Cannot work with PKGDEST environment being set. Please run RUA without it"
+	);
+	assert!(
+		env::var_os("SRCDEST").is_none(),
+		"Cannot work with SRCDEST environment being set. Please run RUA without it"
+	);
+	assert!(
+		env::var_os("BUILDDIR").is_none(),
+		"Cannot work with BUILDDIR environment being set. Please run RUA without it"
+	);
+	if let Some(extension) = std::env::var_os("PKGEXT") {
+		assert!(
+			extension == ".pkg.tar" || extension == ".pkg.tar.xz",
+			"PKGEXT environment is set to an incompatible value. \
+			 Only .pkg.tar and .pkg.tar.xz are supported for now.\
+			 RUA needs those extensions to look inside the archives for 'tar_check' analysis."
+		);
+	} else {
+		env::set_var("PKGEXT", ".pkg.tar.xz");
+	};
 	if !Command::new("bwrap")
 		.args(&["--ro-bind", "/", "/", "true"])
 		.status()

@@ -2,14 +2,13 @@ use crate::terminal_util;
 
 use colored::*;
 use log::debug;
-use log::trace;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check(tar_file: &Path) -> Option<PathBuf> {
+pub fn tar_check(tar_file: &Path) {
 	let tar_str = tar_file
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));
@@ -17,14 +16,14 @@ pub fn tar_check(tar_file: &Path) -> Option<PathBuf> {
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
 		debug!("Checked package tar file {}", tar_str);
-		Some(tar_file.to_path_buf())
 	} else if tar_str.ends_with(".tar") {
 		tar_check_archive(Archive::new(archive), tar_str);
 		debug!("Checked package tar file {}", tar_str);
-		Some(tar_file.to_path_buf())
 	} else {
-		trace!("Skipping non-tar file {}", tar_str);
-		None
+		panic!(
+			"Unexpected archive type (only .pkg.tar and .pkg.tar.xz are supported): {}",
+			tar_str
+		);
 	}
 }
 

@@ -21,27 +21,39 @@ use std::path::PathBuf;
 
 pub fn install(targets: Vec<String>, dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let mut pacman_deps = HashSet::new();
-	let mut aur_packages = HashMap::new();
+	let mut split_to_depth = HashMap::new();
+	let mut split_to_pkgbase = HashMap::new();
+	let mut split_to_version = HashMap::new();
 	let alpm = pacman::create_alpm();
 	for install_target in targets {
 		resolve_dependencies(
 			&install_target,
 			&mut pacman_deps,
-			&mut aur_packages,
+			&mut split_to_depth,
+			&mut split_to_pkgbase,
+			&mut split_to_version,
 			0,
 			&alpm,
 		);
 	}
 	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
-	show_install_summary(&pacman_deps, &aur_packages);
-	for name in aur_packages.keys() {
-		let dir = rua_files::review_dir(dirs, name);
-		fs::create_dir_all(&dir)
-			.unwrap_or_else(|err| panic!("Failed to create repository dir for {}, {}", name, err));
-		reviewing::review_repo(&dir, name, dirs);
+	show_install_summary(&pacman_deps, &split_to_depth);
+	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
+		let dir = rua_files::review_dir(dirs, pkgbase);
+		fs::create_dir_all(&dir).unwrap_or_else(|err| {
+			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
+		});
+		reviewing::review_repo(&dir, pkgbase, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(dirs, aur_packages, is_offline, asdeps);
+	install_all(
+		dirs,
+		split_to_depth,
+		split_to_pkgbase,
+		split_to_version,
+		is_offline,
+		asdeps,
+	);
 }
 
 fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<String, i32>) {
@@ -69,14 +81,42 @@ fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<St
 	}
 }
 
-fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool, asdeps: bool) {
-	let mut packages = packages.iter().collect::<Vec<_>>();
-	packages.sort_by_key(|pair| -*pair.1);
-	for (depth, packages) in &packages.iter().group_by(|pair| *pair.1) {
-		let packages: Vec<_> = packages.map(|pair| pair.0).collect();
-		for name in &packages {
-			let review_dir = rua_files::review_dir(dirs, name);
-			let build_dir = rua_files::build_dir(dirs, name);
+fn install_all(
+	dirs: &ProjectDirs,
+	split_to_depth: HashMap<String, i32>,
+	split_to_pkgbase: HashMap<String, String>,
+	split_to_version: HashMap<String, String>,
+	offline: bool,
+	asdeps: bool,
+) {
+	let archive_whitelist = split_to_version
+		.into_iter()
+		.map(|pair| format!("{}-{}", pair.0, pair.1))
+		.collect::<Vec<_>>();
+	trace!("All expected archive files: {:?}", archive_whitelist);
+	// get a list of (pkgbase, depth)
+	let packages = split_to_pkgbase.iter().map(|(split, pkgbase)| {
+		let depth = split_to_depth
+			.get(split)
+			.expect("Internal error: split package doesn't have recursive depth");
+		(pkgbase.to_string(), *depth, split.to_string())
+	});
+	// sort pairs in descending depth order
+	let packages = packages.sorted_by_key(|(_pkgbase, depth, _split)| -depth);
+	// Note that a pkgbase can appear at multiple depths because
+	// multiple split pkgnames can be at multiple depths.
+	// In this case, we only take the first occurrence of pkgbase,
+	// which would be the maximum depth because of sort order.
+	// We only take one occurrence because we want the package to only be built once.
+	let packages: Vec<(String, i32, String)> = packages
+		.unique_by(|(pkgbase, _depth, _split)| pkgbase.to_string())
+		.collect::<Vec<_>>();
+	// once we have a collection of pkgname-s and their depth, proceed straightforwardly.
+	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
+		let packages = packages.collect::<Vec<&(String, i32, String)>>();
+		for (pkgbase, _depth, _split) in &packages {
+			let review_dir = rua_files::review_dir(dirs, pkgbase);
+			let build_dir = rua_files::build_dir(dirs, pkgbase);
 			rm_rf::force_remove_all(&build_dir, true).expect("Failed to remove old build dir");
 			std::fs::create_dir_all(&build_dir).expect("Failed to create build dir");
 			fs_extra::copy_items(
@@ -92,23 +132,27 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 				offline,
 			);
 		}
-		for name in &packages {
-			check_tars_and_move(name, dirs);
+		for (pkgbase, _depth, _split) in &packages {
+			check_tars_and_move(pkgbase, dirs, &archive_whitelist);
 		}
+		// This relation between split_name and the archive file is not actually correct here.
+		// Instead, all archive files of some group will be bound to one split name only here.
+		// This is probably still good enough for install verification though --
+		// and we only use this relation for this purpose. Feel free to improve, if you want...
 		let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
-		for name in &packages {
-			let checked_tars = rua_files::checked_tars_dir(dirs, &name);
+		for (pkgbase, _depth, split) in &packages {
+			let checked_tars = rua_files::checked_tars_dir(dirs, &pkgbase);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
 				panic!(
 					"Failed to read 'checked_tars' directory for {}, {}",
-					name, e
+					pkgbase, e
 				)
 			});
+
 			for file in read_dir_iterator {
 				files_to_install.push((
-					name.to_string(),
-					file.expect("Failed to open file for tar_check analysis")
-						.path(),
+					split.to_string(),
+					file.expect("Failed to access checked_tars dir").path(),
 				));
 			}
 		}
@@ -116,7 +160,7 @@ fn install_all(dirs: &ProjectDirs, packages: HashMap<String, i32>, offline: bool
 	}
 }
 
-pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
+pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[String]) {
 	debug!("{}:{} checking tars for package {}", file!(), line!(), name);
 	let build_dir = rua_files::build_dir(dirs, name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
@@ -125,14 +169,23 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 			&build_dir, err
 		)
 	});
-	let checked_files = dir_items.flat_map(|file| {
-		tar_check::tar_check(
-			&file
-				.expect("Failed to open file for tar_check analysis")
-				.path(),
-		)
-	});
-	debug!("all package (tar) files checked, moving them",);
+	let dir_items = dir_items.map(|f| f.expect("Failed to open file for tar_check analysis"));
+	let dir_items = dir_items
+		.filter(|file| {
+			let file_name = file.file_name();
+			let file_name = file_name
+				.to_str()
+				.expect("Non-UTF8 characters in tar file name");
+			archive_whitelist
+				.iter()
+				.any(|prefix| file_name.starts_with(prefix))
+		})
+		.collect::<Vec<_>>();
+	trace!("Files filtered for tar checking: {:?}", &dir_items);
+	for file in dir_items.iter() {
+		tar_check::tar_check(&file.path())
+	}
+	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_files::checked_tars_dir(dirs, name);
 	rm_rf::force_remove_all(&checked_tars_dir, true).unwrap_or_else(|err| {
 		panic!(
@@ -147,12 +200,12 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 		);
 	});
 
-	for file in checked_files {
-		let file_name = file.file_name().expect("Failed to parse package tar name");
+	for file in dir_items {
+		let file_name = file.file_name();
 		let file_name = file_name
 			.to_str()
 			.expect("Non-UTF8 characters in tar file name");
-		fs::rename(&file, checked_tars_dir.join(file_name)).unwrap_or_else(|e| {
+		fs::rename(&file.path(), checked_tars_dir.join(file_name)).unwrap_or_else(|e| {
 			panic!(
 				"Failed to move {:?} (build artifact) to {:?}, {}",
 				&file, &checked_tars_dir, e,
@@ -162,32 +215,50 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs) {
 }
 
 /// Check that the package name is easy to work with in shell
-fn check_package_name(name: &str) {
+fn clean_and_check_package_name(name: &str) -> String {
 	lazy_static! {
-		static ref NAME_REGEX: Regex = Regex::new(r"[a-zA-Z][a-zA-Z._-]*")
-			.unwrap_or_else(|_| panic!("{}:{} Failed to parse regexp", file!(), line!()));
+		static ref CLEANUP: Regex = Regex::new(r"(=.*|>.*|<.*)").unwrap_or_else(|err| panic!(
+			"{}:{} Failed to parse regexp, {}",
+			file!(),
+			line!(),
+			err
+		));
 	}
-	if !NAME_REGEX.is_match(name) {
+	let name: String = CLEANUP.replace_all(name, "").to_string();
+	lazy_static! {
+		static ref NAME_REGEX: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z0-9._+-]*$").unwrap_or_else(
+			|err| panic!("{}:{} Failed to parse regexp, {}", file!(), line!(), err)
+		);
+	}
+	if !NAME_REGEX.is_match(&name) {
 		eprintln!("Unexpected package name {}", name);
 		std::process::exit(1)
 	}
+	name
 }
 
+/// Resolve dependencies recursively.
+/// "split_name" is the `pkgname` in PKGBUILD terminology. It's called "split" to avoid
+/// ambiguity of "package name" meaning.
 fn resolve_dependencies(
-	name: &str,
+	split_name: &str,
 	pacman_deps: &mut HashSet<String>,
-	aur_packages: &mut HashMap<String, i32>,
+	split_to_depth: &mut HashMap<String, i32>,
+	split_to_pkgbase: &mut HashMap<String, String>,
+	split_to_version: &mut HashMap<String, String>,
 	depth: i32,
 	alpm: &Alpm,
 ) {
-	check_package_name(&name);
-	if let Some(old_depth) = aur_packages.get(name) {
+	let split_name = clean_and_check_package_name(&split_name);
+	if let Some(old_depth) = split_to_depth.get(&split_name) {
 		let old_depth = *old_depth;
-		aur_packages.insert(name.to_owned(), cmp::max(depth + 1, old_depth));
-		info!("Skipping already resolved package {}", name);
+		split_to_depth.insert(split_name.to_owned(), cmp::max(depth + 1, old_depth));
+		info!("Skipping already resolved package {}", split_name);
 	} else {
-		aur_packages.insert(name.to_owned(), depth);
-		let info = raur_info(&name);
+		split_to_depth.insert(split_name.to_owned(), depth);
+		let info = raur_info(&split_name);
+		split_to_pkgbase.insert(split_name.to_string(), info.package_base);
+		split_to_version.insert(split_name.to_string(), info.version);
 		let deps = info
 			.depends
 			.iter()
@@ -199,9 +270,17 @@ fn resolve_dependencies(
 			} else if !pacman::is_package_installable(alpm, &dep) {
 				info!(
 					"{} depends on AUR package {}. Trying to resolve it...",
-					name, &dep
+					split_name, &dep
 				);
-				resolve_dependencies(&dep, pacman_deps, aur_packages, depth + 1, alpm);
+				resolve_dependencies(
+					&dep,
+					pacman_deps,
+					split_to_depth,
+					split_to_pkgbase,
+					split_to_version,
+					depth + 1,
+					alpm,
+				);
 			} else {
 				pacman_deps.insert(dep.to_owned());
 			}

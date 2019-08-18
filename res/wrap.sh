@@ -1,12 +1,6 @@
 #!/bin/bash -euET
 
-namespace_args=(--unshare-user --unshare-ipc --unshare-pid --unshare-uts --unshare-cgroup)
-gnupg_args=(
-  --tmpfs "${GNUPGHOME:-$HOME/.gnupg}"/private-keys-v1.d
-  --tmpfs "${GNUPGHOME:-$HOME/.gnupg}"/openpgp-revocs.d
-  --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}" "${GNUPGHOME:-$HOME/.gnupg}"
-)
-wrap_args=()
+wrap_args=(--unshare-user --unshare-ipc --unshare-pid --unshare-uts --unshare-cgroup)
 
 for filename in ~/.config/rua/wrap_args.d/*.sh ; do
   test -e "$filename" || continue
@@ -16,14 +10,14 @@ done
 exec nice -n19 \
   ionice -c idle \
   bwrap \
-  "${namespace_args[@]}" \
   --new-session --die-with-parent \
   --ro-bind / / \
   --dev /dev \
   --proc /proc \
   --tmpfs /tmp \
   --tmpfs ~ \
-  "${gnupg_args[@]}" \
+  --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx" "${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx" \
+  --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}/pubring.gpg" "${GNUPGHOME:-$HOME/.gnupg}/pubring.gpg" \
   "${wrap_args[@]}" \
   --ro-bind ~/.config/rua ~/.config/rua \
   --ro-bind "$PWD" "$PWD" \

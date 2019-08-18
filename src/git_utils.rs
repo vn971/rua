@@ -18,21 +18,12 @@ pub fn fetch(dir: &PathBuf) {
 }
 
 pub fn is_upstream_merged(dir: &PathBuf) -> bool {
-	let rev_parse_head = git(dir)
-		.args(&["rev-parse", "HEAD"])
+	git(dir)
+		.args(&["merge-base", "--is-ancestor", "upstream/master", "HEAD"])
 		.stderr(Stdio::null())
-		.stdout(Stdio::null())
 		.status()
-		.expect("failed to run git");
-	if !rev_parse_head.success() {
-		false
-	} else {
-		git(dir)
-			.args(&["merge-base", "--is-ancestor", "upstream/master", "HEAD"])
-			.status()
-			.expect("failed to run git")
-			.success()
-	}
+		.expect("failed to run git")
+		.success()
 }
 
 pub fn show_upstream_diff(dir: &PathBuf) {

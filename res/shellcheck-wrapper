@@ -1,7 +1,7 @@
 #!/bin/bash -euET
 
 ## use as:
-## shellcheck --check-sourced --norc -x < shellcheck-wrapper
+## shellcheck --check-sourced --norc -x shellcheck-wrapper
 
 # declare variables used by PKGBUILD
 srcdir=

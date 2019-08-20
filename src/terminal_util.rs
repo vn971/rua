@@ -42,6 +42,10 @@ pub fn run_env_command(
 	}
 }
 
+/// From bash manual:
+/// > Enclosing  characters in single quotes preserves the literal value of each character
+/// > within the quotes. A single quote may not occur between single quotes,
+/// > even when preceded by a backslash.
 pub fn escape_bash_arg(str: &str) -> String {
 	let result = str.replace("'", "'\\''");
 	format!("'{}'", result)

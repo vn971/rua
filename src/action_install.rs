@@ -214,8 +214,17 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 	}
 }
 
-/// Check that the package name is easy to work with in shell
 fn clean_and_check_package_name(name: &str) -> String {
+	match clean_package_name(name) {
+		Some(name) => name,
+		None => {
+			eprintln!("Unexpected package name {}", name);
+			std::process::exit(1)
+		}
+	}
+}
+
+fn clean_package_name(name: &str) -> Option<String> {
 	lazy_static! {
 		static ref CLEANUP: Regex = Regex::new(r"(=.*|>.*|<.*)").unwrap_or_else(|err| panic!(
 			"{}:{} Failed to parse regexp, {}",
@@ -224,17 +233,20 @@ fn clean_and_check_package_name(name: &str) -> String {
 			err
 		));
 	}
-	let name: String = CLEANUP.replace_all(name, "").to_string();
+	let name: String = CLEANUP.replace_all(name, "").to_lowercase();
 	lazy_static! {
-		static ref NAME_REGEX: Regex = Regex::new(r"^[a-zA-Z][a-zA-Z0-9._+-]*$").unwrap_or_else(
+		// From PKGBUILD manual page:
+		// Valid characters are alphanumerics, and any of the following characters: “@ . _ + -”.
+		// Additionally, names are not allowed to start with hyphens or dots.
+		static ref NAME_REGEX: Regex = Regex::new(r"^[a-z0-9@_+][a-z0-9@_+.-]*$").unwrap_or_else(
 			|err| panic!("{}:{} Failed to parse regexp, {}", file!(), line!(), err)
 		);
 	}
-	if !NAME_REGEX.is_match(&name) {
-		eprintln!("Unexpected package name {}", name);
-		std::process::exit(1)
+	if NAME_REGEX.is_match(&name) {
+		Some(name)
+	} else {
+		None
 	}
-	name
 }
 
 /// Resolve dependencies recursively.
@@ -308,4 +320,34 @@ pub fn raur_info(pkg: &str) -> Option<Package> {
 	let info = raur::info(&[pkg]);
 	let info = info.unwrap_or_else(|e| panic!("Failed to fetch info for package {}, {}", &pkg, e));
 	info.into_iter().next()
+}
+
+#[cfg(test)]
+mod tests {
+	use crate::action_install::*;
+
+	#[test]
+	fn test_starting_hyphen() {
+		assert_eq!(clean_package_name("test"), Some("test".to_string()));
+		assert_eq!(
+			clean_package_name("abcdefghijklmnopqrstuvwxyz0123456789@_+.-"),
+			Some("abcdefghijklmnopqrstuvwxyz0123456789@_+.-".to_string())
+		);
+
+		assert_eq!(clean_package_name(""), None);
+		assert_eq!(clean_package_name("-test"), None);
+		assert_eq!(clean_package_name(".test"), None);
+		assert_eq!(clean_package_name("!"), None);
+		assert_eq!(clean_package_name("german_ö"), None);
+
+		assert_eq!(clean_package_name("@"), Some("@".to_string()));
+		assert_eq!(clean_package_name("_"), Some("_".to_string()));
+		assert_eq!(clean_package_name("+"), Some("+".to_string()));
+
+		assert_eq!(clean_package_name("test>=0"), Some("test".to_string()));
+		assert_eq!(clean_package_name("test>0"), Some("test".to_string()));
+		assert_eq!(clean_package_name("test<0"), Some("test".to_string()));
+		assert_eq!(clean_package_name("test<=0"), Some("test".to_string()));
+		assert_eq!(clean_package_name("test=0"), Some("test".to_string()));
+	}
 }

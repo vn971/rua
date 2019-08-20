@@ -1,5 +1,6 @@
 use crate::terminal_util::escape_bash_arg;
-use srcinfo::{ArchVec, Srcinfo};
+use srcinfo::ArchVec;
+use srcinfo::Srcinfo;
 use std::path::Path;
 
 fn push_field(pkgbuild: &mut String, key: &str, value: &str) {

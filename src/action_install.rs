@@ -1,6 +1,9 @@
-use crate::{pacman, terminal_util};
-use crate::{reviewing, wrapped};
-use crate::{rua_files, tar_check};
+use crate::pacman;
+use crate::reviewing;
+use crate::rua_files;
+use crate::tar_check;
+use crate::terminal_util;
+use crate::wrapped;
 
 use core::cmp;
 use directories::ProjectDirs;

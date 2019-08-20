@@ -1,3 +1,9 @@
+use crate::rua_files;
+use crate::wrapped;
+use chrono::Utc;
+use directories::ProjectDirs;
+use env_logger::Env;
+use log::debug;
 use std::env;
 use std::fs;
 use std::fs::{OpenOptions, Permissions};
@@ -6,12 +12,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::exit;
 use std::process::Command;
-
-use crate::{rua_files, wrapped};
-use chrono::Utc;
-use directories::ProjectDirs;
-use env_logger::Env;
-use log::debug;
 
 fn set_env_if_not_set(key: &str, value: &str) {
 	if env::var_os(key).is_none() {

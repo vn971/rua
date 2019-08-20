@@ -4,7 +4,8 @@ use colored::*;
 use log::debug;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 use tar::*;
 use xz2::read::XzDecoder;
 

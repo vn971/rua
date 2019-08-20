@@ -41,3 +41,8 @@ pub fn run_env_command(
 		eprintln!("Failed to run command, error: {}", err);
 	}
 }
+
+pub fn escape_bash_arg(str: &str) -> String {
+	let result = str.replace("'", "'\\''");
+	format!("'{}'", result)
+}

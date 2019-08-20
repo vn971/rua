@@ -1,20 +1,16 @@
+use crate::terminal_util::escape_bash_arg;
+use srcinfo::{ArchVec, Srcinfo};
 use std::path::Path;
 
-use srcinfo::{ArchVec, Srcinfo};
-
-fn escape_value(value: &str) -> String {
-	value.replace("'", "'\\''")
-}
-
 fn push_field(pkgbuild: &mut String, key: &str, value: &str) {
-	pkgbuild.push_str(&format!("{}='{}'\n", key, escape_value(value)));
+	pkgbuild.push_str(&format!("{}={}\n", key, escape_bash_arg(value)));
 }
 
 fn push_array(pkgbuild: &mut String, key: &str, values: &[String]) {
 	pkgbuild.push_str(&format!("{}=(", key));
 
 	for value in values {
-		pkgbuild.push_str(&format!("\n  '{}'", escape_value(value)))
+		pkgbuild.push_str(&format!("\n  {}", escape_bash_arg(value)))
 	}
 
 	pkgbuild.push_str(")\n");

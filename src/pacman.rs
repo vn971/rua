@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str;
 
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use libalpm::Alpm;
 use libalpm::SigLevel;
@@ -71,7 +72,11 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 			eprintln!("Packages need to be installed:");
 			eprintln!(
 				"\n    pacman {} --needed {}\n",
-				base_args.join(" "),
+				base_args
+					.iter()
+					.map(|f| terminal_util::escape_bash_arg(f))
+					.collect_vec()
+					.join(" "),
 				list.join(" ")
 			);
 			if attempt == 0 {

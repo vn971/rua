@@ -2,6 +2,7 @@
 
 use crate::rua_files;
 use crate::srcinfo_to_pkgbuild;
+use crate::terminal_util;
 
 use directories::ProjectDirs;
 use log::debug;
@@ -104,8 +105,8 @@ pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
 		.as_mut()
 		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
 	let target = target.to_str().expect("Failed to parse shellcheck target");
-	let target = target.replace("'", "'\\''");
-	let target = format!("source '{}'", target);
+	let target = terminal_util::escape_bash_arg(target);
+	let target = format!("source {}", target);
 	let bytes = rua_files::SHELLCHECK_WRAPPER_BYTES.replace("source PKGBUILD", &target);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(

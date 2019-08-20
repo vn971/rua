@@ -50,7 +50,7 @@ pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 			eprint!("[M]=accept/merge upstream changes, ");
 			eprint!("[S]=(shellcheck not available until you merge), ");
 		}
-		eprint!("[I]=run shell to edit/inspect, ");
+		eprint!("[T]=run shell to edit/inspect, ");
 		if is_upstream_merged {
 			eprint!("[O]=ok, use package ");
 		} else {
@@ -58,7 +58,7 @@ pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 		}
 		let string = terminal_util::read_line_lowercase();
 
-		if string == "i" {
+		if string == "t" {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
 		} else if string == "s" && is_upstream_merged {

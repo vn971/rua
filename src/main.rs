@@ -104,7 +104,9 @@ fn main() {
 		.expect("Failed to determine XDG directories");
 	let config: CliArgs = CliArgs::from_args();
 	match config.action {
-		Action::Install { .. } | Action::Builddir { .. } => prepare_for_jailed_action(&dirs),
+		Action::Install { .. } | Action::Builddir { .. } | Action::Upgrade { .. } => {
+			prepare_for_jailed_action(&dirs)
+		}
 		_ => {}
 	}
 	match config.color {

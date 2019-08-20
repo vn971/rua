@@ -26,11 +26,13 @@ pub fn is_upstream_merged(dir: &PathBuf) -> bool {
 		.success()
 }
 
-pub fn show_upstream_diff(dir: &PathBuf) {
-	git(dir)
-		.args(&["diff", "-R", "upstream/master"])
-		.status()
-		.ok();
+pub fn show_upstream_diff(dir: &PathBuf, reverse: bool) {
+	let mut command = git(dir);
+	command.arg("diff");
+	if reverse {
+		command.arg("-R");
+	};
+	command.arg("upstream/master").status().ok();
 }
 
 pub fn identical_to_upstream(dir: &PathBuf) -> bool {

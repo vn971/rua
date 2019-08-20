@@ -43,10 +43,10 @@ pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 			if identical_to_upstream {
 				eprint!("[D]=(identical to upstream, empty diff), ");
 			} else {
-				eprint!("[D]=view diff to your local changes");
+				eprint!("[D]=view your changes, ");
 			};
 		} else {
-			eprint!("[D]=view changes since your last review, ");
+			eprint!("[D]=view upstream changes since your last review, ");
 			eprint!("[M]=accept/merge upstream changes, ");
 			eprint!("[S]=(shellcheck not available until you merge), ");
 		}
@@ -62,11 +62,14 @@ pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
 		} else if string == "s" && is_upstream_merged {
-			wrapped::shellcheck(&dir.join("PKGBUILD"))
-				.map_err(|err| eprintln!("{}", err))
-				.ok();
-		} else if string == "d" {
-			git_utils::show_upstream_diff(dir);
+			match wrapped::shellcheck(&dir.join("PKGBUILD")) {
+				Err(err) => eprintln!("{}", err),
+				Ok(_) => eprintln!("shellcheck found no problems"),
+			};
+		} else if string == "d" && is_upstream_merged {
+			git_utils::show_upstream_diff(dir, false);
+		} else if string == "d" && !is_upstream_merged {
+			git_utils::show_upstream_diff(dir, true);
 		} else if string == "m" && !is_upstream_merged {
 			git_utils::merge_upstream(dir);
 		} else if string == "o" && is_upstream_merged {

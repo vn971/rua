@@ -54,6 +54,7 @@ pub fn upgrade(dirs: &ProjectDirs) {
 			let string = terminal_util::read_line_lowercase();
 			if string == "o" {
 				action_install::install(&outdated, dirs, false, true);
+				break;
 			} else if string == "x" {
 				break;
 			}

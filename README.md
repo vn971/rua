@@ -2,19 +2,19 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
+- Provides detailed information:
+  * warn if SUID files are present in an already built package, and show them
+  * show upstream diff before building, or full diff if the package is new
+  * see code problems in PKGBUILD via `shellcheck` (taking care of special variables)
+  * show INSTALL script (if present), executable and file list previews in already built package
+- Minimize user distractions:
+  * verify all packages once, build without interruptions
+  * group built dependencies for batch review/install
 - Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
   * supports "offline" builds (by using a network namespace)
   * builds in isolated filesystem, see [safety](#Safety) section below
   * uses seccomp to limit available syscalls (e.g. the build cannot call `ptrace`)
   * filesystem is mounted with "nosuid" (e.g. the build cannot execute `sudo`)
-- Provides detailed information:
-  * upstream diff is shown before building, or full diff if the package is new
-  * warn if SUID files are present in the already built package, and show them
-  * see code problems in PKGBUILD via `shellcheck` (taking care of special variables)
-  * show INSTALL script (if present), executable and file list previews
-- Minimize user distractions:
-  * verify all packages once, build without interruptions
-  * group built dependencies for batch review/install
 - Allows local patch application
 - Written in Rust
 

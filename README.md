@@ -3,17 +3,17 @@
 RUA is a build tool for ArchLinux, AUR. Its features:
 
 - Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-  * supports "offline" builds (network namespace)
+  * supports "offline" builds (by using a network namespace)
   * builds in isolated filesystem, see [safety](#Safety) section below
-  * PKGBUILD script is run under seccomp rules (e.g. the build cannot call `ptrace`)
-  * filesystem is mounted with "nosuid" (e.g. the build cannot call `sudo`)
+  * uses seccomp to limit available syscalls (e.g. the build cannot call `ptrace`)
+  * filesystem is mounted with "nosuid" (e.g. the build cannot execute `sudo`)
 - Provides detailed information:
   * upstream diff is shown before building, or full diff if the package is new
   * warn if SUID files are present in the already built package, and show them
   * see code problems in PKGBUILD via `shellcheck` (taking care of special variables)
-  * show INSTALL script (if present), executable and file list preview
-- Minimize user interaction:
-  * verify all PKGBUILD-s once, build without interruptions
+  * show INSTALL script (if present), executable and file list previews
+- Minimize user distractions:
+  * verify all packages once, build without interruptions
   * group built dependencies for batch review/install
 - Allows local patch application
 - Written in Rust
@@ -27,7 +27,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua info freecad`
 
-`rua upgrade`  # find outdated AUR packages and offer upgrade
+`rua upgrade`  # (new) find outdated AUR packages and offer upgrade
 
 `rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of special PKGBUILD variables.
 
@@ -99,8 +99,9 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 
 ## Limitations
 
+* This tool focuses on AUR packages only, you cannot `-Suy` your system with it. Use pacman for that.
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
-* The tool does not show you outdated packages yet (those that have updates in AUR). Pull requests are welcomed.
+* "-git" packages do not receive automatic upgrades yet. Merge requests welcomed.
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever re-downloading dependencies with each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
 
 
@@ -126,6 +127,6 @@ This work was made possible by the excellent libraries of
 [srcinfo](https://github.com/Morganamilo/srcinfo.rs)
 and many others.
 
-IRC: #rua @freenode.net  (no promises are made for availability)
+IRC: #rua @freenode.net
 
 Project is shared under GPLv3+.

@@ -2,6 +2,7 @@
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 
+- Allows local patch application
 - Provides detailed information:
   * warn if SUID files are present in an already built package, and show them
   * show upstream diff before building, or full diff if the package is new
@@ -15,13 +16,12 @@ RUA is a build tool for ArchLinux, AUR. Its features:
   * builds in isolated filesystem, see [safety](#Safety) section below
   * uses seccomp to limit available syscalls (e.g. the build cannot call `ptrace`)
   * filesystem is mounted with "nosuid" (e.g. the build cannot execute `sudo`)
-- Allows local patch application
 - Written in Rust
 
 
 # Use
 
-`rua install xcalib`
+`rua install xcalib`  # installs or upgrades a package
 
 `rua search wesnoth`
 
@@ -129,4 +129,4 @@ and many others.
 
 IRC: #rua @freenode.net
 
-Project is shared under GPLv3+.
+Project is shared under GPLv3+. For authors, see [Cargo.toml](Cargo.toml) and git history.

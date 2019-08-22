@@ -8,6 +8,8 @@ use crate::wrapped;
 use core::cmp;
 use directories::ProjectDirs;
 use fs_extra::dir::CopyOptions;
+use indexmap::IndexMap;
+use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use libalpm::Alpm;
@@ -16,17 +18,16 @@ use log::info;
 use log::trace;
 use raur::Package;
 use regex::Regex;
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
 pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
-	let mut pacman_deps = HashSet::new();
-	let mut split_to_depth = HashMap::new();
-	let mut split_to_pkgbase = HashMap::new();
-	let mut split_to_version = HashMap::new();
+	let mut pacman_deps = IndexSet::new();
+	let mut split_to_depth = IndexMap::new();
+	let mut split_to_pkgbase = IndexMap::new();
+	let mut split_to_version = IndexMap::new();
 	let alpm = pacman::create_alpm();
 	for install_target in targets {
 		resolve_dependencies(
@@ -39,7 +40,6 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 			&alpm,
 		);
 	}
-	pacman_deps.retain(|name| !pacman::is_package_installed(&alpm, name));
 	show_install_summary(&pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = rua_files::review_dir(dirs, pkgbase);
@@ -59,7 +59,7 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 	);
 }
 
-fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<String, i32>) {
+fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
@@ -86,9 +86,9 @@ fn show_install_summary(pacman_deps: &HashSet<String>, aur_packages: &HashMap<St
 
 fn install_all(
 	dirs: &ProjectDirs,
-	split_to_depth: HashMap<String, i32>,
-	split_to_pkgbase: HashMap<String, String>,
-	split_to_version: HashMap<String, String>,
+	split_to_depth: IndexMap<String, i32>,
+	split_to_pkgbase: IndexMap<String, String>,
+	split_to_version: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
 ) {
@@ -257,10 +257,10 @@ fn clean_package_name(name: &str) -> Option<String> {
 /// ambiguity of "package name" meaning.
 fn resolve_dependencies(
 	split_name: &str,
-	pacman_deps: &mut HashSet<String>,
-	split_to_depth: &mut HashMap<String, i32>,
-	split_to_pkgbase: &mut HashMap<String, String>,
-	split_to_version: &mut HashMap<String, String>,
+	pacman_deps: &mut IndexSet<String>,
+	split_to_depth: &mut IndexMap<String, i32>,
+	split_to_pkgbase: &mut IndexMap<String, String>,
+	split_to_version: &mut IndexMap<String, String>,
 	depth: i32,
 	alpm: &Alpm,
 ) {

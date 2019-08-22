@@ -26,6 +26,7 @@ env_logger = "0.6.2"
 failure = "0.1.5"
 fs2 = "0.4.3"
 fs_extra = "1.1.0"
+indexmap = "1.1.0"
 itertools = "0.8.0"
 lazy_static = "1.3.0"
 libalpm = { package = "libalpm-fork", version = "0.1.4" }

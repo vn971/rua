@@ -1,15 +1,13 @@
 use crate::terminal_util;
-
-use std::collections::HashSet;
-use std::path::Path;
-use std::path::PathBuf;
-use std::process::Command;
-use std::str;
-
+use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use libalpm::Alpm;
 use libalpm::SigLevel;
+use std::path::Path;
+use std::path::PathBuf;
+use std::process::Command;
+use std::str;
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
 	alpm.local_db()
@@ -117,7 +115,7 @@ pub fn ensure_aur_packages_installed(packages: Vec<(String, PathBuf)>, is_depend
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: HashSet<String>) {
+pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
 	let mut map: Vec<(String, PathBuf)> = Vec::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();

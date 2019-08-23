@@ -1292,7 +1292,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)",

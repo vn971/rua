@@ -3,6 +3,9 @@ use directories::ProjectDirs;
 use std::path::PathBuf;
 
 pub fn build_dir(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
+	let dir = dir
+		.canonicalize()
+		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", dir, err));
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));

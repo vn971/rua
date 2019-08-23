@@ -29,7 +29,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua upgrade`  # (new) find outdated AUR packages and offer upgrade
 
-`rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of special PKGBUILD variables.
+`rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of PKGBUILD-specific variables.
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 

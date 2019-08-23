@@ -1,6 +1,8 @@
 use crate::pacman;
 use crate::{action_install, terminal_util};
 use directories::ProjectDirs;
+use version_compare::CompOp;
+use version_compare::VersionCompare;
 
 pub fn upgrade(dirs: &ProjectDirs) {
 	let alpm = pacman::create_alpm();
@@ -25,10 +27,17 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	for (pkg, local_ver) in aur_pkgs {
 		let raur_ver = action_install::raur_info(pkg).map(|p| p.version);
 		if let Some(raur_ver) = raur_ver {
-			if local_ver == raur_ver {
-				up_to_date.push(pkg);
-			} else {
+			let is_outdated = VersionCompare::compare_to(&local_ver, &raur_ver, &CompOp::Lt)
+				.unwrap_or_else(|_| {
+					panic!(
+						"Could not compare local->upstream versions: {}->{}",
+						local_ver, raur_ver
+					)
+				});
+			if is_outdated {
 				outdated.push((pkg, local_ver, raur_ver));
+			} else {
+				up_to_date.push(pkg);
 			}
 		} else {
 			unexistent.push(pkg);

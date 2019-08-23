@@ -41,6 +41,7 @@ tar = "0.4.26"
 term_size = "0.3.1"
 uname = "0.1.1"
 users = "0.9.1"
+version-compare = "0.0.9"
 xz2 = "0.1.6"
 
 [profile.release]

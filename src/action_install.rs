@@ -5,6 +5,7 @@ use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
 
+use alpm::Alpm;
 use core::cmp;
 use directories::ProjectDirs;
 use fs_extra::dir::CopyOptions;
@@ -12,7 +13,6 @@ use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use libalpm::Alpm;
 use log::debug;
 use log::info;
 use log::trace;

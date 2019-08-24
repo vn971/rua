@@ -1,25 +1,24 @@
 use crate::terminal_util;
+use alpm::Alpm;
+use alpm::SigLevel;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use libalpm::Alpm;
-use libalpm::SigLevel;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str;
 
 pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
-	alpm.local_db()
+	alpm.localdb()
+		.pkgs()
+		.expect("failed to open alpm.localdb().pkgs()")
 		.find_satisfier(name)
-		.expect("Failed to access libalpm.find_satisfier")
 		.map_or(false, |sat| sat.install_date().is_some())
 }
 
 pub fn is_package_installable(alpm: &Alpm, name: &str) -> bool {
-	alpm.find_satisfier(name)
-		.expect("Failed to access libalpm.find_satisfier")
-		.is_some()
+	alpm.syncdbs().find_satisfier(name).is_some()
 }
 
 fn get_repository_list() -> Vec<String> {
@@ -48,7 +47,7 @@ fn create_local_alpm() -> Alpm {
 pub fn create_alpm() -> Alpm {
 	let alpm = create_local_alpm();
 	for repo in get_repository_list() {
-		alpm.register_sync_db(&repo, &SigLevel::default())
+		alpm.register_syncdb(&repo, SigLevel::NONE)
 			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
 	}
 	alpm

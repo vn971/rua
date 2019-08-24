@@ -6,10 +6,11 @@ use version_compare::VersionCompare;
 
 pub fn upgrade(dirs: &ProjectDirs) {
 	let alpm = pacman::create_alpm();
-	let local_db = alpm.local_db();
-	let pkg_cache = local_db.pkg_cache();
+	let pkg_cache = alpm
+		.localdb()
+		.pkgs()
+		.expect("Could not get alpm.localdb().pkgs() packages");
 	let aur_pkgs = pkg_cache
-		.iter()
 		.filter(|pkg| !pacman::is_package_installable(&alpm, pkg.name()))
 		.map(|pkg| (pkg.name(), pkg.version().to_string()))
 		.collect::<Vec<_>>();

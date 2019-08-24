@@ -21,7 +21,7 @@ use std::path::PathBuf;
 
 pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
 	let alpm = pacman::create_alpm();
-	let (all_recursive_packages, split_to_raur, pacman_deps, split_to_depth) =
+	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
 			panic!("Failed to fetch info from AUR, {}", err);
 		});
@@ -34,9 +34,9 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 		.map(|(split, raur)| (split.to_string(), raur.version.to_string()))
 		.collect();
 
-	let not_found = all_recursive_packages
-		.into_iter()
-		.filter(|p| !split_to_raur.contains_key(p))
+	let not_found = split_to_depth
+		.keys()
+		.filter(|pkg| !split_to_raur.contains_key(*pkg))
 		.collect_vec();
 	if !not_found.is_empty() {
 		eprintln!(

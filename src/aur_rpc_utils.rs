@@ -8,12 +8,10 @@ use raur::Package;
 use regex::Regex;
 use log::trace;
 
-type AllRecursiveAurPackets = Vec<String>; // this is needed to detect "not found" packages
 type RaurInfo = IndexMap<String, Package>;
 type PacmanDependencies = IndexSet<String>;
 type DepthMap = IndexMap<String, i32>;
 type RecursiveInfo = (
-	AllRecursiveAurPackets,
 	RaurInfo,
 	PacmanDependencies,
 	DepthMap,
@@ -30,11 +28,9 @@ pub fn recursive_info(
 	}
 	let mut pacman_deps: IndexSet<String> = IndexSet::new();
 	let mut info_map: IndexMap<String, Package> = IndexMap::new();
-	let mut queue_position = 0;
-	while queue.len() > queue_position {
-		let new_queue_position = (queue_position + 200).min(queue.len());
-		let to_process = &queue[queue_position..new_queue_position];
-		queue_position = new_queue_position;
+	while !queue.is_empty() {
+		let split_at = queue.len().max(200) - 200;
+		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
 		for info in raur::info(&to_process)? {
 			let lower_dependencies = info
@@ -76,7 +72,7 @@ pub fn recursive_info(
 			info_map.insert(info.name.to_string(), info);
 		}
 	}
-	Ok((queue, info_map, pacman_deps, depth_map))
+	Ok((info_map, pacman_deps, depth_map))
 }
 
 fn clean_and_check_package_name(name: &str) -> String {

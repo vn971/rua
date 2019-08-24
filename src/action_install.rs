@@ -71,6 +71,9 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	eprintln!("And the following AUR packages will need to be built and installed:");
 	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
 	aur_packages.sort_by_key(|pair| -*pair.1);
+	for (aur, dep) in &aur_packages {
+		debug!("depth {}: {}", dep, aur);
+	}
 	eprintln!(
 		"{}\n",
 		aur_packages.iter().map(|s| format!("  {}", s.0)).join("\n")
@@ -274,12 +277,12 @@ fn resolve_dependencies(
 		let info = raur_info_assert_one(&split_name);
 		split_to_pkgbase.insert(split_name.to_string(), info.package_base);
 		split_to_version.insert(split_name.to_string(), info.version);
-		let deps = info
-			.depends
-			.iter()
-			.chain(info.make_depends.iter())
+		let lower_dependencies = info.make_depends.iter().map(|d| (d, 1));
+		let flat_dependencies = info.depends.iter().map(|d| (d, 0));
+		let deps = lower_dependencies
+			.chain(flat_dependencies)
 			.collect::<Vec<_>>();
-		for dep in deps.into_iter() {
+		for (dep, depth_diff) in deps.into_iter() {
 			if pacman::is_package_installed(alpm, &dep) {
 				// skip if already installed
 			} else if !pacman::is_package_installable(alpm, &dep) {
@@ -293,7 +296,7 @@ fn resolve_dependencies(
 					split_to_depth,
 					split_to_pkgbase,
 					split_to_version,
-					depth + 1,
+					depth + depth_diff,
 					alpm,
 				);
 			} else {

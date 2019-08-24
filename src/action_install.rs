@@ -1,3 +1,4 @@
+use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_files;
@@ -5,41 +6,46 @@ use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
 
-use core::cmp;
 use directories::ProjectDirs;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use lazy_static::lazy_static;
-use libalpm::Alpm;
 use log::debug;
-use log::info;
 use log::trace;
 use raur::Package;
-use regex::Regex;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
 pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
-	let mut pacman_deps = IndexSet::new();
-	let mut split_to_depth = IndexMap::new();
-	let mut split_to_pkgbase = IndexMap::new();
-	let mut split_to_version = IndexMap::new();
 	let alpm = pacman::create_alpm();
-	for install_target in targets {
-		resolve_dependencies(
-			&install_target,
-			&mut pacman_deps,
-			&mut split_to_depth,
-			&mut split_to_pkgbase,
-			&mut split_to_version,
-			0,
-			&alpm,
+	let (all_recursive_packages, split_to_raur, pacman_deps, split_to_depth) =
+		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
+			panic!("Failed to fetch info from AUR, {}", err);
+		});
+	let split_to_pkgbase: IndexMap<String, String> = split_to_raur
+		.iter()
+		.map(|(split, raur)| (split.to_string(), raur.package_base.to_string()))
+		.collect();
+	let split_to_version: IndexMap<String, String> = split_to_raur
+		.iter()
+		.map(|(split, raur)| (split.to_string(), raur.version.to_string()))
+		.collect();
+
+	let not_found = all_recursive_packages
+		.into_iter()
+		.filter(|p| !split_to_raur.contains_key(p))
+		.collect_vec();
+	if !not_found.is_empty() {
+		eprintln!(
+			"Need to install packages: {:?}, but they are not found on AUR.",
+			not_found
 		);
+		std::process::exit(1)
 	}
+
 	show_install_summary(&pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = rua_files::review_dir(dirs, pkgbase);
@@ -220,102 +226,6 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 	}
 }
 
-fn clean_and_check_package_name(name: &str) -> String {
-	match clean_package_name(name) {
-		Some(name) => name,
-		None => {
-			eprintln!("Unexpected package name {}", name);
-			std::process::exit(1)
-		}
-	}
-}
-
-fn clean_package_name(name: &str) -> Option<String> {
-	lazy_static! {
-		static ref CLEANUP: Regex = Regex::new(r"(=.*|>.*|<.*)").unwrap_or_else(|err| panic!(
-			"{}:{} Failed to parse regexp, {}",
-			file!(),
-			line!(),
-			err
-		));
-	}
-	let name: String = CLEANUP.replace_all(name, "").to_lowercase();
-	lazy_static! {
-		// From PKGBUILD manual page:
-		// Valid characters are alphanumerics, and any of the following characters: “@ . _ + -”.
-		// Additionally, names are not allowed to start with hyphens or dots.
-		static ref NAME_REGEX: Regex = Regex::new(r"^[a-z0-9@_+][a-z0-9@_+.-]*$").unwrap_or_else(
-			|err| panic!("{}:{} Failed to parse regexp, {}", file!(), line!(), err)
-		);
-	}
-	if NAME_REGEX.is_match(&name) {
-		Some(name)
-	} else {
-		None
-	}
-}
-
-/// Resolve dependencies recursively.
-/// "split_name" is the `pkgname` in PKGBUILD terminology. It's called "split" to avoid
-/// ambiguity of "package name" meaning.
-fn resolve_dependencies(
-	split_name: &str,
-	pacman_deps: &mut IndexSet<String>,
-	split_to_depth: &mut IndexMap<String, i32>,
-	split_to_pkgbase: &mut IndexMap<String, String>,
-	split_to_version: &mut IndexMap<String, String>,
-	depth: i32,
-	alpm: &Alpm,
-) {
-	let split_name = clean_and_check_package_name(&split_name);
-	if let Some(old_depth) = split_to_depth.get(&split_name) {
-		let old_depth = *old_depth;
-		split_to_depth.insert(split_name.to_owned(), cmp::max(depth + 1, old_depth));
-		info!("Skipping already resolved package {}", split_name);
-	} else {
-		split_to_depth.insert(split_name.to_owned(), depth);
-		let info = raur_info_assert_one(&split_name);
-		split_to_pkgbase.insert(split_name.to_string(), info.package_base);
-		split_to_version.insert(split_name.to_string(), info.version);
-		let lower_dependencies = info.make_depends.iter().map(|d| (d, 1));
-		let flat_dependencies = info.depends.iter().map(|d| (d, 0));
-		let deps = lower_dependencies
-			.chain(flat_dependencies)
-			.collect::<Vec<_>>();
-		for (dep, depth_diff) in deps.into_iter() {
-			if pacman::is_package_installed(alpm, &dep) {
-				// skip if already installed
-			} else if !pacman::is_package_installable(alpm, &dep) {
-				info!(
-					"{} depends on AUR package {}. Trying to resolve it...",
-					split_name, &dep
-				);
-				resolve_dependencies(
-					&dep,
-					pacman_deps,
-					split_to_depth,
-					split_to_pkgbase,
-					split_to_version,
-					depth + depth_diff,
-					alpm,
-				);
-			} else {
-				pacman_deps.insert(dep.to_owned());
-			}
-		}
-	}
-}
-
-fn raur_info_assert_one(pkg: &str) -> Package {
-	match raur_info(pkg) {
-		Some(pkg) => pkg,
-		None => {
-			eprintln!("Package {} not found in AUR", pkg);
-			std::process::exit(1)
-		}
-	}
-}
-
 pub fn raur_info(pkg: &str) -> Option<Package> {
 	trace!(
 		"{}:{} Fetching AUR information for package {}",
@@ -326,34 +236,4 @@ pub fn raur_info(pkg: &str) -> Option<Package> {
 	let info = raur::info(&[pkg]);
 	let info = info.unwrap_or_else(|e| panic!("Failed to fetch info for package {}, {}", &pkg, e));
 	info.into_iter().next()
-}
-
-#[cfg(test)]
-mod tests {
-	use crate::action_install::*;
-
-	#[test]
-	fn test_starting_hyphen() {
-		assert_eq!(clean_package_name("test"), Some("test".to_string()));
-		assert_eq!(
-			clean_package_name("abcdefghijklmnopqrstuvwxyz0123456789@_+.-"),
-			Some("abcdefghijklmnopqrstuvwxyz0123456789@_+.-".to_string())
-		);
-
-		assert_eq!(clean_package_name(""), None);
-		assert_eq!(clean_package_name("-test"), None);
-		assert_eq!(clean_package_name(".test"), None);
-		assert_eq!(clean_package_name("!"), None);
-		assert_eq!(clean_package_name("german_ö"), None);
-
-		assert_eq!(clean_package_name("@"), Some("@".to_string()));
-		assert_eq!(clean_package_name("_"), Some("_".to_string()));
-		assert_eq!(clean_package_name("+"), Some("+".to_string()));
-
-		assert_eq!(clean_package_name("test>=0"), Some("test".to_string()));
-		assert_eq!(clean_package_name("test>0"), Some("test".to_string()));
-		assert_eq!(clean_package_name("test<0"), Some("test".to_string()));
-		assert_eq!(clean_package_name("test<=0"), Some("test".to_string()));
-		assert_eq!(clean_package_name("test=0"), Some("test".to_string()));
-	}
 }

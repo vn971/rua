@@ -5,6 +5,7 @@ mod action_builddir;
 mod action_install;
 mod action_search;
 mod action_upgrade;
+mod aur_rpc_utils;
 mod cli_args;
 mod git_utils;
 mod pacman;

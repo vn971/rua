@@ -60,7 +60,6 @@ fn overwrite_script(path: &Path, content: &[u8]) {
 
 // sets environment and other things applicable to all RUA commands
 pub fn prepare_environment() {
-	set_env_if_not_set("RUST_BACKTRACE", "1"); // if it wasn't set to "0" explicitly, set it to 1.
 	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
 		.format(|buf, record| {
 			writeln!(

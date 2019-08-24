@@ -4,18 +4,14 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use libalpm::Alpm;
+use log::trace;
 use raur::Package;
 use regex::Regex;
-use log::trace;
 
 type RaurInfo = IndexMap<String, Package>;
 type PacmanDependencies = IndexSet<String>;
 type DepthMap = IndexMap<String, i32>;
-type RecursiveInfo = (
-	RaurInfo,
-	PacmanDependencies,
-	DepthMap,
-);
+type RecursiveInfo = (RaurInfo, PacmanDependencies, DepthMap);
 
 pub fn recursive_info(
 	root_packages_to_process: &[String],

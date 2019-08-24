@@ -13,7 +13,7 @@ before_script:
   - rustup component add rustfmt
 
 script:
-  - cargo test --verbose --all
+  - cargo check --verbose --all
   - cargo clippy --all-targets --all-features -- -D warnings
   - cargo fmt --all -- --check
   - shellcheck -e SC1090 res/wrap.sh  # exclude non-constant sourcing that shellcheck cannot check

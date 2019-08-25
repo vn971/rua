@@ -78,7 +78,7 @@ fn main() {
 		} => {
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
-		Action::Builddir { offline, target } => action_builddir::build_dir(offline, target, &dirs),
+		Action::Builddir { offline, target } => action_builddir::action_builddir(offline, target, &dirs),
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
 			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));
@@ -90,7 +90,7 @@ fn main() {
 				.ok();
 		}
 		Action::Tarcheck { target } => {
-			tar_check::tar_check(&target);
+			tar_check::tar_check_unwrap(&target);
 			eprintln!("Finished checking pachage: {:?}", target);
 		}
 		Action::Upgrade {} => {

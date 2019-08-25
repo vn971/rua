@@ -195,7 +195,7 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 		.collect::<Vec<_>>();
 	trace!("Files filtered for tar checking: {:?}", &dir_items);
 	for file in dir_items.iter() {
-		tar_check::tar_check(&file.path())
+		tar_check::tar_check_unwrap(&file.path());
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_files::checked_tars_dir(dirs, name);

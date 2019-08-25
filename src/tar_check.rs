@@ -9,7 +9,15 @@ use std::path::PathBuf;
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check(tar_file: &Path) {
+pub fn tar_check_unwrap(tar_file: &Path) {
+	let result = tar_check(tar_file);
+	result.unwrap_or_else(|err| {
+		eprintln!("{}", err);
+		std::process::exit(1)
+	})
+}
+
+pub fn tar_check(tar_file: &Path) -> Result<(), String> {
 	let tar_str = tar_file
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));
@@ -17,14 +25,16 @@ pub fn tar_check(tar_file: &Path) {
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
 		debug!("Checked package tar file {}", tar_str);
+		Ok(())
 	} else if tar_str.ends_with(".tar") {
 		tar_check_archive(Archive::new(archive), tar_str);
 		debug!("Checked package tar file {}", tar_str);
+		Ok(())
 	} else {
-		panic!(
-			"Unexpected archive type (only .pkg.tar and .pkg.tar.xz are supported): {}",
-			tar_str
-		);
+		Err(format!(
+			"Archive {:?} cannot be analyzed. Only .tar.xz and .tar files are supported",
+			tar_file
+		))
 	}
 }
 

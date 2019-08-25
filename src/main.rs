@@ -78,7 +78,9 @@ fn main() {
 		} => {
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
-		Action::Builddir { offline, target } => action_builddir::action_builddir(offline, target, &dirs),
+		Action::Builddir { offline, target } => {
+			action_builddir::action_builddir(offline, target, &dirs)
+		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
 			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));

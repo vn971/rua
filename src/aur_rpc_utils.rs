@@ -1,9 +1,9 @@
 use crate::pacman;
+use alpm::Alpm;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use libalpm::Alpm;
 use log::trace;
 use raur::Package;
 use regex::Regex;

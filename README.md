@@ -61,6 +61,7 @@ cargo install rua
 ```
 
 Does not include bash/zsh/fish completions, but everything else should work.
+If you use development version `pacman-git`, use `cargo install --features git rua` instead.
 
 
 ## How it works / reviewing

@@ -118,7 +118,7 @@ pub fn prepare_for_jailed_action(dirs: &ProjectDirs) {
 		exit(4)
 	}
 	std::fs::create_dir_all(dirs.cache_dir()).expect("Failed to create project cache directory");
-	rm_rf::force_remove_all(dirs.config_dir().join(".system"), true).ok();
+	rm_rf::force_remove_all(dirs.config_dir().join(".system")).ok();
 	std::fs::create_dir_all(dirs.config_dir().join(".system"))
 		.expect("Failed to create project config directory");
 	std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d"))

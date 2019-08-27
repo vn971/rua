@@ -129,7 +129,7 @@ fn install_all(
 		for (pkgbase, _depth, _split) in &packages {
 			let review_dir = rua_files::review_dir(dirs, pkgbase);
 			let build_dir = rua_files::build_dir(dirs, pkgbase);
-			rm_rf::force_remove_all(&build_dir, true).expect("Failed to remove old build dir");
+			rm_rf::force_remove_all(&build_dir).expect("Failed to remove old build dir");
 			std::fs::create_dir_all(&build_dir).expect("Failed to create build dir");
 			fs_extra::copy_items(
 				&vec![review_dir],
@@ -137,7 +137,7 @@ fn install_all(
 				&CopyOptions::new(),
 			)
 			.expect("failed to copy reviewed dir to build dir");
-			rm_rf::force_remove_all(build_dir.join(".git"), true).expect("Failed to remove .git");
+			rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove .git");
 			wrapped::build_directory(
 				&build_dir.to_str().expect("Non-UTF8 directory name"),
 				dirs,
@@ -199,7 +199,7 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_files::checked_tars_dir(dirs, name);
-	rm_rf::force_remove_all(&checked_tars_dir, true).unwrap_or_else(|err| {
+	rm_rf::force_remove_all(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
 			"Failed to clean checked tar files dir {:?}, {}",
 			checked_tars_dir, err,

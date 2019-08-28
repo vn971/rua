@@ -118,6 +118,7 @@ pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
 		.wait_with_output()
 		.map_err(|e| format!("Failed waiting for shellcheck to exit: {}", e))?;
 	if child.status.success() {
+		eprintln!("Good job, shellcheck didn't find problems in the PKGBUILD.");
 		Ok(())
 	} else {
 		Err("".to_string())

@@ -49,11 +49,10 @@ impl AlpmWrapper for AlpmImpl {
 			.localdb()
 			.pkgs()
 			.expect("Could not get alpm.localdb().pkgs() packages");
-		let aur_pkgs = pkg_cache
-			.filter(|pkg| !self.is_package_installable(pkg.name()))
+		pkg_cache
+			.filter(|pkg| !self.is_installed(pkg.name()))
 			.map(|pkg| pkg.name().to_string())
-			.collect::<Vec<_>>();
-		aur_pkgs
+			.collect::<Vec<_>>()
 	}
 
 	fn is_package_older_than(&self, package: &str, version: &str) -> bool {

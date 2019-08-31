@@ -39,7 +39,7 @@ impl AlpmWrapper for AlpmImpl {
 			.map_or(false, |sat| sat.install_date().is_some())
 	}
 
-	fn is_package_installable(&self, package: &str) -> bool {
+	fn is_installed(&self, package: &str) -> bool {
 		self.alpm.syncdbs().find_satisfier(package).is_some()
 	}
 

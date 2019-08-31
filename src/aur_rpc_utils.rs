@@ -42,7 +42,7 @@ pub fn recursive_info(
 			for (dependency, depth_diff) in deps.into_iter() {
 				if alpm.is_package_installed(&dependency) {
 					// skip if already installed
-				} else if !alpm.is_package_installable(&dependency) {
+				} else if !alpm.is_installed(&dependency) {
 					if !depth_map.contains_key(&dependency) {
 						eprintln!(
 							"Package {} depends on {}. Resolving...",

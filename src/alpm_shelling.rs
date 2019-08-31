@@ -20,7 +20,7 @@ impl AlpmWrapper for AlpmImpl {
 			.success()
 	}
 
-	fn is_package_installable(&self, package: &str) -> bool {
+	fn is_installed(&self, package: &str) -> bool {
 		Command::new("pacman")
 			.arg("-Sddp")
 			.arg(&package)

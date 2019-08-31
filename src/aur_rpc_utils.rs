@@ -40,9 +40,9 @@ pub fn recursive_info(
 			let deps = lower_dependencies.chain(flat_dependencies).collect_vec();
 
 			for (dependency, depth_diff) in deps.into_iter() {
-				if pacman::is_package_installed(alpm, &dependency) {
+				if pacman::is_installed(alpm, &dependency) {
 					// skip if already installed
-				} else if !pacman::is_package_installable(alpm, &dependency) {
+				} else if !pacman::is_installable(alpm, &dependency) {
 					if !depth_map.contains_key(&dependency) {
 						eprintln!(
 							"Package {} depends on {}. Resolving...",

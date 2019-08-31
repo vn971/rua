@@ -11,7 +11,7 @@ pub fn upgrade(dirs: &ProjectDirs) {
 		.pkgs()
 		.expect("Could not get alpm.localdb().pkgs() packages");
 	let aur_pkgs = pkg_cache
-		.filter(|pkg| !pacman::is_package_installable(&alpm, pkg.name()))
+		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
 		.map(|pkg| (pkg.name(), pkg.version().to_string()))
 		.collect::<Vec<_>>();
 	let aur_pkgs_string = aur_pkgs

@@ -9,7 +9,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str;
 
-pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
+/// Checks if either this package is installed, or anything that provides the name
+pub fn is_installed(alpm: &Alpm, name: &str) -> bool {
 	alpm.localdb()
 		.pkgs()
 		.expect("failed to open alpm.localdb().pkgs()")
@@ -17,7 +18,8 @@ pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
 		.map_or(false, |sat| sat.install_date().is_some())
 }
 
-pub fn is_package_installable(alpm: &Alpm, name: &str) -> bool {
+/// Checks if either this package is installable, or anything that provides the name is
+pub fn is_installable(alpm: &Alpm, name: &str) -> bool {
 	alpm.syncdbs().find_satisfier(name).is_some()
 }
 
@@ -102,7 +104,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 			}
 		}
 		let alpm = create_local_alpm();
-		packages.retain(|(name, _)| !is_package_installed(&alpm, name));
+		packages.retain(|(name, _)| !is_installed(&alpm, name));
 	}
 }
 

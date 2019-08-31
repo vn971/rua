@@ -1,6 +1,5 @@
+use crate::alpm_wrapper::AlpmWrapper;
 use crate::terminal_util;
-use alpm::Alpm;
-use alpm::SigLevel;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -8,50 +7,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str;
-
-pub fn is_package_installed(alpm: &Alpm, name: &str) -> bool {
-	alpm.localdb()
-		.pkgs()
-		.expect("failed to open alpm.localdb().pkgs()")
-		.find_satisfier(name)
-		.map_or(false, |sat| sat.install_date().is_some())
-}
-
-pub fn is_package_installable(alpm: &Alpm, name: &str) -> bool {
-	alpm.syncdbs().find_satisfier(name).is_some()
-}
-
-fn get_repository_list() -> Vec<String> {
-	let cmd = Command::new("pacman-conf")
-		.arg("--repo-list")
-		.output()
-		.expect("cannot get repository list: pacman-conf --repo-list");
-	let output = String::from_utf8(cmd.stdout)
-		.expect("Failed to get repo list from `pacman-conf --repo-list`");
-	output.lines().map(ToOwned::to_owned).collect()
-}
-
-/// Create `Alpm` instance with no registered databases except local
-fn create_local_alpm() -> Alpm {
-	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-	alpm.unwrap_or_else(|err| {
-		panic!(
-			"{}:{} Failed to initialize alpm library, {}",
-			file!(),
-			line!(),
-			err
-		)
-	})
-}
-
-pub fn create_alpm() -> Alpm {
-	let alpm = create_local_alpm();
-	for repo in get_repository_list() {
-		alpm.register_syncdb(&repo, SigLevel::NONE)
-			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
-	}
-	alpm
-}
 
 fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
 	let mut attempt = 0;
@@ -101,8 +56,8 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				break;
 			}
 		}
-		let alpm = create_local_alpm();
-		packages.retain(|(name, _)| !is_package_installed(&alpm, name));
+		let alpm = crate::alpm_impl::new();
+		packages.retain(|(name, _)| !alpm.is_package_installed(name));
 	}
 }
 
@@ -122,17 +77,6 @@ pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
 	}
 	ensure_packages_installed(map, &["-S", "--asdeps"]);
 }
-
-// Some old functions that invoke shelling below.
-// Currently, using "libalpm" crate is preferred instead.
-// These functions might get back in use should RUA-s move away from using libalpm (I don't know that yet).
-
-//pub fn is_package_installable(package: &str) -> bool {
-//	Command::new("pacman").arg("-Sddp").arg(&package)
-//		.stdout(Stdio::null()).stderr(Stdio::null()).status()
-//		.expect(&format!("Failed to determine if package {} is installable", package))
-//		.success()
-//}
 
 // Architecture as defined in the local pacman configuration
 lazy_static! {

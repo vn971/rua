@@ -1,5 +1,5 @@
-use crate::pacman;
-use alpm::Alpm;
+use crate::alpm_impl::AlpmImpl;
+use crate::alpm_wrapper::AlpmWrapper;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
@@ -15,7 +15,7 @@ type RecursiveInfo = (RaurInfo, PacmanDependencies, DepthMap);
 
 pub fn recursive_info(
 	root_packages_to_process: &[String],
-	alpm: &Alpm,
+	alpm: &AlpmImpl,
 ) -> Result<RecursiveInfo, raur::Error> {
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
@@ -40,9 +40,9 @@ pub fn recursive_info(
 			let deps = lower_dependencies.chain(flat_dependencies).collect_vec();
 
 			for (dependency, depth_diff) in deps.into_iter() {
-				if pacman::is_package_installed(alpm, &dependency) {
+				if alpm.is_package_installed(&dependency) {
 					// skip if already installed
-				} else if !pacman::is_package_installable(alpm, &dependency) {
+				} else if !alpm.is_package_installable(&dependency) {
 					if !depth_map.contains_key(&dependency) {
 						eprintln!(
 							"Package {} depends on {}. Resolving...",

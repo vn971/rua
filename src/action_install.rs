@@ -20,7 +20,7 @@ use std::fs::ReadDir;
 use std::path::PathBuf;
 
 pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
-	let alpm = pacman::create_alpm();
+	let alpm = crate::alpm_impl::new();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
 			panic!("Failed to fetch info from AUR, {}", err);

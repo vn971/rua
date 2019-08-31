@@ -16,7 +16,8 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-git = ["alpm/git"]
+alpm_linking_stable = ["alpm"]
+alpm_linking_git = ["alpm/git"]
 
 [build-dependencies]
 structopt = "0.2.18"
@@ -32,7 +33,7 @@ fs_extra = "1.1.0"
 indexmap = "1.1.0"
 itertools = "0.8.0"
 lazy_static = "1.4.0"
-alpm = "0.5.0"
+alpm = { version = "0.5.0", optional = true }
 log = "0.4.8"
 prettytable-rs = "0.8.0"
 raur = "1.0.2"
@@ -44,7 +45,6 @@ tar = "0.4.26"
 term_size = "0.3.1"
 uname = "0.1.1"
 users = "0.9.1"
-version-compare = "0.0.9"
 xz2 = "0.1.6"
 
 [profile.release]

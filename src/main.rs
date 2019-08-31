@@ -5,6 +5,19 @@ mod action_builddir;
 mod action_install;
 mod action_search;
 mod action_upgrade;
+
+mod alpm_wrapper;
+
+#[cfg(not(any(feature = "alpm_linking_stable", feature = "alpm_linking_git")))]
+mod alpm_shelling;
+#[cfg(not(any(feature = "alpm_linking_stable", feature = "alpm_linking_git")))]
+use alpm_shelling as alpm_impl;
+
+#[cfg(any(feature = "alpm_linking_stable", feature = "alpm_linking_git"))]
+mod alpm_linking;
+#[cfg(any(feature = "alpm_linking_stable", feature = "alpm_linking_git"))]
+use alpm_linking as alpm_impl;
+
 mod aur_rpc_utils;
 mod cli_args;
 mod git_utils;

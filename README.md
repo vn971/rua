@@ -11,11 +11,11 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Minimize user distractions:
   * verify all packages once, build without interruptions
   * group built dependencies for batch review/install
-- Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap) to build packages:
-  * supports "offline" builds (by using a network namespace)
+- Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap):
+  * supports "offline" builds
   * builds in isolated filesystem, see [safety](#Safety) section below
-  * uses seccomp to limit available syscalls (e.g. the build cannot call `ptrace`)
-  * filesystem is mounted with "nosuid" (e.g. the build cannot execute `sudo`)
+  * uses `seccomp` to limit available syscalls (e.g. the build cannot call `ptrace`)
+  * the build cannot execute `sudo` (filesystem is mounted with `nosuid`)
 - Written in Rust
 
 
@@ -42,7 +42,7 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/ .
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed git base-devel bubblewrap-suid shellcheck cargo
+sudo pacman -S --needed git base-devel bubblewrap-suid lz openssl shellcheck cargo
 ```
 
 

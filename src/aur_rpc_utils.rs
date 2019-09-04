@@ -6,6 +6,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::trace;
 use raur::Package;
+use raur::Raur;
 use regex::Regex;
 
 type RaurInfo = IndexMap<String, Package>;
@@ -17,6 +18,7 @@ pub fn recursive_info(
 	root_packages_to_process: &[String],
 	alpm: &Alpm,
 ) -> Result<RecursiveInfo, raur::Error> {
+	let raur_handle = raur::Handle::default();
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
 	for pkg in &queue {
@@ -28,7 +30,7 @@ pub fn recursive_info(
 		let split_at = queue.len().max(200) - 200;
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
-		for info in raur::info(&to_process)? {
+		for info in raur_handle.info(&to_process)? {
 			let lower_dependencies = info
 				.make_depends
 				.iter()

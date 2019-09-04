@@ -14,7 +14,7 @@ arg_enum! {
 #[structopt(rename_all = "kebab-case")]
 pub struct CliArgs {
 	#[structopt(
-		raw(possible_values = "&CLIColorType::variants()"),
+		possible_values = &CLIColorType::variants(),
 		case_insensitive = true,
 		default_value = "auto",
 		long = "color",

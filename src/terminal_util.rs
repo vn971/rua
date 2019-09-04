@@ -1,6 +1,6 @@
 use std::env;
 use std::io;
-use std::path::PathBuf;
+use std::path::Path;
 use std::process::Command;
 
 pub fn read_line_lowercase() -> String {
@@ -13,7 +13,7 @@ pub fn read_line_lowercase() -> String {
 
 /// For example: SHELL, PAGER, EDITOR.
 pub fn run_env_command(
-	dir: &PathBuf,
+	dir: &Path,
 	env_variable_name: &str,
 	alternative_executable: &str,
 	arguments: &[&str],

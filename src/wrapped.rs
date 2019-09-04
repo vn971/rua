@@ -10,6 +10,7 @@ use log::info;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
@@ -79,7 +80,7 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 	build_local(dir, project_dirs, offline);
 }
 
-pub fn shellcheck(target: &PathBuf) -> Result<(), String> {
+pub fn shellcheck(target: &Path) -> Result<(), String> {
 	if !target.exists() {
 		return Err("Cannot find target for shellcheck, aborting".to_string());
 	};

@@ -4,9 +4,9 @@ use crate::terminal_util;
 use crate::wrapped;
 use directories::ProjectDirs;
 use log::debug;
-use std::path::PathBuf;
+use std::path::Path;
 
-pub fn review_repo(dir: &PathBuf, pkgbase: &str, dirs: &ProjectDirs) {
+pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &ProjectDirs) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to read directory for reviewing, {}",

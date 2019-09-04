@@ -2,7 +2,6 @@ use crate::terminal_util;
 use alpm::Alpm;
 use alpm::SigLevel;
 use indexmap::IndexSet;
-use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::path::Path;
 use std::path::PathBuf;
@@ -66,16 +65,13 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 						panic!("{}:{} cannot parse package name", file!(), line!())
 					})
 				})
+				.map(terminal_util::escape_bash_arg)
 				.collect::<Vec<_>>();
-			list.sort_unstable();
+			list.sort();
 			eprintln!("Packages need to be installed:");
 			eprintln!(
 				"\n    pacman {} --needed {}\n",
-				base_args
-					.iter()
-					.map(|f| terminal_util::escape_bash_arg(f))
-					.collect_vec()
-					.join(" "),
+				base_args.join(" "),
 				list.join(" ")
 			);
 			if attempt == 0 {

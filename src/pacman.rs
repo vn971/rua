@@ -65,7 +65,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 						panic!("{}:{} cannot parse package name", file!(), line!())
 					})
 				})
-				.map(terminal_util::escape_bash_arg)
+				.map(terminal_util::escape_bash_arg) // this is just printing. rua does not use bash to install packages
 				.collect::<Vec<_>>();
 			list.sort();
 			eprintln!("Packages need to be installed:");

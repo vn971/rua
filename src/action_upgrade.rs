@@ -1,8 +1,12 @@
+use crate::action_install;
 use crate::pacman;
-use crate::{action_install, terminal_util};
+use crate::print_package_table;
+use crate::terminal_util;
 use colored::*;
 use directories::ProjectDirs;
 use log::debug;
+use prettytable::format::*;
+use prettytable::*;
 use std::collections::HashSet;
 use version_compare::CompOp;
 use version_compare::VersionCompare;
@@ -51,22 +55,13 @@ pub fn upgrade(dirs: &ProjectDirs) {
 				up_to_date.push(pkg);
 			}
 		} else {
-			unexistent.push(pkg);
+			unexistent.push((pkg, local_ver));
 		}
-	}
-	if !unexistent.is_empty() {
-		eprintln!("The following packages do not seem to exist in neither AUR nor main repos:");
-		eprintln!("{}", unexistent.join(" "));
-		eprintln!("Consider deleting them or verifying if they are really in use.");
-		eprintln!();
 	}
 	if outdated.is_empty() {
 		eprintln!("All AUR packages are up-to-date. Congratulations!");
 	} else {
-		eprintln!("The following AUR packages have upstream upgrades:");
-		for (pkg, local, remote) in &outdated {
-			eprintln!("{}  {} -> {}", pkg, local, remote);
-		}
+		print_outdated(&outdated, &unexistent);
 		eprintln!();
 		let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
 		loop {
@@ -80,4 +75,31 @@ pub fn upgrade(dirs: &ProjectDirs) {
 			}
 		}
 	}
+}
+
+fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, String)]) {
+	let mut table = Table::new();
+	table.set_titles(row![
+		"Package".underline(),
+		"Current".underline(),
+		"Latest".underline()
+	]);
+
+	for (pkg, local, remote) in outdated {
+		table.add_row(row![
+			print_package_table::trunc(pkg, 39).yellow(),
+			print_package_table::trunc(local, 19),
+			print_package_table::trunc(remote, 19).green(),
+		]);
+	}
+	for (pkg, local) in unexistent {
+		table.add_row(row![
+			print_package_table::trunc(pkg, 39).yellow(),
+			print_package_table::trunc(local, 19),
+			"NOT FOUND, ignored".red(),
+		]);
+	}
+	let fmt: TableFormat = *prettytable::format::consts::FORMAT_CLEAN;
+	table.set_format(fmt);
+	table.printstd();
 }

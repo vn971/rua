@@ -3,6 +3,7 @@ use alpm::Alpm;
 use alpm::SigLevel;
 use indexmap::IndexSet;
 use lazy_static::lazy_static;
+use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -26,10 +27,20 @@ fn get_repository_list() -> Vec<String> {
 	let cmd = Command::new("pacman-conf")
 		.arg("--repo-list")
 		.output()
-		.expect("cannot get repository list: pacman-conf --repo-list");
-	let output = String::from_utf8(cmd.stdout)
-		.expect("Failed to get repo list from `pacman-conf --repo-list`");
+		.expect("cannot execute pacman-conf --repo-list");
+	let output =
+		String::from_utf8(cmd.stdout).expect("Failed to parse output of `pacman-conf --repo-list`");
 	output.lines().map(ToOwned::to_owned).collect()
+}
+
+pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
+	let cmd = Command::new("pacman-conf")
+		.arg("HoldPkg")
+		.output()
+		.map_err(|_| "cannot execute pacman-conf HoldPkg")?;
+	let output = String::from_utf8(cmd.stdout)
+		.map_err(|err| format!("Failed to parse output of pacman-conf HoldPkg, {}", err))?;
+	Ok(output.lines().map(ToOwned::to_owned).collect())
 }
 
 /// Create `Alpm` instance with no registered databases except local

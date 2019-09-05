@@ -36,11 +36,11 @@ fn get_repository_list() -> Vec<String> {
 
 pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
 	let cmd = Command::new("pacman-conf")
-		.arg("HoldPkg")
+		.arg("IgnorePkg")
 		.output()
-		.map_err(|_| "cannot execute pacman-conf HoldPkg")?;
+		.map_err(|_| "cannot execute pacman-conf IgnorePkg")?;
 	let output = String::from_utf8(cmd.stdout)
-		.map_err(|err| format!("Failed to parse output of pacman-conf HoldPkg, {}", err))?;
+		.map_err(|err| format!("Failed to parse output of pacman-conf IgnorePkg, {}", err))?;
 	Ok(output.lines().map(ToOwned::to_owned).collect())
 }
 

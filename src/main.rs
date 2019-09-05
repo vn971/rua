@@ -55,7 +55,13 @@ fn main() {
 		}
 	}
 	rua_environment::prepare_environment(&dirs);
-	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
+	let locked_file = File::open(dirs.config_dir()).unwrap_or_else(|err| {
+		panic!(
+			"Failed to open config dir {:?} for locking, {}",
+			dirs.config_dir(),
+			err
+		);
+	});
 	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
 		eprintln!("Another RUA instance already running.");
 		exit(2)

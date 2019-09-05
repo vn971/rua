@@ -2,6 +2,7 @@ use crate::terminal_util;
 use alpm::Alpm;
 use alpm::SigLevel;
 use indexmap::IndexSet;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::path::Path;
@@ -76,14 +77,16 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 						panic!("{}:{} cannot parse package name", file!(), line!())
 					})
 				})
-				.map(terminal_util::escape_bash_arg) // this is just printing. rua does not use bash to install packages
 				.collect::<Vec<_>>();
 			list.sort();
 			eprintln!("Packages need to be installed:");
 			eprintln!(
 				"\n    pacman {} --needed {}\n",
 				base_args.join(" "),
-				list.join(" ")
+				list.iter()
+					.map(|p| terminal_util::escape_bash_arg(p)) // this is only printing. rua does not use bash to install packages
+					.collect_vec()
+					.join(" ")
 			);
 			if attempt == 0 {
 				eprint!(

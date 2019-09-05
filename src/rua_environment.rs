@@ -59,7 +59,7 @@ fn overwrite_script(path: &Path, content: &[u8]) {
 }
 
 // sets environment and other things applicable to all RUA commands
-pub fn prepare_environment() {
+pub fn prepare_environment(dirs: &ProjectDirs) {
 	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
 		.format(|buf, record| {
 			writeln!(
@@ -76,9 +76,6 @@ pub fn prepare_environment() {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-}
-
-pub fn prepare_for_jailed_action(dirs: &ProjectDirs) {
 	if users::get_current_uid() == 0 {
 		eprintln!("RUA does not allow building as root.");
 		eprintln!("Also, makepkg will not allow you building as root anyway.");

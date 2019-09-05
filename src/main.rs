@@ -33,7 +33,6 @@ use std::process::exit;
 use structopt::StructOpt;
 
 fn main() {
-	rua_environment::prepare_environment();
 	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
 		.expect("Failed to determine XDG directories");
 	let config: CliArgs = CliArgs::from_args();
@@ -55,13 +54,7 @@ fn main() {
 			env::remove_var("CLICOLOR");
 		}
 	}
-
-	match config.action {
-		Action::Install { .. } | Action::Builddir { .. } | Action::Upgrade { .. } => {
-			rua_environment::prepare_for_jailed_action(&dirs)
-		}
-		_ => {}
-	}
+	rua_environment::prepare_environment(&dirs);
 	let locked_file = File::open(dirs.config_dir()).expect("Failed to find config dir for locking");
 	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
 		eprintln!("Another RUA instance already running.");

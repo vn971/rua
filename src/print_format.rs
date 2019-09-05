@@ -44,5 +44,5 @@ pub fn print_indent<'a>(
 		_ => print!("{}", v.collect::<Vec<_>>().join(" ")),
 	}
 
-	eprintln!();
+	println!(); // This is the _result_ of rua execution, not a side log. Thus no `eprintln`.
 }

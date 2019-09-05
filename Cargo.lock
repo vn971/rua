@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.14.8"
+version = "0.14.9"
 dependencies = [
  "alpm 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",

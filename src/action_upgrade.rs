@@ -2,14 +2,13 @@ use crate::action_install;
 use crate::pacman;
 use crate::print_package_table;
 use crate::terminal_util;
+use alpm::Version;
 use colored::*;
 use directories::ProjectDirs;
 use log::debug;
 use prettytable::format::*;
 use prettytable::*;
 use std::collections::HashSet;
-use version_compare::CompOp;
-use version_compare::VersionCompare;
 
 pub fn upgrade(dirs: &ProjectDirs) {
 	let alpm = pacman::create_alpm();
@@ -24,7 +23,7 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	let aur_pkgs = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
 		.filter(|pkg| !ignored_packages.contains(pkg.name()))
-		.map(|pkg| (pkg.name(), pkg.version().to_string()))
+		.map(|pkg| (pkg.name(), pkg.version()))
 		.collect::<Vec<_>>();
 	let aur_pkgs_string = aur_pkgs
 		.iter()
@@ -40,22 +39,13 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	for (pkg, local_ver) in aur_pkgs {
 		let raur_ver = action_install::raur_info(pkg).map(|p| p.version);
 		if let Some(raur_ver) = raur_ver {
-			let is_outdated = VersionCompare::compare_to(&local_ver, &raur_ver, &CompOp::Lt)
-				.unwrap_or_else(|_| {
-					eprintln!(
-						"Could not compare local->upstream versions: {}->{}  Assuming outdated...",
-						local_ver.red(),
-						raur_ver.green()
-					);
-					true
-				});
-			if is_outdated {
-				outdated.push((pkg, local_ver, raur_ver));
+			if local_ver < Version::new(&raur_ver) {
+				outdated.push((pkg, local_ver.to_string(), raur_ver));
 			} else {
 				up_to_date.push(pkg);
 			}
 		} else {
-			unexistent.push((pkg, local_ver));
+			unexistent.push((pkg, local_ver.to_string()));
 		}
 	}
 	if outdated.is_empty() {

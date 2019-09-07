@@ -22,7 +22,7 @@ git = ["alpm/git"]
 structopt = "0.3.0"
 
 [dependencies]
-alpm = "0.5.2"
+alpm = "0.6.0"
 chrono = "0.4.9"
 colored = "1.8.0"
 directories = "2.0.2"
@@ -44,7 +44,6 @@ tar = "0.4.26"
 term_size = "0.3.1"
 uname = "0.1.1"
 users = "0.9.1"
-version-compare = "0.0.9"
 xz2 = "0.1.6"
 
 [profile.release]

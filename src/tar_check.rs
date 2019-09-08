@@ -1,6 +1,7 @@
 use crate::terminal_util;
 
 use colored::*;
+use indexmap::IndexSet;
 use log::debug;
 use std::fs::File;
 use std::io::Read;
@@ -9,18 +10,15 @@ use std::path::PathBuf;
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check_unwrap(tar_file: &Path) {
-	let result = tar_check(tar_file);
+pub fn tar_check_unwrap(tar_file: &Path, file_name: &str) {
+	let result = tar_check(tar_file, file_name);
 	result.unwrap_or_else(|err| {
 		eprintln!("{}", err);
 		std::process::exit(1)
 	})
 }
 
-pub fn tar_check(tar_file: &Path) -> Result<(), String> {
-	let tar_str = tar_file
-		.to_str()
-		.unwrap_or_else(|| panic!("{}:{} Failed to parse tar file name", file!(), line!()));
+pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	if tar_str.ends_with(".tar.xz") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
@@ -128,5 +126,39 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprintln!("Exiting...");
 			std::process::exit(-1);
 		}
+	}
+}
+
+pub fn common_suffix_length(pkg_names: &[&str], archive_whitelist: &IndexSet<&str>) -> usize {
+	let min_len = pkg_names.iter().map(|p| p.len()).min().unwrap_or(0);
+	for suffix_length in 0..min_len {
+		for pkg in pkg_names {
+			let suffix_start = pkg.len() - suffix_length;
+			let prefix = &pkg[..suffix_start];
+			if archive_whitelist.contains(prefix) {
+				return suffix_length;
+			}
+		}
+	}
+	min_len
+}
+
+#[cfg(test)]
+mod tests {
+	use crate::tar_check::*;
+	use indexmap::IndexSet;
+
+	fn test(files: &[&str], whitelist: &[&str], expected: usize) {
+		let set: IndexSet<&str> = whitelist.iter().copied().collect();
+		let result = common_suffix_length(files, &set);
+		assert_eq!(result, expected)
+	}
+
+	#[test]
+	fn test_all() {
+		test(&["a-1.pkg.tar", "b-1.pkg.tar"], &["a"], 10);
+		test(&["a-1.pkg.tar", "bbbb-1.pkg.tar"], &["a", "dinosaur"], 10);
+		test(&["a-x-1.pkg.tar", "b-x-1.pkg.tar"], &["a-x"], 10);
+		test(&["a-x-1.pkg.tar", "b-x-1.pkg.tar"], &["a"], 12);
 	}
 }

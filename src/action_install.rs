@@ -29,11 +29,6 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 		.iter()
 		.map(|(split, raur)| (split.to_string(), raur.package_base.to_string()))
 		.collect();
-	let split_to_version: IndexMap<String, String> = split_to_raur
-		.iter()
-		.map(|(split, raur)| (split.to_string(), raur.version.to_string()))
-		.collect();
-
 	let not_found = split_to_depth
 		.keys()
 		.filter(|pkg| !split_to_raur.contains_key(*pkg))
@@ -55,14 +50,7 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 		reviewing::review_repo(&dir, pkgbase, dirs);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(
-		dirs,
-		split_to_depth,
-		split_to_pkgbase,
-		split_to_version,
-		is_offline,
-		asdeps,
-	);
+	install_all(dirs, split_to_depth, split_to_pkgbase, is_offline, asdeps);
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
@@ -97,15 +85,14 @@ fn install_all(
 	dirs: &ProjectDirs,
 	split_to_depth: IndexMap<String, i32>,
 	split_to_pkgbase: IndexMap<String, String>,
-	split_to_version: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
 ) {
-	let archive_whitelist = split_to_version
-		.into_iter()
-		.map(|pair| format!("{}-{}", pair.0, pair.1))
-		.collect::<Vec<_>>();
-	trace!("All expected archive files: {:?}", archive_whitelist);
+	let archive_whitelist = split_to_depth
+		.iter()
+		.map(|(split, _depth)| split.as_str())
+		.collect::<IndexSet<_>>();
+	trace!("All expected split packages: {:?}", archive_whitelist);
 	// get a list of (pkgbase, depth)
 	let packages = split_to_pkgbase.iter().map(|(split, pkgbase)| {
 		let depth = split_to_depth
@@ -172,8 +159,8 @@ fn install_all(
 	}
 }
 
-pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[String]) {
-	debug!("{}:{} checking tars for package {}", file!(), line!(), name);
+pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &IndexSet<&str>) {
+	debug!("checking tars and moving for package {}", name);
 	let build_dir = rua_files::build_dir(dirs, name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
 		panic!(
@@ -182,20 +169,27 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 		)
 	});
 	let dir_items = dir_items.map(|f| f.expect("Failed to open file for tar_check analysis"));
-	let dir_items = dir_items
-		.filter(|file| {
+	let mut dir_items = dir_items
+		.map(|file| {
 			let file_name = file.file_name();
 			let file_name = file_name
-				.to_str()
+				.into_string()
 				.expect("Non-UTF8 characters in tar file name");
-			archive_whitelist
-				.iter()
-				.any(|prefix| file_name.starts_with(prefix))
+			(file, file_name)
 		})
+		.filter(|(_, name)| (name.ends_with(".pkg.tar") || name.ends_with(".pkg.tar.xz")))
 		.collect::<Vec<_>>();
+	let dir_items_names = dir_items
+		.iter()
+		.map(|(_, name)| name.as_str())
+		.collect_vec();
+	let common_suffix_length =
+		tar_check::common_suffix_length(&dir_items_names, &archive_whitelist);
+	dir_items
+		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
 	trace!("Files filtered for tar checking: {:?}", &dir_items);
-	for file in dir_items.iter() {
-		tar_check::tar_check_unwrap(&file.path());
+	for (file, file_name) in dir_items.iter() {
+		tar_check::tar_check_unwrap(&file.path(), file_name);
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_files::checked_tars_dir(dirs, name);
@@ -212,11 +206,7 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[
 		);
 	});
 
-	for file in dir_items {
-		let file_name = file.file_name();
-		let file_name = file_name
-			.to_str()
-			.expect("Non-UTF8 characters in tar file name");
+	for (file, file_name) in dir_items {
 		fs::rename(&file.path(), checked_tars_dir.join(file_name)).unwrap_or_else(|e| {
 			panic!(
 				"Failed to move {:?} (build artifact) to {:?}, {}",

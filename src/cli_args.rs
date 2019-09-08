@@ -69,7 +69,7 @@ pub enum Action {
 		#[structopt(help = "PKGBUILD to check (or ./PKGBUILD if not provided)")]
 		target: Option<PathBuf>,
 	},
-	#[structopt(about = "Check *.tar or *.tar.xz archive")]
+	#[structopt(about = "Check *.pkg.tar or *.pkg.tar.xz archive")]
 	Tarcheck {
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,

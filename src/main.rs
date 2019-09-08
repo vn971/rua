@@ -91,7 +91,10 @@ fn main() {
 				.ok();
 		}
 		Action::Tarcheck { target } => {
-			tar_check::tar_check_unwrap(&target);
+			tar_check::tar_check_unwrap(
+				&target,
+				target.to_str().expect("target is not valid UTF-8"),
+			);
 			eprintln!("Finished checking pachage: {:?}", target);
 		}
 		Action::Upgrade {} => {

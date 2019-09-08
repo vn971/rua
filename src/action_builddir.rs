@@ -12,14 +12,13 @@ pub fn action_builddir(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
 	wrapped::build_directory(dir_str, &dirs, offline);
 	for file in dir
 		.read_dir()
-		.expect("directory with built package not found")
+		.expect("cannot read directory with built package")
 	{
-		tar_check::tar_check(
-			&file
-				.expect("Failed to open file for tar_check analysis")
-				.path(),
-		)
-		.ok();
+		let file = file
+			.expect("Failed to open file for tar_check analysis")
+			.path();
+		let file_str = file.to_str().expect("Builddir target has unvalid UTF-8");
+		tar_check::tar_check(&file, file_str).ok();
 	}
 	eprintln!("Package built and checked in: {}", dir_str);
 	eprintln!("If you want to install the built artifacts, do it manually.");

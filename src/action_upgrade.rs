@@ -89,7 +89,7 @@ fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, Stri
 			"NOT FOUND, ignored".red(),
 		]);
 	}
-	let fmt: TableFormat = *prettytable::format::consts::FORMAT_CLEAN;
+	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();
 	table.set_format(fmt);
 	table.printstd();
 }

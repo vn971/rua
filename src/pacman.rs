@@ -1,7 +1,7 @@
 use crate::terminal_util;
 use alpm::Alpm;
 use alpm::SigLevel;
-use indexmap::IndexSet;
+use aur_depends::Actions;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::collections::HashSet;
@@ -17,11 +17,6 @@ pub fn is_installed(alpm: &Alpm, name: &str) -> bool {
 		.expect("failed to open alpm.localdb().pkgs()")
 		.find_satisfier(name)
 		.map_or(false, |sat| sat.install_date().is_some())
-}
-
-/// Checks if either this package is installable, or anything that provides the name is
-pub fn is_installable(alpm: &Alpm, name: &str) -> bool {
-	alpm.syncdbs().find_satisfier(name).is_some()
 }
 
 fn get_repository_list() -> Vec<String> {
@@ -47,14 +42,21 @@ pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
 /// Create `Alpm` instance with no registered databases except local
 fn create_local_alpm() -> Alpm {
 	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-	alpm.unwrap_or_else(|err| {
+	let mut alpm = alpm.unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to initialize alpm library, {}",
 			file!(),
 			line!(),
 			err
 		)
-	})
+	});
+
+	for pkg in get_ignored_packages().unwrap() {
+		alpm.add_ignorepkg(pkg)
+			.unwrap_or_else(|e| panic!("Failed to add ignorepkg {}", e));
+	}
+
+	alpm
 }
 
 pub fn create_alpm() -> Alpm {
@@ -126,11 +128,12 @@ pub fn ensure_aur_packages_installed(packages: Vec<(String, PathBuf)>, is_depend
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
+pub fn ensure_pacman_packages_installed(actions: &Actions) {
 	let mut map: Vec<(String, PathBuf)> = Vec::new();
-	for package in packages {
-		let path = Path::new(&package).to_path_buf();
-		map.push((package, path));
+	for package in &actions.install {
+		let package = &package.pkg;
+		let path = Path::new(&package.name()).to_path_buf();
+		map.push((package.name().to_string(), path));
 	}
 	ensure_packages_installed(map, &["-S", "--asdeps"]);
 }

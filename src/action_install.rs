@@ -1,4 +1,3 @@
-use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_files;
@@ -6,72 +5,78 @@ use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
 
+use aur_depends::{Actions, Missing, Resolver};
 use directories::ProjectDirs;
 use fs_extra::dir::CopyOptions;
-use indexmap::IndexMap;
-use indexmap::IndexSet;
 use itertools::Itertools;
 use log::debug;
 use log::trace;
-use raur::Package;
-use std::collections::HashSet;
 use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
-	let alpm = pacman::create_alpm();
-	let (split_to_raur, pacman_deps, split_to_depth) =
-		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
-			panic!("Failed to fetch info from AUR, {}", err);
-		});
-	let split_to_pkgbase: IndexMap<String, String> = split_to_raur
-		.iter()
-		.map(|(split, raur)| (split.to_string(), raur.package_base.to_string()))
-		.collect();
-	let not_found = split_to_depth
-		.keys()
-		.filter(|pkg| !split_to_raur.contains_key(*pkg))
-		.collect_vec();
-	if !not_found.is_empty() {
-		eprintln!(
-			"Need to install packages: {:?}, but they are not found on AUR.",
-			not_found
-		);
+pub fn install(
+	resolver: Resolver,
+	targets: &[String],
+	dirs: &ProjectDirs,
+	is_offline: bool,
+	as_deps: bool,
+) {
+	let actions = resolver
+		.resolve_targets(targets)
+		.unwrap_or_else(|e| panic!("failed to resolver deps {}", e));
+
+	if !actions.missing.is_empty() {
+		eprintln!("Need to install packages: but they are not found:");
+
+		for Missing { stack, dep } in actions.missing {
+			eprint!("{}", dep);
+			if !stack.is_empty() {
+				eprint!(" (Wanted by: {})", stack.join(" -> "));
+			}
+			eprintln!();
+		}
 		std::process::exit(1)
 	}
 
-	show_install_summary(&pacman_deps, &split_to_depth);
-	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
-		let dir = rua_files::review_dir(dirs, pkgbase);
+	show_install_summary(&actions);
+
+	for base in &actions.build {
+		let dir = rua_files::review_dir(dirs, &base.pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
-			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
+			panic!(
+				"Failed to create repository dir for {}, {}",
+				base.pkgbase, err
+			)
 		});
-		reviewing::review_repo(&dir, pkgbase, dirs);
+		reviewing::review_repo(&dir, &base.pkgbase, dirs);
 	}
-	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(dirs, split_to_depth, split_to_pkgbase, is_offline, asdeps);
+
+	pacman::ensure_pacman_packages_installed(&actions);
+	install_all(dirs, &actions, as_deps, is_offline)
 }
 
-fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
-	if pacman_deps.len() + aur_packages.len() == 1 {
-		return;
+fn show_install_summary(actions: &Actions) {
+	if !actions.install.is_empty() {
+		println!("Repo packages to install:");
+
+		for install in &actions.install {
+			let pkg = &install.pkg;
+			println!("    {}", pkg.name())
+		}
+		println!();
 	}
-	eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
-	eprintln!(
-		"{}",
-		pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
-	);
-	eprintln!("And the following AUR packages will need to be built and installed:");
-	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
-	aur_packages.sort_by_key(|pair| -*pair.1);
-	for (aur, dep) in &aur_packages {
-		debug!("depth {}: {}", dep, aur);
+
+	if !actions.build.is_empty() {
+		println!("Aur packages to install:");
+
+		for install in actions.iter_build_pkgs() {
+			let pkg = &install.pkg;
+			println!("    {}", pkg.name)
+		}
+		println!();
 	}
-	eprintln!(
-		"{}\n",
-		aur_packages.iter().map(|s| format!("  {}", s.0)).join("\n")
-	);
+
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();
@@ -81,85 +86,62 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	}
 }
 
-fn install_all(
-	dirs: &ProjectDirs,
-	split_to_depth: IndexMap<String, i32>,
-	split_to_pkgbase: IndexMap<String, String>,
-	offline: bool,
-	asdeps: bool,
-) {
-	let archive_whitelist = split_to_depth
-		.iter()
-		.map(|(split, _depth)| split.as_str())
-		.collect::<IndexSet<_>>();
-	trace!("All expected split packages: {:?}", archive_whitelist);
-	// get a list of (pkgbase, depth)
-	let packages = split_to_pkgbase.iter().map(|(split, pkgbase)| {
-		let depth = split_to_depth
-			.get(split)
-			.expect("Internal error: split package doesn't have recursive depth");
-		(pkgbase.to_string(), *depth, split.to_string())
-	});
-	// sort pairs in descending depth order
-	let packages = packages.sorted_by_key(|(_pkgbase, depth, _split)| -depth);
-	// Note that a pkgbase can appear at multiple depths because
-	// multiple split pkgnames can be at multiple depths.
-	// In this case, we only take the first occurrence of pkgbase,
-	// which would be the maximum depth because of sort order.
-	// We only take one occurrence because we want the package to only be built once.
-	let packages: Vec<(String, i32, String)> = packages
-		.unique_by(|(pkgbase, _depth, _split)| pkgbase.to_string())
+fn install_all(dirs: &ProjectDirs, actions: &Actions, as_deps: bool, offline: bool) {
+	let archive_whitelist = actions
+		.iter_build_pkgs()
+		.map(|pkg| pkg.pkg.name.as_str())
 		.collect::<Vec<_>>();
-	// once we have a collection of pkgname-s and their depth, proceed straightforwardly.
-	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
-		let packages = packages.collect::<Vec<&(String, i32, String)>>();
-		for (pkgbase, _depth, _split) in &packages {
-			let review_dir = rua_files::review_dir(dirs, pkgbase);
-			let build_dir = rua_files::build_dir(dirs, pkgbase);
-			rm_rf::force_remove_all(&build_dir).expect("Failed to remove old build dir");
-			std::fs::create_dir_all(&build_dir).expect("Failed to create build dir");
-			fs_extra::copy_items(
-				&vec![review_dir],
-				rua_files::global_build_dir(dirs),
-				&CopyOptions::new(),
-			)
-			.expect("failed to copy reviewed dir to build dir");
-			rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove .git");
-			wrapped::build_directory(
-				&build_dir.to_str().expect("Non-UTF8 directory name"),
-				dirs,
-				offline,
-			);
-		}
-		for (pkgbase, _depth, _split) in &packages {
-			check_tars_and_move(pkgbase, dirs, &archive_whitelist);
-		}
-		// This relation between split_name and the archive file is not actually correct here.
-		// Instead, all archive files of some group will be bound to one split name only here.
-		// This is probably still good enough for install verification though --
-		// and we only use this relation for this purpose. Feel free to improve, if you want...
-		let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
-		for (pkgbase, _depth, split) in &packages {
-			let checked_tars = rua_files::checked_tars_dir(dirs, &pkgbase);
-			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
-				panic!(
-					"Failed to read 'checked_tars' directory for {}, {}",
-					pkgbase, e
-				)
-			});
+	trace!("All expected split packages: {:?}", archive_whitelist);
 
-			for file in read_dir_iterator {
-				files_to_install.push((
-					split.to_string(),
-					file.expect("Failed to access checked_tars dir").path(),
-				));
-			}
-		}
-		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0);
+	for base in &actions.build {
+		let pkgbase = &base.pkgbase;
+		let review_dir = rua_files::review_dir(dirs, pkgbase);
+		let build_dir = rua_files::build_dir(dirs, pkgbase);
+		rm_rf::force_remove_all(&build_dir).expect("Failed to remove old build dir");
+		std::fs::create_dir_all(&build_dir).expect("Failed to create build dir");
+		fs_extra::copy_items(
+			&vec![review_dir],
+			rua_files::global_build_dir(dirs),
+			&CopyOptions::new(),
+		)
+		.expect("failed to copy reviewed dir to build dir");
+		rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove .git");
+		wrapped::build_directory(
+			&build_dir.to_str().expect("Non-UTF8 directory name"),
+			dirs,
+			offline,
+		);
 	}
+	for base in &actions.build {
+		check_tars_and_move(&base.pkgbase, dirs, &archive_whitelist);
+	}
+	// This relation between split_name and the archive file is not actually correct here.
+	// Instead, all archive files of some group will be bound to one split name only here.
+	// This is probably still good enough for install verification though --
+	// and we only use this relation for this purpose. Feel free to improve, if you want...
+	let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
+	for base in &actions.build {
+		let pkgbase = &base.pkgbase;
+		let checked_tars = rua_files::checked_tars_dir(dirs, &pkgbase);
+		let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
+			panic!(
+				"Failed to read 'checked_tars' directory for {}, {}",
+				pkgbase, e
+			)
+		});
+
+		for file in read_dir_iterator {
+			files_to_install.push((
+				pkgbase.to_string(),
+				file.expect("Failed to access checked_tars dir").path(),
+			));
+		}
+	}
+
+	pacman::ensure_aur_packages_installed(files_to_install, true || as_deps); //TODO hande as_deps properly
 }
 
-pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &IndexSet<&str>) {
+pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &[&str]) {
 	debug!("checking tars and moving for package {}", name);
 	let build_dir = rua_files::build_dir(dirs, name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
@@ -185,8 +167,9 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &I
 		.collect_vec();
 	let common_suffix_length =
 		tar_check::common_suffix_length(&dir_items_names, &archive_whitelist);
-	dir_items
-		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
+	dir_items.retain(|(_, name)| {
+		archive_whitelist.contains(&&name[..name.len() - common_suffix_length])
+	});
 	trace!("Files filtered for tar checking: {:?}", &dir_items);
 	for (file, file_name) in dir_items.iter() {
 		tar_check::tar_check_unwrap(&file.path(), file_name);
@@ -214,16 +197,4 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &I
 			)
 		});
 	}
-}
-
-pub fn raur_info(pkg: &str) -> Option<Package> {
-	trace!(
-		"{}:{} Fetching AUR information for package {}",
-		file!(),
-		line!(),
-		pkg
-	);
-	let info = raur::info(&[pkg]);
-	let info = info.unwrap_or_else(|e| panic!("Failed to fetch info for package {}, {}", &pkg, e));
-	info.into_iter().next()
 }

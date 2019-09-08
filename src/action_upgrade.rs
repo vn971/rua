@@ -2,63 +2,38 @@ use crate::action_install;
 use crate::pacman;
 use crate::print_package_table;
 use crate::terminal_util;
-use alpm::Version;
+use aur_depends::{AurUpdate, AurUpdates, Flags, Resolver};
 use colored::*;
 use directories::ProjectDirs;
-use log::debug;
 use prettytable::format::*;
 use prettytable::*;
 use std::collections::HashSet;
 
 pub fn upgrade(dirs: &ProjectDirs) {
 	let alpm = pacman::create_alpm();
-	let pkg_cache = alpm
-		.localdb()
-		.pkgs()
-		.expect("Could not get alpm.localdb().pkgs() packages");
-	let ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
-		eprintln!("Warning: Could not get ignored packages, {}", err);
-		HashSet::new()
-	});
-	let aur_pkgs = pkg_cache
-		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.filter(|pkg| !ignored_packages.contains(pkg.name()))
-		.map(|pkg| (pkg.name(), pkg.version()))
-		.collect::<Vec<_>>();
-	let aur_pkgs_string = aur_pkgs
-		.iter()
-		.map(|(pkg, _ver)| *pkg)
-		.collect::<Vec<_>>()
-		.join(" ");
-	debug!("You have the following packages outside of main repos installed:");
-	debug!("{}", aur_pkgs_string);
-	debug!("");
-	let mut up_to_date = Vec::new();
-	let mut outdated = Vec::new();
-	let mut unexistent = Vec::new();
-	for (pkg, local_ver) in aur_pkgs {
-		let raur_ver = action_install::raur_info(pkg).map(|p| p.version);
-		if let Some(raur_ver) = raur_ver {
-			if local_ver < Version::new(&raur_ver) {
-				outdated.push((pkg, local_ver.to_string(), raur_ver));
-			} else {
-				up_to_date.push(pkg);
-			}
-		} else {
-			unexistent.push((pkg, local_ver.to_string()));
-		}
-	}
-	if outdated.is_empty() {
+	let raur = raur::Handle::default();
+	let mut cache = HashSet::new();
+	let mut resolver = Resolver::new(&alpm, &mut cache, &raur, Flags::new() | Flags::AUR_ONLY);
+
+	let updates = resolver
+		.aur_updates()
+		.unwrap_or_else(|e| panic!("failed to get aur updates {}", e));
+
+	if updates.updates.is_empty() {
 		eprintln!("All AUR packages are up-to-date. Congratulations!");
 	} else {
-		print_outdated(&outdated, &unexistent);
+		print_updates(&updates);
 		eprintln!();
-		let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
+		let outdated: Vec<String> = updates
+			.updates
+			.iter()
+			.map(|u| u.remote.name.to_string())
+			.collect();
 		loop {
 			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 			let string = terminal_util::read_line_lowercase();
 			if string == "o" {
-				action_install::install(&outdated, dirs, false, true);
+				action_install::install(resolver, &outdated, dirs, false, true);
 				break;
 			} else if string == "x" {
 				break;
@@ -67,7 +42,7 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	}
 }
 
-fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, String)]) {
+fn print_updates(updates: &AurUpdates) {
 	let mut table = Table::new();
 	table.set_titles(row![
 		"Package".underline(),
@@ -75,20 +50,23 @@ fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, Stri
 		"Latest".underline()
 	]);
 
-	for (pkg, local, remote) in outdated {
+	let AurUpdates { updates, missing } = updates;
+
+	for AurUpdate { local, remote } in updates {
 		table.add_row(row![
-			print_package_table::trunc(pkg, 39).yellow(),
-			print_package_table::trunc(local, 19),
-			print_package_table::trunc(remote, 19).green(),
+			print_package_table::trunc(&remote.name, 39).yellow(),
+			print_package_table::trunc(local.version(), 19),
+			print_package_table::trunc(&remote.version, 19).green(),
 		]);
 	}
-	for (pkg, local) in unexistent {
+	for pkg in missing {
 		table.add_row(row![
-			print_package_table::trunc(pkg, 39).yellow(),
-			print_package_table::trunc(local, 19),
+			print_package_table::trunc(pkg.name(), 39).yellow(),
+			print_package_table::trunc(pkg.version(), 19),
 			"NOT FOUND, ignored".red(),
 		]);
 	}
+
 	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();
 	table.set_format(fmt);
 	table.printstd();

@@ -5,7 +5,6 @@ mod action_builddir;
 mod action_install;
 mod action_search;
 mod action_upgrade;
-mod aur_rpc_utils;
 mod cli_args;
 mod git_utils;
 mod pacman;
@@ -23,9 +22,11 @@ mod wrapped;
 use crate::cli_args::CLIColorType;
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
+use aur_depends::{Flags, Resolver};
 use cli_args::{Action, CliArgs};
 use directories::ProjectDirs;
 use fs2::FileExt;
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::path::PathBuf;
@@ -75,7 +76,12 @@ fn main() {
 			offline,
 			target,
 		} => {
-			action_install::install(&target, &dirs, offline, asdeps);
+			let alpm = pacman::create_alpm();
+			let mut cache = HashSet::new();
+			let raur = raur::Handle::default();
+			let resolver = Resolver::new(&alpm, &mut cache, &raur, Flags::new() | Flags::AUR_ONLY);
+
+			action_install::install(resolver, &target, &dirs, offline, asdeps);
 		}
 		Action::Builddir { offline, target } => {
 			action_builddir::action_builddir(offline, target, &dirs)

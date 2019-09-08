@@ -1,7 +1,6 @@
 use crate::terminal_util;
 
 use colored::*;
-use indexmap::IndexSet;
 use log::debug;
 use std::fs::File;
 use std::io::Read;
@@ -129,13 +128,13 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	}
 }
 
-pub fn common_suffix_length(pkg_names: &[&str], archive_whitelist: &IndexSet<&str>) -> usize {
+pub fn common_suffix_length(pkg_names: &[&str], archive_whitelist: &[&str]) -> usize {
 	let min_len = pkg_names.iter().map(|p| p.len()).min().unwrap_or(0);
 	for suffix_length in 0..min_len {
 		for pkg in pkg_names {
 			let suffix_start = pkg.len() - suffix_length;
 			let prefix = &pkg[..suffix_start];
-			if archive_whitelist.contains(prefix) {
+			if archive_whitelist.contains(&prefix) {
 				return suffix_length;
 			}
 		}
@@ -146,11 +145,9 @@ pub fn common_suffix_length(pkg_names: &[&str], archive_whitelist: &IndexSet<&st
 #[cfg(test)]
 mod tests {
 	use crate::tar_check::*;
-	use indexmap::IndexSet;
 
 	fn test(files: &[&str], whitelist: &[&str], expected: usize) {
-		let set: IndexSet<&str> = whitelist.iter().copied().collect();
-		let result = common_suffix_length(files, &set);
+		let result = common_suffix_length(files, whitelist);
 		assert_eq!(result, expected)
 	}
 

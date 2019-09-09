@@ -13,7 +13,6 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use log::debug;
 use log::trace;
-use raur::Package;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::ReadDir;
@@ -214,16 +213,4 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &I
 			)
 		});
 	}
-}
-
-pub fn raur_info(pkg: &str) -> Option<Package> {
-	trace!(
-		"{}:{} Fetching AUR information for package {}",
-		file!(),
-		line!(),
-		pkg
-	);
-	let info = raur::info(&[pkg]);
-	let info = info.unwrap_or_else(|e| panic!("Failed to fetch info for package {}, {}", &pkg, e));
-	info.into_iter().next()
 }

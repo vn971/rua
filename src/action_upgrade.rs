@@ -1,10 +1,12 @@
 use crate::action_install;
+use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::print_package_table;
 use crate::terminal_util;
 use alpm::Version;
 use colored::*;
 use directories::ProjectDirs;
+use itertools::Itertools;
 use log::debug;
 use prettytable::format::*;
 use prettytable::*;
@@ -36,8 +38,10 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	let mut up_to_date = Vec::new();
 	let mut outdated = Vec::new();
 	let mut unexistent = Vec::new();
+	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| *p).collect_vec());
+	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
 	for (pkg, local_ver) in aur_pkgs {
-		let raur_ver = action_install::raur_info(pkg).map(|p| p.version);
+		let raur_ver = info_map.get(pkg).map(|p| p.version.to_string());
 		if let Some(raur_ver) = raur_ver {
 			if local_ver < Version::new(&raur_ver) {
 				outdated.push((pkg, local_ver.to_string(), raur_ver));

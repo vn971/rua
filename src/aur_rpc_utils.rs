@@ -14,6 +14,8 @@ type PacmanDependencies = IndexSet<String>;
 type DepthMap = IndexMap<String, i32>;
 type RecursiveInfo = (RaurInfo, PacmanDependencies, DepthMap);
 
+const BATCH_SIZE: usize = 200;
+
 pub fn recursive_info(
 	root_packages_to_process: &[String],
 	alpm: &Alpm,
@@ -27,7 +29,7 @@ pub fn recursive_info(
 	let mut pacman_deps: IndexSet<String> = IndexSet::new();
 	let mut info_map: IndexMap<String, Package> = IndexMap::new();
 	while !queue.is_empty() {
-		let split_at = queue.len().max(200) - 200;
+		let split_at = queue.len().max(BATCH_SIZE) - BATCH_SIZE;
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
 		for info in raur_handle.info(&to_process)? {
@@ -71,6 +73,17 @@ pub fn recursive_info(
 		}
 	}
 	Ok((info_map, pacman_deps, depth_map))
+}
+
+pub fn info_map(packages_to_query: &[&str]) -> Result<IndexMap<String, Package>, raur::Error> {
+	let mut result = IndexMap::new();
+	for group in packages_to_query.chunks(BATCH_SIZE) {
+		let group_info = raur::info(group)?;
+		for pkg in group_info.into_iter() {
+			result.insert(pkg.name.to_string(), pkg);
+		}
+	}
+	Ok(result)
 }
 
 fn clean_and_check_package_name(name: &str) -> String {

@@ -33,15 +33,19 @@ pub fn recursive_info(
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
 		for info in raur_handle.info(&to_process)? {
-			let lower_dependencies = info
+			let make_deps = info
 				.make_depends
 				.iter()
 				.map(|d| (clean_and_check_package_name(d), 1));
-			let flat_dependencies = info
+			let check_deps = info
+				.check_depends
+				.iter()
+				.map(|d| (clean_and_check_package_name(d), 1));
+			let flat_deps = info
 				.depends
 				.iter()
 				.map(|d| (clean_and_check_package_name(d), 0));
-			let deps = lower_dependencies.chain(flat_dependencies).collect_vec();
+			let deps = make_deps.chain(flat_deps).chain(check_deps).collect_vec();
 
 			for (dependency, depth_diff) in deps.into_iter() {
 				if pacman::is_installed(alpm, &dependency) {

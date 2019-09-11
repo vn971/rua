@@ -33,21 +33,16 @@ pub fn recursive_info(
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
 		for info in raur_handle.info(&to_process)? {
-			let make_deps = info
-				.make_depends
-				.iter()
-				.map(|d| (clean_and_check_package_name(d), 1));
-			let check_deps = info
-				.check_depends
-				.iter()
-				.map(|d| (clean_and_check_package_name(d), 1));
-			let flat_deps = info
-				.depends
-				.iter()
-				.map(|d| (clean_and_check_package_name(d), 0));
-			let deps = make_deps.chain(flat_deps).chain(check_deps).collect_vec();
+			let make_deps = info.make_depends.iter();
+			let check_deps = info.check_depends.iter();
+			let flat_deps = info.depends.iter();
+			let deps = make_deps
+				.chain(flat_deps)
+				.chain(check_deps)
+				.map(|d| clean_and_check_package_name(d))
+				.collect_vec();
 
-			for (dependency, depth_diff) in deps.into_iter() {
+			for dependency in deps.into_iter() {
 				if pacman::is_installed(alpm, &dependency) {
 					// skip if already installed
 				} else if !pacman::is_installable(alpm, &dependency) {
@@ -65,9 +60,7 @@ pub fn recursive_info(
 						.expect("Internal error: queue element does not have depth");
 					let new_depth = depth_map
 						.get(&dependency)
-						.map_or(parent_depth + depth_diff, |d| {
-							(*d).max(parent_depth + depth_diff)
-						});
+						.map_or(parent_depth + 1, |d| (*d).max(parent_depth + 1));
 					depth_map.insert(dependency.to_string(), new_depth);
 				} else {
 					pacman_deps.insert(dependency.to_owned());

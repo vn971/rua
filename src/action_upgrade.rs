@@ -12,7 +12,10 @@ use prettytable::format::*;
 use prettytable::*;
 use std::collections::HashSet;
 
-pub fn upgrade(dirs: &ProjectDirs) {
+pub fn upgrade(dirs: &ProjectDirs, devel: bool) {
+	if devel {
+		unimplemented!("--devel support to be added");
+	}
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()

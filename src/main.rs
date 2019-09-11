@@ -97,8 +97,8 @@ fn main() {
 			);
 			eprintln!("Finished checking pachage: {:?}", target);
 		}
-		Action::Upgrade {} => {
-			action_upgrade::upgrade(&dirs);
+		Action::Upgrade { devel } => {
+			action_upgrade::upgrade(&dirs, devel);
 		}
 	};
 }

@@ -81,8 +81,15 @@ pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 }
 
 pub fn shellcheck(target: &Path) -> Result<(), String> {
+	let target = if target.is_dir() {
+		target.join("PKGBUILD")
+	} else {
+		target.to_path_buf()
+	};
 	if !target.exists() {
-		return Err("Cannot find target for shellcheck, aborting".to_string());
+		return Err("Could not find target for shellcheck, aborting".to_string());
+	} else if !target.is_file() {
+		return Err("Shellcheck target is not a file, aborting".to_string());
 	};
 	let mut command = Command::new("bwrap");
 	command.args(&["--ro-bind", "/", "/"]);

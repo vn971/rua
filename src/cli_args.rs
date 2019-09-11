@@ -76,7 +76,11 @@ pub enum Action {
 	},
 	#[structopt(about = "Upgrade AUR packages")]
 	Upgrade {
-		#[structopt(long, help = "Also rebuild all *-git packages")]
+		#[structopt(
+			long,
+			help = "Also rebuild all development packages.
+Supported: git, hg, bzr, svn, cvs, darcs"
+		)]
 		devel: bool,
 	},
 }

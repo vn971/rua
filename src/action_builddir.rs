@@ -9,7 +9,7 @@ pub fn action_builddir(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));
-	wrapped::build_directory(dir_str, &dirs, offline, false);
+	wrapped::build_directory(dir_str, &dirs, offline);
 	for file in dir
 		.read_dir()
 		.expect("cannot read directory with built package")

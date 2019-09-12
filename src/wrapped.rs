@@ -44,7 +44,7 @@ fn download_srcinfo_sources(dir: &str, dirs: &ProjectDirs) {
 		.expect("Failed to clean up PKGBUILD.static");
 }
 
-fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool, ignore_deps: bool) {
+fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool) {
 	debug!(
 		"{}:{} Building package in directory {}",
 		file!(),
@@ -57,9 +57,6 @@ fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool, ignore_deps: boo
 		command.arg("--unshare-net");
 	}
 	command.args(&["--bind", dir, dir]).arg("makepkg");
-	if ignore_deps {
-		command.arg("--nodeps");
-	}
 	let command = command
 		.status()
 		.unwrap_or_else(|e| panic!("Failed to execute ~/.config/rua/.system/wrap.sh, {}", e));
@@ -75,11 +72,11 @@ fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool, ignore_deps: boo
 	}
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool, ignore_deps: bool) {
+pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
 	if offline {
 		download_srcinfo_sources(dir, project_dirs);
 	}
-	build_local(dir, project_dirs, offline, ignore_deps);
+	build_local(dir, project_dirs, offline);
 }
 
 pub fn shellcheck(target: &Path) -> Result<(), String> {

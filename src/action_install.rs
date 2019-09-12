@@ -128,7 +128,6 @@ fn install_all(
 				&build_dir.to_str().expect("Non-UTF8 directory name"),
 				dirs,
 				offline,
-				true,
 			);
 		}
 		for (pkgbase, _depth, _split) in &packages {

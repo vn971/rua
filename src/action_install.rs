@@ -134,7 +134,8 @@ fn install_all(
 			});
 			{
 				let dir_to_remove = build_dir.join(".git");
-				rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove {}", dir_to_remove);
+				rm_rf::force_remove_all(build_dir.join(".git"))
+					.expect("Failed to remove {}", dir_to_remove);
 			}
 			wrapped::build_directory(
 				&build_dir.to_str().expect("Non-UTF8 directory name"),

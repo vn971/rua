@@ -115,15 +115,27 @@ fn install_all(
 		for (pkgbase, _depth, _split) in &packages {
 			let review_dir = rua_files::review_dir(dirs, pkgbase);
 			let build_dir = rua_files::build_dir(dirs, pkgbase);
-			rm_rf::force_remove_all(&build_dir).expect("Failed to remove old build dir");
-			std::fs::create_dir_all(&build_dir).expect("Failed to create build dir");
+			rm_rf::force_remove_all(&build_dir).unwrap_or_else(|err| {
+				panic!("Failed to remove old build dir {}, {}", &build_dir, err)
+			});
+			std::fs::create_dir_all(&build_dir)
+				.unwrap_or_else(|err| panic!("Failed to create build dir {}", &build_dir, err));
 			fs_extra::copy_items(
 				&vec![review_dir],
 				rua_files::global_build_dir(dirs),
 				&CopyOptions::new(),
 			)
-			.expect("failed to copy reviewed dir to build dir");
-			rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove .git");
+			.unwrap_or_else(|err| {
+				panic!(
+					"failed to copy reviewed dir {} to build dir {}",
+					review_dir,
+					rua_files::global_build_dir(dirs)
+				)
+			});
+			{
+				let dir_to_remove = build_dir.join(".git");
+				rm_rf::force_remove_all(build_dir.join(".git")).expect("Failed to remove {}", dir_to_remove);
+			}
 			wrapped::build_directory(
 				&build_dir.to_str().expect("Non-UTF8 directory name"),
 				dirs,

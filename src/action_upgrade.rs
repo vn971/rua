@@ -7,12 +7,22 @@ use alpm::Version;
 use colored::*;
 use directories::ProjectDirs;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use log::debug;
 use prettytable::format::*;
 use prettytable::*;
+use regex::Regex;
 use std::collections::HashSet;
 
-pub fn upgrade(dirs: &ProjectDirs) {
+fn pkg_is_devel(name: &str) -> bool {
+	lazy_static! {
+		// make sure that the --devel help string in cli_args.rs matches if you change this
+		static ref RE: Regex = Regex::new(r"-(git|hg|bzr|svn|cvs|darcs)(-.+)*$").unwrap();
+	}
+	RE.is_match(name)
+}
+
+pub fn upgrade(dirs: &ProjectDirs, devel: bool) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()
@@ -43,7 +53,7 @@ pub fn upgrade(dirs: &ProjectDirs) {
 	for (pkg, local_ver) in aur_pkgs {
 		let raur_ver = info_map.get(pkg).map(|p| p.version.to_string());
 		if let Some(raur_ver) = raur_ver {
-			if local_ver < Version::new(&raur_ver) {
+			if local_ver < Version::new(&raur_ver) || (devel && pkg_is_devel(pkg)) {
 				outdated.push((pkg, local_ver.to_string(), raur_ver));
 			} else {
 				up_to_date.push(pkg);

@@ -40,7 +40,8 @@ pub enum Action {
 		#[structopt(
 			short = "o",
 			long = "offline",
-			help = "forbid internet access while building packages. Sources are downloaded using .SRCINFO only"
+			help = "Forbid internet access while building packages.
+Sources are downloaded using .SRCINFO only"
 		)]
 		offline: bool,
 		#[structopt(help = "Target package", multiple = true, required = true)]
@@ -51,7 +52,8 @@ pub enum Action {
 		#[structopt(
 			short = "o",
 			long = "offline",
-			help = "forbid internet access while building packages. Sources are downloaded using .SRCINFO only"
+			help = "Forbid internet access while building packages.
+Sources are downloaded using .SRCINFO only"
 		)]
 		offline: bool,
 		#[structopt(help = "Target directory", required = true)]
@@ -75,5 +77,13 @@ pub enum Action {
 		target: PathBuf,
 	},
 	#[structopt(about = "Upgrade AUR packages")]
-	Upgrade {},
+	Upgrade {
+		#[structopt(
+			long = "devel",
+			short = "d",
+			help = "Also rebuild development packages.
+Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
+		)]
+		devel: bool,
+	},
 }

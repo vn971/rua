@@ -42,7 +42,7 @@ Jail arguments can be overridden in ~/.config/rua/wrap_args.d/ .
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed git base-devel bubblewrap-suid lz openssl shellcheck cargo
+sudo pacman -S --needed git base-devel bubblewrap-suid lz shellcheck cargo
 ```
 
 

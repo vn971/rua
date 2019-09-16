@@ -2,10 +2,10 @@ use crate::action_install;
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::print_package_table;
+use crate::rua_files::RuaDirs;
 use crate::terminal_util;
 use alpm::Version;
 use colored::*;
-use directories::ProjectDirs;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::debug;
@@ -22,7 +22,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade(dirs: &ProjectDirs, devel: bool) {
+pub fn upgrade(dirs: &RuaDirs, devel: bool) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()

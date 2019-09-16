@@ -1,10 +1,9 @@
 // Commands that are run inside "bubblewrap" jail
 
 use crate::rua_files;
+use crate::rua_files::RuaDirs;
 use crate::srcinfo_to_pkgbuild;
 use crate::terminal_util;
-
-use directories::ProjectDirs;
 use log::debug;
 use log::info;
 use std::fs;
@@ -14,14 +13,30 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
+use std::sync::Once;
 
-pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
-
-fn wrap_yes_internet(dirs: &ProjectDirs) -> Command {
-	Command::new(dirs.config_dir().join(WRAP_SCRIPT_PATH))
+static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
+pub fn check_bubblewrap_runnable() {
+	BUBBLEWRAP_IS_RUNNABLE.call_once(|| {
+		if !Command::new("bwrap")
+			.args(&["--ro-bind", "/", "/", "true"])
+			.status()
+			.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
+			.success()
+		{
+			eprintln!("Failed to run bwrap.");
+			eprintln!("A possible cause for this is if RUA itself is run in jail (docker, bwrap, firejail,..).");
+			eprintln!("If so, see https://github.com/vn971/rua/issues/8");
+			std::process::exit(4)
+		}
+	});
 }
 
-fn download_srcinfo_sources(dir: &str, dirs: &ProjectDirs) {
+fn wrap_yes_internet(dirs: &RuaDirs) -> Command {
+	Command::new(&dirs.wrapper_bwrap_script)
+}
+
+fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 	let dir_path = PathBuf::from(dir).join("PKGBUILD.static");
 	let mut file = File::create(&dir_path)
 		.unwrap_or_else(|err| panic!("Cannot create {}/PKGBUILD.static, {}", dir, err));
@@ -44,7 +59,7 @@ fn download_srcinfo_sources(dir: &str, dirs: &ProjectDirs) {
 		.expect("Failed to clean up PKGBUILD.static");
 }
 
-fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool) {
+fn build_local(dir: &str, dirs: &RuaDirs, is_offline: bool) {
 	debug!(
 		"{}:{} Building package in directory {}",
 		file!(),
@@ -72,7 +87,7 @@ fn build_local(dir: &str, dirs: &ProjectDirs, is_offline: bool) {
 	}
 }
 
-pub fn build_directory(dir: &str, project_dirs: &ProjectDirs, offline: bool) {
+pub fn build_directory(dir: &str, project_dirs: &RuaDirs, offline: bool) {
 	if offline {
 		download_srcinfo_sources(dir, project_dirs);
 	}
@@ -90,6 +105,7 @@ pub fn shellcheck(target: &Path) -> Result<(), String> {
 	} else if !target.is_file() {
 		return Err("Shellcheck target is not a file, aborting".to_string());
 	};
+	check_bubblewrap_runnable();
 	let mut command = Command::new("bwrap");
 	command.args(&["--ro-bind", "/", "/"]);
 	command.args(&["--proc", "/proc", "--dev", "/dev"]);

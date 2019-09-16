@@ -1,12 +1,10 @@
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::reviewing;
-use crate::rua_files;
+use crate::rua_files::RuaDirs;
 use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
-
-use directories::ProjectDirs;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
@@ -18,7 +16,7 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps: bool) {
+pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: bool) {
 	let alpm = pacman::create_alpm();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
@@ -42,7 +40,7 @@ pub fn install(targets: &[String], dirs: &ProjectDirs, is_offline: bool, asdeps:
 
 	show_install_summary(&pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
-		let dir = rua_files::review_dir(dirs, pkgbase);
+		let dir = dirs.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
 			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
 		});
@@ -81,7 +79,7 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 }
 
 fn install_all(
-	dirs: &ProjectDirs,
+	dirs: &RuaDirs,
 	split_to_depth: IndexMap<String, i32>,
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
@@ -113,8 +111,8 @@ fn install_all(
 	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
 		let packages = packages.collect::<Vec<&(String, i32, String)>>();
 		for (pkgbase, _depth, _split) in &packages {
-			let review_dir = rua_files::review_dir(dirs, pkgbase);
-			let build_dir = rua_files::build_dir(dirs, pkgbase);
+			let review_dir = dirs.review_dir(pkgbase);
+			let build_dir = dirs.build_dir(pkgbase);
 			rm_rf::force_remove_all(&build_dir).unwrap_or_else(|err| {
 				panic!("Failed to remove old build dir {:?}, {}", &build_dir, err)
 			});
@@ -123,15 +121,13 @@ fn install_all(
 			});
 			fs_extra::copy_items(
 				&vec![&review_dir],
-				rua_files::global_build_dir(dirs),
+				&dirs.global_build_dir,
 				&CopyOptions::new(),
 			)
 			.unwrap_or_else(|err| {
 				panic!(
 					"failed to copy reviewed dir {:?} to build dir {:?}, error is {}",
-					&review_dir,
-					rua_files::global_build_dir(dirs),
-					err
+					&review_dir, dirs.global_build_dir, err
 				)
 			});
 			{
@@ -154,7 +150,7 @@ fn install_all(
 		// and we only use this relation for this purpose. Feel free to improve, if you want...
 		let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for (pkgbase, _depth, split) in &packages {
-			let checked_tars = rua_files::checked_tars_dir(dirs, &pkgbase);
+			let checked_tars = dirs.checked_tars_dir(&pkgbase);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
 				panic!(
 					"Failed to read 'checked_tars' directory for {}, {}",
@@ -173,9 +169,9 @@ fn install_all(
 	}
 }
 
-pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &IndexSet<&str>) {
+pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &IndexSet<&str>) {
 	debug!("checking tars and moving for package {}", name);
-	let build_dir = rua_files::build_dir(dirs, name);
+	let build_dir = dirs.build_dir(name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"Failed to read directory contents for {:?}, {}",
@@ -206,7 +202,7 @@ pub fn check_tars_and_move(name: &str, dirs: &ProjectDirs, archive_whitelist: &I
 		tar_check::tar_check_unwrap(&file.path(), file_name);
 	}
 	debug!("all package (tar) files checked, moving them");
-	let checked_tars_dir = rua_files::checked_tars_dir(dirs, name);
+	let checked_tars_dir = dirs.checked_tars_dir(name);
 	rm_rf::force_remove_all(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
 			"Failed to clean checked tar files dir {:?}, {}",

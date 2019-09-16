@@ -1,8 +1,9 @@
-use crate::{tar_check, wrapped};
-use directories::ProjectDirs;
+use crate::rua_files::RuaDirs;
+use crate::tar_check;
+use crate::wrapped;
 use std::path::PathBuf;
 
-pub fn action_builddir(offline: bool, dir: PathBuf, dirs: &ProjectDirs) {
+pub fn action_builddir(offline: bool, dir: PathBuf, dirs: &RuaDirs) {
 	let dir = dir
 		.canonicalize()
 		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", dir, err));

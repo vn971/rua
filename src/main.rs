@@ -20,52 +20,16 @@ mod tar_check;
 mod terminal_util;
 mod wrapped;
 
-use crate::cli_args::CLIColorType;
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
 use cli_args::{Action, CliArgs};
-use directories::ProjectDirs;
-use fs2::FileExt;
-use std::env;
-use std::fs::File;
 use std::path::PathBuf;
 use std::process::exit;
 use structopt::StructOpt;
 
 fn main() {
-	let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
-		.expect("Failed to determine XDG directories");
 	let config: CliArgs = CliArgs::from_args();
-	match config.color {
-		// see "colored" crate and referenced specs
-		CLIColorType::auto => {
-			env::remove_var("NOCOLOR");
-			env::remove_var("CLICOLOR_FORCE");
-			env::remove_var("CLICOLOR");
-		}
-		CLIColorType::never => {
-			env::set_var("NOCOLOR", "1");
-			env::remove_var("CLICOLOR_FORCE");
-			env::set_var("CLICOLOR", "0");
-		}
-		CLIColorType::always => {
-			env::remove_var("NOCOLOR");
-			env::set_var("CLICOLOR_FORCE", "1");
-			env::remove_var("CLICOLOR");
-		}
-	}
-	rua_environment::prepare_environment(&dirs);
-	let locked_file = File::open(dirs.config_dir()).unwrap_or_else(|err| {
-		panic!(
-			"Failed to open config dir {:?} for locking, {}",
-			dirs.config_dir(),
-			err
-		);
-	});
-	locked_file.try_lock_exclusive().unwrap_or_else(|_| {
-		eprintln!("Another RUA instance already running.");
-		exit(2)
-	});
+	rua_environment::prepare_environment(&config);
 	match config.action {
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
@@ -75,9 +39,11 @@ fn main() {
 			offline,
 			target,
 		} => {
+			let dirs = rua_files::RuaDirs::new();
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
 		Action::Builddir { offline, target } => {
+			let dirs = rua_files::RuaDirs::new();
 			action_builddir::action_builddir(offline, target, &dirs)
 		}
 		Action::Search { target } => action_search::action_search(target),
@@ -98,6 +64,7 @@ fn main() {
 			eprintln!("Finished checking pachage: {:?}", target);
 		}
 		Action::Upgrade { devel } => {
+			let dirs = rua_files::RuaDirs::new();
 			action_upgrade::upgrade(&dirs, devel);
 		}
 	};

@@ -1,12 +1,11 @@
 use crate::git_utils;
-use crate::rua_files;
+use crate::rua_files::RuaDirs;
 use crate::terminal_util;
 use crate::wrapped;
-use directories::ProjectDirs;
 use log::debug;
 use std::path::Path;
 
-pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &ProjectDirs) {
+pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to read directory for reviewing, {}",
@@ -23,7 +22,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &ProjectDirs) {
 		git_utils::fetch(&dir);
 	}
 
-	let build_dir = rua_files::build_dir(dirs, pkgbase);
+	let build_dir = dirs.build_dir(pkgbase);
 	if build_dir.exists() && git_utils::is_upstream_merged(&dir) {
 		eprintln!("WARNING: your AUR repo is up-to-date.");
 		eprintln!(

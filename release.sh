@@ -4,6 +4,7 @@
 
 set -o pipefail
 
+rustup update
 cargo upgrade
 cargo update
 if ! test -z "$(git status --porcelain)"; then

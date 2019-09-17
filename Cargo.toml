@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.14.14"
+version = "0.14.15"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -22,7 +22,7 @@ git = ["alpm/git"]
 structopt = "0.3.1"
 
 [dependencies]
-alpm = "0.6.0"
+alpm = "0.6.1"
 chrono = "0.4.9"
 colored = "1.8.0"
 directories = "2.0.2"

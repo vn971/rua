@@ -54,12 +54,14 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
-	eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
-	eprintln!(
-		"{}",
-		pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
-	);
-	eprintln!("And the following AUR packages will need to be built and installed:");
+	if !pacman_deps.is_empty() {
+		eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
+		eprintln!(
+			"{}",
+			pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
+		);
+	};
+	eprintln!("\nAnd the following AUR packages will need to be built and installed:");
 	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
 	aur_packages.sort_by_key(|pair| -*pair.1);
 	for (aur, dep) in &aur_packages {

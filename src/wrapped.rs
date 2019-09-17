@@ -6,6 +6,8 @@ use crate::srcinfo_to_pkgbuild;
 use crate::terminal_util;
 use log::debug;
 use log::info;
+use log::trace;
+use srcinfo::Srcinfo;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -13,6 +15,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
+use std::str::FromStr;
 use std::sync::Once;
 
 static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
@@ -59,14 +62,58 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 		.expect("Failed to clean up PKGBUILD.static");
 }
 
-fn build_local(dir: &str, dirs: &RuaDirs, is_offline: bool) {
+pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
+	debug!("Getting srcinfo in directory {}", dir);
+	let mut command = wrap_yes_internet(dirs);
+	command.arg("--unshare-net");
+	command.args(&["--ro-bind", dir, dir]);
+	command.env("PKGDEST", "/tmp").env("SRCDEST", "/tmp").env("BUILDDIR", "/tmp");
+	command.current_dir(dir);
+	command
+		.arg("makepkg")
+		.arg("--holdver")
+		.arg("--printsrcinfo");
+
+	let output = command
+		.output()
+		.map_err(|err| format!("cannot execute makepkg --holdver --printsrcinfo, {}", err))?;
+	if !output.status.success() {
+		Err(format!(
+			"makepkg failed to execute, Stdout:\n{}\n\nStderr:\n{}\n",
+			String::from_utf8_lossy(&output.stdout),
+			String::from_utf8_lossy(&output.stderr),
+		))?
+	}
+	let output = String::from_utf8(output.stdout).map_err(|err| {
+		format!(
+			"Non-UTF8 in output of makepkg --holdver --printsrcinfo, {}",
+			err
+		)
+	})?;
+	trace!("generated SRCINFO content:\n{}", output);
+	let srcinfo = Srcinfo::from_str(&output).map_err(|e| {
+		format!(
+			"{}:{} Failed to parse SRCINFO:\n{:?}\nError is: {}",
+			file!(),
+			line!(),
+			output,
+			e
+		)
+	})?;
+	Ok(srcinfo)
+}
+
+fn build_local(dir: &str, dirs: &RuaDirs, offline: bool, force: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
 	let mut command = wrap_yes_internet(dirs);
 	command.current_dir(dir);
-	if is_offline {
+	if offline {
 		command.arg("--unshare-net");
 	}
 	command.args(&["--bind", dir, dir]).arg("makepkg");
+	if force {
+		command.arg("--force");
+	}
 	let command = command
 		.status()
 		.unwrap_or_else(|e| panic!("Failed to execute ~/.config/rua/.system/wrap.sh, {}", e));
@@ -82,11 +129,11 @@ fn build_local(dir: &str, dirs: &RuaDirs, is_offline: bool) {
 	}
 }
 
-pub fn build_directory(dir: &str, project_dirs: &RuaDirs, offline: bool) {
+pub fn build_directory(dir: &str, project_dirs: &RuaDirs, offline: bool, force: bool) {
 	if offline {
 		download_srcinfo_sources(dir, project_dirs);
 	}
-	build_local(dir, project_dirs, offline);
+	build_local(dir, project_dirs, offline, force);
 }
 
 pub fn shellcheck(target: &Path) -> Result<(), String> {

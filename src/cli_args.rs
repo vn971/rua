@@ -56,6 +56,12 @@ Sources are downloaded using .SRCINFO only"
 Sources are downloaded using .SRCINFO only"
 		)]
 		offline: bool,
+		#[structopt(
+			short = "f",
+			long = "force",
+			help = "use --force option with makepkg, see makepkg(8)"
+		)]
+		force: bool,
 		#[structopt(help = "Target directory", required = true)]
 		target: PathBuf,
 	},

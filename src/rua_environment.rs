@@ -71,3 +71,7 @@ pub fn prepare_environment(config: &CliArgs) {
 		env::set_var("PKGEXT", ".pkg.tar.xz");
 	};
 }
+
+pub fn extension() -> String {
+	std::env::var("PKGEXT").expect("Internal error: variable PKGEXT is unset")
+}

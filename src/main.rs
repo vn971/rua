@@ -42,9 +42,13 @@ fn main() {
 			let dirs = rua_files::RuaDirs::new();
 			action_install::install(&target, &dirs, offline, asdeps);
 		}
-		Action::Builddir { offline, target } => {
+		Action::Builddir {
+			offline,
+			force,
+			target,
+		} => {
 			let dirs = rua_files::RuaDirs::new();
-			action_builddir::action_builddir(offline, target, &dirs)
+			action_builddir::action_builddir(target, &dirs, offline, force);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {

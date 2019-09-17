@@ -60,12 +60,7 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 }
 
 fn build_local(dir: &str, dirs: &RuaDirs, is_offline: bool) {
-	debug!(
-		"{}:{} Building package in directory {}",
-		file!(),
-		line!(),
-		dir
-	);
+	debug!("{}:{} Building directory {}", file!(), line!(), dir);
 	let mut command = wrap_yes_internet(dirs);
 	command.current_dir(dir);
 	if is_offline {

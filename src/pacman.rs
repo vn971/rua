@@ -25,21 +25,21 @@ pub fn is_installable(alpm: &Alpm, name: &str) -> bool {
 }
 
 fn get_repository_list() -> Vec<String> {
-	let cmd = Command::new("pacman-conf")
+	let command = Command::new("pacman-conf")
 		.arg("--repo-list")
 		.output()
 		.expect("cannot execute pacman-conf --repo-list");
-	let output =
-		String::from_utf8(cmd.stdout).expect("Failed to parse output of `pacman-conf --repo-list`");
+	let output = String::from_utf8(command.stdout)
+		.expect("Failed to parse output of `pacman-conf --repo-list`");
 	output.lines().map(ToOwned::to_owned).collect()
 }
 
 pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
-	let cmd = Command::new("pacman-conf")
+	let command = Command::new("pacman-conf")
 		.arg("IgnorePkg")
 		.output()
 		.map_err(|_| "cannot execute pacman-conf IgnorePkg")?;
-	let output = String::from_utf8(cmd.stdout)
+	let output = String::from_utf8(command.stdout)
 		.map_err(|err| format!("Failed to parse output of pacman-conf IgnorePkg, {}", err))?;
 	Ok(output.lines().map(ToOwned::to_owned).collect())
 }

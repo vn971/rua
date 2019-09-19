@@ -67,7 +67,9 @@ pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
 	let mut command = wrap_yes_internet(dirs);
 	command.arg("--unshare-net");
 	command.args(&["--ro-bind", dir, dir]);
-	command.env("PKGDEST", "/tmp").env("SRCDEST", "/tmp").env("BUILDDIR", "/tmp");
+	command.env("PKGDEST", "/tmp");
+	command.env("SRCDEST", "/tmp");
+	command.env("BUILDDIR", "/tmp");
 	command.current_dir(dir);
 	command
 		.arg("makepkg")

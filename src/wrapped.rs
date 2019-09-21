@@ -109,6 +109,10 @@ fn build_local(dir: &str, dirs: &RuaDirs, offline: bool, force: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
 	let mut command = wrap_yes_internet(dirs);
 	command.current_dir(dir);
+	command.env("PKGDEST", dir);
+	command.env("SRCDEST", dir);
+	command.env("SRCPKGDEST", dir);
+	command.env("LOGDEST", dir);
 	if offline {
 		command.arg("--unshare-net");
 	}

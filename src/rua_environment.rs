@@ -57,6 +57,14 @@ pub fn prepare_environment(config: &CliArgs) {
 		"Cannot work with SRCDEST environment being set. Please run RUA without it"
 	);
 	assert!(
+		env::var_os("SRCPKGDEST").is_none(),
+		"Cannot work with SRCPKGDEST environment being set. Please run RUA without it"
+	);
+	assert!(
+		env::var_os("LOGDEST").is_none(),
+		"Cannot work with LOGDEST environment being set. Please run RUA without it"
+	);
+	assert!(
 		env::var_os("BUILDDIR").is_none(),
 		"Cannot work with BUILDDIR environment being set. Please run RUA without it"
 	);

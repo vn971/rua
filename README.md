@@ -105,6 +105,7 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 * The tool does not handle versions. It will always install the latest version possible, and it will always assume that latest version is enough.
 * Development packages such as "-git" packages are only rebuilt when running `rua upgrade --devel`. No version checks are done to avoid unnecessary rebuilds. Merge requests welcomed.
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever re-downloading dependencies with each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
+* Shared directories such as makepkg.conf-s "PKGDEST", "BUILDDIR" are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool. Merge requests for moving built artifacts elsewhere are welcomed.
 
 
 ## Safety

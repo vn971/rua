@@ -63,7 +63,7 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool) {
 		}
 	}
 	if outdated.is_empty() {
-		eprintln!("All AUR packages are up-to-date. Congratulations!");
+		eprintln!("Good job! All AUR packages are up-to-date.");
 	} else {
 		print_outdated(&outdated, &unexistent);
 		eprintln!();

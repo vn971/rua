@@ -34,7 +34,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 	}
 
 	loop {
-		eprintln!("Reviewing {:?}. ", dir);
+		eprintln!("\nReviewing {:?}. ", dir);
 		let is_upstream_merged = git_utils::is_upstream_merged(&dir);
 		let identical_to_upstream = is_upstream_merged && git_utils::identical_to_upstream(dir);
 		if is_upstream_merged {

@@ -52,22 +52,27 @@ pub fn prepare_environment(config: &CliArgs) {
 		env::var_os("PKGDEST").is_none(),
 		"Cannot work with PKGDEST environment being set. Please run RUA without it"
 	);
+	env::set_var("PKGDEST", "/dev/null"); // make sure it's overridden later
 	assert!(
 		env::var_os("SRCDEST").is_none(),
 		"Cannot work with SRCDEST environment being set. Please run RUA without it"
 	);
+	env::set_var("SRCDEST", "/dev/null"); // make sure it's overridden later
 	assert!(
 		env::var_os("SRCPKGDEST").is_none(),
 		"Cannot work with SRCPKGDEST environment being set. Please run RUA without it"
 	);
+	env::set_var("SRCPKGDEST", "/dev/null"); // make sure it's overridden later
 	assert!(
 		env::var_os("LOGDEST").is_none(),
 		"Cannot work with LOGDEST environment being set. Please run RUA without it"
 	);
+	env::set_var("LOGDEST", "/dev/null"); // make sure it's overridden later
 	assert!(
 		env::var_os("BUILDDIR").is_none(),
 		"Cannot work with BUILDDIR environment being set. Please run RUA without it"
 	);
+	env::set_var("BUILDDIR", "/dev/null"); // make sure it's overridden later
 	if let Some(extension) = std::env::var_os("PKGEXT") {
 		assert!(
 			extension == ".pkg.tar" || extension == ".pkg.tar.xz",

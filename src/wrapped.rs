@@ -35,8 +35,15 @@ pub fn check_bubblewrap_runnable() {
 	});
 }
 
-fn wrap_yes_internet(dirs: &RuaDirs) -> Command {
-	Command::new(&dirs.wrapper_bwrap_script)
+fn wrap_yes_internet(dirs: &RuaDirs, cur_dir: &str, makepkg_dir: &str) -> Command {
+	let mut command = Command::new(&dirs.wrapper_bwrap_script);
+	command.current_dir(cur_dir);
+	command.env("PKGDEST", makepkg_dir);
+	command.env("SRCDEST", makepkg_dir);
+	command.env("SRCPKGDEST", makepkg_dir);
+	command.env("LOGDEST", makepkg_dir);
+	command.env("BUILDDIR", makepkg_dir);
+	command
 }
 
 fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
@@ -50,11 +57,10 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 	file.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	info!("Downloading sources using .SRCINFO...");
-	let command = wrap_yes_internet(dirs)
+	let command = wrap_yes_internet(dirs, dir, dir)
 		.args(&["--bind", dir, dir])
 		.args(&["makepkg", "-f", "--verifysource"])
 		.args(&["-p", "PKGBUILD.static"])
-		.current_dir(dir)
 		.status()
 		.unwrap_or_else(|e| panic!("Failed to fetch dependencies in directory {}, {}", dir, e));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
@@ -64,13 +70,9 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 
 pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
 	debug!("Getting srcinfo in directory {}", dir);
-	let mut command = wrap_yes_internet(dirs);
+	let mut command = wrap_yes_internet(dirs, dir, "/tmp");
 	command.arg("--unshare-net");
 	command.args(&["--ro-bind", dir, dir]);
-	command.env("PKGDEST", "/tmp");
-	command.env("SRCDEST", "/tmp");
-	command.env("BUILDDIR", "/tmp");
-	command.current_dir(dir);
 	command
 		.arg("makepkg")
 		.arg("--holdver")
@@ -107,12 +109,7 @@ pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
 
 fn build_local(dir: &str, dirs: &RuaDirs, offline: bool, force: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
-	let mut command = wrap_yes_internet(dirs);
-	command.current_dir(dir);
-	command.env("PKGDEST", dir);
-	command.env("SRCDEST", dir);
-	command.env("SRCPKGDEST", dir);
-	command.env("LOGDEST", dir);
+	let mut command = wrap_yes_internet(dirs, dir, dir);
 	if offline {
 		command.arg("--unshare-net");
 	}

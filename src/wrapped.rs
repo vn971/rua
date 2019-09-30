@@ -82,11 +82,11 @@ pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
 		.output()
 		.map_err(|err| format!("cannot execute makepkg --holdver --printsrcinfo, {}", err))?;
 	if !output.status.success() {
-		Err(format!(
+		return Err(format!(
 			"makepkg failed to execute, Stdout:\n{}\n\nStderr:\n{}\n",
 			String::from_utf8_lossy(&output.stdout),
 			String::from_utf8_lossy(&output.stderr),
-		))?
+		));
 	}
 	let output = String::from_utf8(output.stdout).map_err(|err| {
 		format!(

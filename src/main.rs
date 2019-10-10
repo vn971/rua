@@ -65,7 +65,7 @@ fn main() {
 				&target,
 				target.to_str().expect("target is not valid UTF-8"),
 			);
-			eprintln!("Finished checking pachage: {:?}", target);
+			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel } => {
 			let dirs = rua_files::RuaDirs::new();

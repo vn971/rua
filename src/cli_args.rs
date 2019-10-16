@@ -21,6 +21,14 @@ pub struct CliArgs {
 		help = "set colors", // the rest of the description is filled in by structopt
 	)]
 	pub color: CLIColorType,
+	#[structopt(
+		help = "Alternative command for sudo, such as gosu, doas, runas, suex etc.",
+		env = SUDO_ENVIRONMENT_VARIABLE_NAME,
+		long = "sudo-command",
+		hide_env_values = true,
+		default_value = "sudo",
+	)]
+	pub sudo_command: String,
 	#[structopt(subcommand)]
 	pub action: Action,
 }
@@ -93,3 +101,6 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 		devel: bool,
 	},
 }
+
+/// environment variable that we expect the user might fill
+pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";

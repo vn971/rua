@@ -5,7 +5,7 @@ use crate::tar_check;
 use crate::wrapped;
 use std::path::PathBuf;
 
-pub fn action_builddir(dir: PathBuf, dirs: &RuaDirs, offline: bool, force: bool) {
+pub fn action_builddir(dir: &PathBuf, dirs: &RuaDirs, offline: bool, force: bool) {
 	let dir = dir
 		.canonicalize()
 		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", dir, err));

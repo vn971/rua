@@ -1,10 +1,12 @@
 use crate::aur_rpc_utils;
+use crate::cli_args;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_files::RuaDirs;
 use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
+use cli_args::CliArgs;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
@@ -16,7 +18,13 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: bool) {
+pub fn install(
+	targets: &[String],
+	dirs: &RuaDirs,
+	is_offline: bool,
+	asdeps: bool,
+	cli_args: &CliArgs,
+) {
 	let alpm = pacman::create_alpm();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
@@ -46,8 +54,15 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 		});
 		reviewing::review_repo(&dir, pkgbase, dirs);
 	}
-	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(dirs, split_to_depth, split_to_pkgbase, is_offline, asdeps);
+	pacman::ensure_pacman_packages_installed(pacman_deps, cli_args);
+	install_all(
+		dirs,
+		split_to_depth,
+		split_to_pkgbase,
+		is_offline,
+		asdeps,
+		cli_args,
+	);
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
@@ -86,6 +101,7 @@ fn install_all(
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
+	cli_args: &CliArgs,
 ) {
 	let archive_whitelist = split_to_depth
 		.iter()
@@ -168,7 +184,7 @@ fn install_all(
 				));
 			}
 		}
-		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0);
+		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0, cli_args);
 	}
 }
 

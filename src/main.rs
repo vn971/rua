@@ -22,15 +22,16 @@ mod wrapped;
 
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
-use cli_args::{Action, CliArgs};
+use cli_args::Action;
+use cli_args::CliArgs;
 use std::path::PathBuf;
 use std::process::exit;
 use structopt::StructOpt;
 
 fn main() {
-	let config: CliArgs = CliArgs::from_args();
-	rua_environment::prepare_environment(&config);
-	match config.action {
+	let cli_args: CliArgs = CliArgs::from_args();
+	rua_environment::prepare_environment(&cli_args);
+	match &cli_args.action {
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
 		}
@@ -40,7 +41,7 @@ fn main() {
 			target,
 		} => {
 			let dirs = rua_files::RuaDirs::new();
-			action_install::install(&target, &dirs, offline, asdeps);
+			action_install::install(&target, &dirs, *offline, *asdeps, &cli_args);
 		}
 		Action::Builddir {
 			offline,
@@ -48,11 +49,14 @@ fn main() {
 			target,
 		} => {
 			let dirs = rua_files::RuaDirs::new();
-			action_builddir::action_builddir(target, &dirs, offline, force);
+			action_builddir::action_builddir(target, &dirs, *offline, *force);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
-			let result = shellcheck(&target.unwrap_or_else(|| PathBuf::from("./PKGBUILD")));
+			let target = target
+				.as_ref()
+				.map_or_else(|| PathBuf::from("./PKGBUILD"), |p| p.clone());
+			let result = shellcheck(&target);
 			result
 				.map_err(|err| {
 					eprintln!("{}", err);
@@ -69,7 +73,7 @@ fn main() {
 		}
 		Action::Upgrade { devel } => {
 			let dirs = rua_files::RuaDirs::new();
-			action_upgrade::upgrade(&dirs, devel);
+			action_upgrade::upgrade(&dirs, *devel, &cli_args);
 		}
 	};
 }

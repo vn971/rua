@@ -10,7 +10,8 @@ fn is_package_ok(pkg: &Package, filter: &str) -> bool {
 			.any(|descr| descr.to_lowercase().contains(filter.as_str()))
 }
 
-pub fn action_search(mut keywords: Vec<String>) {
+pub fn action_search(keywords: &[String]) {
+	let mut keywords = Vec::from(keywords);
 	keywords.sort_by_key(|t| -(t.len() as i16));
 	let query = keywords
 		.first()

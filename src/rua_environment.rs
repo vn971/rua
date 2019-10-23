@@ -1,3 +1,4 @@
+use crate::cli_args;
 use crate::cli_args::CLIColorType;
 use crate::cli_args::CliArgs;
 use chrono::Utc;
@@ -87,4 +88,8 @@ pub fn prepare_environment(config: &CliArgs) {
 
 pub fn extension() -> String {
 	std::env::var("PKGEXT").expect("Internal error: variable PKGEXT is unset")
+}
+
+pub fn sudo_command() -> String {
+	std::env::var(cli_args::SUDO_ENVIRONMENT_VARIABLE_NAME).unwrap_or_else(|_| "sudo".to_string())
 }

@@ -1,12 +1,10 @@
 use crate::action_install;
 use crate::aur_rpc_utils;
-use crate::cli_args;
 use crate::pacman;
 use crate::print_package_table;
 use crate::rua_files::RuaDirs;
 use crate::terminal_util;
 use alpm::Version;
-use cli_args::CliArgs;
 use colored::*;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -24,7 +22,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade(dirs: &RuaDirs, devel: bool, cli_args: &CliArgs) {
+pub fn upgrade(dirs: &RuaDirs, devel: bool) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()
@@ -74,7 +72,7 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool, cli_args: &CliArgs) {
 			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 			let string = terminal_util::read_line_lowercase();
 			if string == "o" {
-				action_install::install(&outdated, dirs, false, true, cli_args);
+				action_install::install(&outdated, dirs, false, true);
 				break;
 			} else if string == "x" {
 				break;

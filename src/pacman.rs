@@ -1,8 +1,7 @@
-use crate::cli_args;
+use crate::rua_environment;
 use crate::terminal_util;
 use alpm::Alpm;
 use alpm::SigLevel;
-use cli_args::CliArgs;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -68,11 +67,7 @@ pub fn create_alpm() -> Alpm {
 	alpm
 }
 
-fn ensure_packages_installed(
-	mut packages: Vec<(String, PathBuf)>,
-	base_args: &[&str],
-	cli_args: &CliArgs,
-) {
+fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
 	let mut attempt = 0;
 	while !packages.is_empty() {
 		{
@@ -97,19 +92,19 @@ fn ensure_packages_installed(
 			if attempt == 0 {
 				eprint!(
 					"Enter S to `{}` install it, or install manually and press M when done. ",
-					cli_args.sudo_command
+					rua_environment::sudo_command()
 				);
 			} else {
 				eprint!(
-					"Enter S to {} install it, X to skip installation, ",
-					cli_args.sudo_command
+					"Enter S to `{}` install it, X to skip installation, ",
+					rua_environment::sudo_command()
 				);
 				eprint!("or install manually and enter M when done. ");
 			}
 			attempt += 1;
 			let string = terminal_util::read_line_lowercase();
 			if string == "s" {
-				let exit_status = Command::new(&cli_args.sudo_command)
+				let exit_status = Command::new(rua_environment::sudo_command())
 					.arg("pacman")
 					.args(base_args)
 					.arg("--needed")
@@ -128,25 +123,21 @@ fn ensure_packages_installed(
 	}
 }
 
-pub fn ensure_aur_packages_installed(
-	packages: Vec<(String, PathBuf)>,
-	is_dependency: bool,
-	cli_args: &CliArgs,
-) {
+pub fn ensure_aur_packages_installed(packages: Vec<(String, PathBuf)>, is_dependency: bool) {
 	if is_dependency {
-		ensure_packages_installed(packages, &["-U", "--asdeps"], cli_args);
+		ensure_packages_installed(packages, &["-U", "--asdeps"]);
 	} else {
-		ensure_packages_installed(packages, &["-U"], cli_args);
+		ensure_packages_installed(packages, &["-U"]);
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: IndexSet<String>, cli_args: &CliArgs) {
+pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
 	let mut map: Vec<(String, PathBuf)> = Vec::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
 		map.push((package, path));
 	}
-	ensure_packages_installed(map, &["-S", "--asdeps"], cli_args);
+	ensure_packages_installed(map, &["-S", "--asdeps"]);
 }
 
 // Some old functions that invoke shelling below.

@@ -11,7 +11,10 @@ arg_enum! {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(rename_all = "kebab-case")]
+#[structopt(
+	rename_all = "kebab-case",
+	after_help = "ENVIRONMENT:\n    RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc."
+)]
 pub struct CliArgs {
 	#[structopt(
 		possible_values = &CLIColorType::variants(),
@@ -21,14 +24,6 @@ pub struct CliArgs {
 		help = "set colors", // the rest of the description is filled in by structopt
 	)]
 	pub color: CLIColorType,
-	#[structopt(
-		help = "Alternative command for sudo, such as gosu, doas, runas, suex etc.",
-		env = SUDO_ENVIRONMENT_VARIABLE_NAME,
-		long = "sudo-command",
-		hide_env_values = true,
-		default_value = "sudo",
-	)]
-	pub sudo_command: String,
 	#[structopt(subcommand)]
 	pub action: Action,
 }
@@ -103,4 +98,5 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 }
 
 /// environment variable that we expect the user might fill
+// !! make sure it's the same as in CliArgs above !!
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";

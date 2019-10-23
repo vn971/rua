@@ -41,7 +41,7 @@ fn main() {
 			target,
 		} => {
 			let dirs = rua_files::RuaDirs::new();
-			action_install::install(&target, &dirs, *offline, *asdeps, &cli_args);
+			action_install::install(&target, &dirs, *offline, *asdeps);
 		}
 		Action::Builddir {
 			offline,
@@ -73,7 +73,7 @@ fn main() {
 		}
 		Action::Upgrade { devel } => {
 			let dirs = rua_files::RuaDirs::new();
-			action_upgrade::upgrade(&dirs, *devel, &cli_args);
+			action_upgrade::upgrade(&dirs, *devel);
 		}
 	};
 }

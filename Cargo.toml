@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.14.15"
+version = "0.14.16"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -19,18 +19,18 @@ build = "build.rs"
 git = ["alpm/git"]
 
 [build-dependencies]
-structopt = "0.3.1"
+structopt = "0.3.3"
 
 [dependencies]
-alpm = "0.6.1"
+alpm = "0.7.0"
 chrono = "0.4.9"
 colored = "1.8.0"
 directories = "2.0.2"
-env_logger = "0.6.2"
-failure = "0.1.5"
+env_logger = "0.7.1"
+failure = "0.1.6"
 fs2 = "0.4.3"
 fs_extra = "1.1.0"
-indexmap = "1.2.0"
+indexmap = "1.3.0"
 itertools = "0.8.0"
 lazy_static = "1.4.0"
 log = "0.4.8"
@@ -39,7 +39,7 @@ raur = { version = "2.0.1", default-features = false, features = ["rustls"] }
 regex = "1.3.1"
 rm_rf = "0.3.0"
 srcinfo = "0.3.2"
-structopt = "0.3.1"
+structopt = "0.3.3"
 tar = "0.4.26"
 term_size = "0.3.1"
 uname = "0.1.1"

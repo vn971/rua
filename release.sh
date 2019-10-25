@@ -7,20 +7,15 @@ set -o pipefail
 rustup update
 cargo upgrade
 cargo update
+cargo fmt --all --
 if ! test -z "$(git status --porcelain)"; then
   >&2 printf '%s\n' "error: uncommitted changes"
   exit 1
 fi
 
 shellcheck -e SC1090 res/wrap.sh
-cargo fmt --all --
-cargo clippy --all-targets --all-features -- -D warnings
 cargo test
-if ! test -z "$(git status --porcelain)"; then
-  >&2 printf '%s\n' "error: uncommitted changes"
-  exit 1
-fi
-
+cargo clippy --all-targets --all-features -- -D warnings
 cargo publish
 
 tag=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')

@@ -115,7 +115,7 @@ fn install_all(
 		for (pkgbase, _depth, _split) in &packages {
 			let review_dir = dirs.review_dir(pkgbase);
 			let build_dir = dirs.build_dir(pkgbase);
-			rm_rf::force_remove_all(&build_dir).unwrap_or_else(|err| {
+			rm_rf::ensure_removed(&build_dir).unwrap_or_else(|err| {
 				panic!("Failed to remove old build dir {:?}, {}", &build_dir, err)
 			});
 			std::fs::create_dir_all(&build_dir).unwrap_or_else(|err| {
@@ -134,7 +134,7 @@ fn install_all(
 			});
 			{
 				let dir_to_remove = build_dir.join(".git");
-				rm_rf::force_remove_all(build_dir.join(".git"))
+				rm_rf::ensure_removed(build_dir.join(".git"))
 					.unwrap_or_else(|err| panic!("Failed to remove {:?}, {}", dir_to_remove, err));
 			}
 			wrapped::build_directory(
@@ -206,7 +206,7 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = dirs.checked_tars_dir(name);
-	rm_rf::force_remove_all(&checked_tars_dir).unwrap_or_else(|err| {
+	rm_rf::ensure_removed(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
 			"Failed to clean checked tar files dir {:?}, {}",
 			checked_tars_dir, err,

@@ -31,7 +31,7 @@ impl RuaDirs {
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.cache_dir())
 			.expect("Failed to create project cache directory");
-		rm_rf::force_remove_all(dirs.config_dir().join(".system")).ok();
+		rm_rf::ensure_removed(dirs.config_dir().join(".system")).ok();
 		std::fs::create_dir_all(dirs.config_dir().join(".system"))
 			.expect("Failed to create project config directory");
 		std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d"))

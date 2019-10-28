@@ -29,7 +29,12 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 			"If you continue, the build directory will be removed and the build will be re-run."
 		);
 		eprintln!("If you don't want that, consider resolving the situation manually,");
-		eprintln!("for example:    rua builddir {:?}", build_dir);
+		let build_dir = terminal_util::escape_bash_arg(
+			build_dir
+				.to_str()
+				.unwrap_or_else(|| panic!("Failed to stringify build directory {:?}", build_dir)),
+		);
+		eprintln!("for example:    rua builddir {}", build_dir);
 		eprintln!();
 	}
 

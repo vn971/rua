@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.14.17"
+version = "0.14.18"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -31,7 +31,7 @@ failure = "0.1.6"
 fs2 = "0.4.3"
 fs_extra = "1.1.0"
 indexmap = "1.3.0"
-itertools = "0.8.0"
+itertools = "0.8.1"
 lazy_static = "1.4.0"
 log = "0.4.8"
 prettytable-rs = "0.8.0"

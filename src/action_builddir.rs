@@ -17,10 +17,14 @@ pub fn action_builddir(dir: &Path, dirs: &RuaDirs, offline: bool, force: bool) {
 	let srcinfo = wrapped::generate_srcinfo(dir_str, dirs).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
 	let ext = rua_environment::extension();
-	let archive_names = srcinfo
-		.pkgs
-		.iter()
-		.map(|p| format!("{}-{}-{}{}", p.pkgname, ver, *pacman::PACMAN_ARCH, ext));
+	let archive_names = srcinfo.pkgs.iter().map(|package| {
+		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {
+			pacman::PACMAN_ARCH.to_string()
+		} else {
+			"any".to_string()
+		};
+		format!("{}-{}-{}{}", package.pkgname, ver, arch, ext)
+	});
 
 	for archive_name in archive_names {
 		let file = dir.join(archive_name);

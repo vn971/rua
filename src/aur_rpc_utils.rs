@@ -72,7 +72,9 @@ pub fn recursive_info(
 	Ok((info_map, pacman_deps, depth_map))
 }
 
-pub fn info_map(packages_to_query: &[&str]) -> Result<IndexMap<String, Package>, raur::Error> {
+pub fn info_map<S: AsRef<str>>(
+	packages_to_query: &[S],
+) -> Result<IndexMap<String, Package>, raur::Error> {
 	let mut result = IndexMap::new();
 	for group in packages_to_query.chunks(BATCH_SIZE) {
 		let group_info = raur::info(group)?;

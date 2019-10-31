@@ -114,7 +114,7 @@ RUA only adds build-time safety and install-time control. Once/if packages pass 
 When building packages, RUA uses the following filesystem isolation by default:
 
 * Build directory is mounted read-write.
-* ~/.gnupg directory is mounted read-only, excluding ~/.gnupg/private-keys-v1.d, which is blocked. This allows signature verification to work.
+* Files `"$GNUPGHOME"/pubring.kbx` and `"$GNUPGHOME"/pubring.gpg` are mounted read-only (if exists). This allows signature verification to work.
 * The rest of `~` is not visible to the build process, mounted under tmpfs.
 * The rest of `/` is mounted read-only.
 * You can add your mount points by configuring "wrap_args".

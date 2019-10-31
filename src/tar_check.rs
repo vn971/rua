@@ -101,28 +101,28 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		eprint!("[O]=ok, proceed. ");
 		let string = terminal_util::read_line_lowercase();
 		eprintln!();
-		if string == "s" && !suid_files.is_empty() {
+		if &string == "s" && !suid_files.is_empty() {
 			for path in &suid_files {
 				eprintln!("{}", path);
 			}
-		} else if string == "e" {
+		} else if &string == "e" {
 			for path in &executable_files {
 				eprintln!("{}", path);
 			}
-		} else if string == "l" {
+		} else if &string == "l" {
 			for path in &all_files {
 				eprintln!("{}", path);
 			}
-		} else if string == "i" && has_install {
+		} else if &string == "i" && has_install {
 			eprintln!("{}", &install_file);
-		} else if string == "t" {
+		} else if &string == "t" {
 			let dir = PathBuf::from(path_str);
 			let dir = dir.parent().unwrap_or_else(|| Path::new("."));
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir.to_path_buf(), "SHELL", "bash", &[]);
-		} else if string == "o" {
+		} else if &string == "o" {
 			break;
-		} else if string == "q" {
+		} else if &string == "q" {
 			eprintln!("Exiting...");
 			std::process::exit(-1);
 		}

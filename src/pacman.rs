@@ -113,8 +113,8 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				if exit_status.map(|c| c.success()).unwrap_or(false) {
 					break;
 				}
-			} else if string == "m" {
-			} else if string == "x" {
+			} else if &string == "m" {
+			} else if &string == "x" {
 				break;
 			}
 		}

@@ -65,18 +65,18 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 		if string == "t" {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
-		} else if string == "s" && is_upstream_merged {
+		} else if &string == "s" && is_upstream_merged {
 			match wrapped::shellcheck(&dir.join("PKGBUILD")) {
 				Err(err) => eprintln!("{}", err),
 				Ok(_) => eprintln!("shellcheck found no problems"),
 			};
-		} else if string == "d" && is_upstream_merged {
+		} else if &string == "d" && is_upstream_merged {
 			git_utils::show_upstream_diff(dir, false);
-		} else if string == "d" && !is_upstream_merged {
+		} else if &string == "d" && !is_upstream_merged {
 			git_utils::show_upstream_diff(dir, true);
-		} else if string == "m" && !is_upstream_merged {
+		} else if &string == "m" && !is_upstream_merged {
 			git_utils::merge_upstream(dir);
-		} else if string == "o" && is_upstream_merged {
+		} else if &string == "o" && is_upstream_merged {
 			break;
 		}
 	}

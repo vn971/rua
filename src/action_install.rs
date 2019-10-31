@@ -74,7 +74,7 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();
-		if string == "o" {
+		if &string == "o" {
 			break;
 		}
 	}

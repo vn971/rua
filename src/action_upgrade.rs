@@ -82,11 +82,11 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool, printonly: bool) {
 			loop {
 				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 				let string = terminal_util::read_line_lowercase();
-				if string == "o" {
+				if &string == "o" {
 					let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
 					action_install::install(&outdated, dirs, false, true);
 					break;
-				} else if string == "x" {
+				} else if &string == "x" {
 					break;
 				}
 			}

@@ -74,16 +74,16 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool, printonly: bool) {
 		debug!("You have the following packages outside of main repos installed:");
 		debug!("{}", aur_pkgs_string);
 		debug!("");
-		if outdated.is_empty() {
+		if outdated.is_empty() && unexistent.is_empty() {
 			eprintln!("Good job! All AUR packages are up-to-date.");
 		} else {
 			print_outdated(&outdated, &unexistent);
 			eprintln!();
-			let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
 			loop {
 				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 				let string = terminal_util::read_line_lowercase();
 				if string == "o" {
+					let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
 					action_install::install(&outdated, dirs, false, true);
 					break;
 				} else if string == "x" {

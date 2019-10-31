@@ -22,7 +22,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade(dirs: &RuaDirs, devel: bool) {
+pub fn upgrade(dirs: &RuaDirs, devel: bool, printonly: bool) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()
@@ -42,9 +42,6 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool) {
 		.map(|(pkg, _ver)| *pkg)
 		.collect::<Vec<_>>()
 		.join(" ");
-	debug!("You have the following packages outside of main repos installed:");
-	debug!("{}", aur_pkgs_string);
-	debug!("");
 	let mut up_to_date = Vec::new();
 	let mut outdated = Vec::new();
 	let mut unexistent = Vec::new();
@@ -62,20 +59,36 @@ pub fn upgrade(dirs: &RuaDirs, devel: bool) {
 			unexistent.push((pkg, local_ver.to_string()));
 		}
 	}
-	if outdated.is_empty() {
-		eprintln!("Good job! All AUR packages are up-to-date.");
+	if printonly {
+		if outdated.is_empty() && unexistent.is_empty() {
+			std::process::exit(-1)
+		} else {
+			for (pkg, _, _) in outdated {
+				println!("{}", pkg);
+			}
+			for (pkg, _) in unexistent {
+				println!("{}", pkg);
+			}
+		}
 	} else {
-		print_outdated(&outdated, &unexistent);
-		eprintln!();
-		let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-		loop {
-			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
-			let string = terminal_util::read_line_lowercase();
-			if string == "o" {
-				action_install::install(&outdated, dirs, false, true);
-				break;
-			} else if string == "x" {
-				break;
+		debug!("You have the following packages outside of main repos installed:");
+		debug!("{}", aur_pkgs_string);
+		debug!("");
+		if outdated.is_empty() {
+			eprintln!("Good job! All AUR packages are up-to-date.");
+		} else {
+			print_outdated(&outdated, &unexistent);
+			eprintln!();
+			let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
+			loop {
+				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
+				let string = terminal_util::read_line_lowercase();
+				if string == "o" {
+					action_install::install(&outdated, dirs, false, true);
+					break;
+				} else if string == "x" {
+					break;
+				}
 			}
 		}
 	}

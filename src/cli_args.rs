@@ -85,7 +85,9 @@ Sources are downloaded using .SRCINFO only"
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,
 	},
-	#[structopt(about = "Upgrade AUR packages")]
+	#[structopt(
+		about = "Upgrade AUR packages. To ignore upgrade proposals for a certain package, add it to IgnorePkg in pacman.conf"
+	)]
 	Upgrade {
 		#[structopt(
 			long = "devel",
@@ -94,6 +96,11 @@ Sources are downloaded using .SRCINFO only"
 Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 		)]
 		devel: bool,
+		#[structopt(
+			long = "printonly",
+			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts)."
+		)]
+		printonly: bool,
 	},
 }
 

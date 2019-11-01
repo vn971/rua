@@ -72,6 +72,11 @@ pub fn recursive_info(
 	Ok((info_map, pacman_deps, depth_map))
 }
 
+/// Queries the AUR for the provided given package names and returns a map all packages
+/// that match.
+///
+/// # Arguments
+/// * `packages_to_query` - A slice of package names to find in the AUR
 pub fn info_map<S: AsRef<str>>(
 	packages_to_query: &[S],
 ) -> Result<IndexMap<String, Package>, raur::Error> {

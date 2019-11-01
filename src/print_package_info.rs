@@ -11,8 +11,8 @@ pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
 	let mut all_pkgs = Vec::with_capacity(pkg_map.len());
 
 	for pkg in pkgs {
-		if let Some(pkg) = pkg_map.get(pkg) {
-			all_pkgs.push(pkg)
+		if let Some(found_pkg) = pkg_map.get(pkg) {
+			all_pkgs.push(found_pkg)
 		} else {
 			eprintln!("{} package '{}' was not found", "error:".red(), pkg);
 		}

@@ -1,25 +1,18 @@
+use crate::aur_rpc_utils::info_map;
 use crate::print_format::{date, opt, print_indent};
 
 use colored::*;
 use failure::Error;
-use std::collections::HashMap;
 use term_size::dimensions_stdout;
 
 pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
-	let mut hm = HashMap::with_capacity(pkgs.len());
+	let pkg_map = info_map(&pkgs)?;
 
-	for chunk in pkgs.chunks(150) {
-		let pkgs = raur::info(&chunk)?;
-		for pkg in pkgs {
-			hm.insert(pkg.name.clone(), pkg);
-		}
-	}
-
-	let mut all_pkgs = Vec::with_capacity(hm.len());
+	let mut all_pkgs = Vec::with_capacity(pkg_map.len());
 
 	for pkg in pkgs {
-		if let Some(pkg) = hm.get(pkg) {
-			all_pkgs.push(pkg)
+		if let Some(found_pkg) = pkg_map.get(pkg) {
+			all_pkgs.push(found_pkg)
 		} else {
 			eprintln!("{} package '{}' was not found", "error:".red(), pkg);
 		}

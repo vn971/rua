@@ -6,7 +6,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Provides detailed information:
   * warn if SUID files are present in an already built package, and show them
   * show upstream diff before building, or full diff if the package is new
-  * see code problems in PKGBUILD via `shellcheck` (taking care of special variables)
+  * see code problems in PKGBUILD via `shellcheck`, taking care of special variables
   * show INSTALL script (if present), executable and file list previews in already built package
 - Minimize user distractions:
   * verify all packages once, build without interruptions
@@ -21,13 +21,13 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 # Use
 
-`rua install xcalib`  # installs or upgrades a package
+`rua install xcalib`  # install or upgrade a package
 
 `rua search wesnoth`
 
 `rua info freecad`
 
-`rua upgrade`  # (new) find outdated AUR packages and offer upgrade
+`rua upgrade`  # upgrade AUR packages. You can selectively ignore packages by adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`).
 
 `rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of PKGBUILD-specific variables.
 
@@ -35,9 +35,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua builddir --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
 
-`rua --help && rua install --help`  # shows CLI help
-
-Jail arguments can be overridden in ~/.config/rua/wrap_args.d/ .
+`rua --help; rua subcommand --help`  # shows CLI help
 
 
 ## Install dependencies
@@ -69,7 +67,7 @@ When a new AUR package is fetched by RUA for the first time, it is stored in `~/
 This is done via git, with an empty branch as your currently accepted state.
 
 If you review upstream changes and accept them, upstream is merged into your local branch.
-RUA will only allow you building once you have upstream as your ancestor, making sure you merged it.
+RUA will only allow you building once upstream is your ancestor, making sure you merged it.
 
 When you later install a new version of the package, RUA will fetch the new version and show you the diff since your last review.
 
@@ -104,8 +102,8 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 * Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
 * The tool does not handle versions. It will always install the latest version possible, and it will always assume that latest version is enough.
 * Development packages such as "-git" packages are only rebuilt when running `rua upgrade --devel`. No version checks are done to avoid unnecessary rebuilds. Merge requests welcomed.
-* Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever re-downloading dependencies with each build. If you want to override some of that, take a look at ~/.config/rua/wrap_args.d/ and the parent directory for examples.
-* Shared directories such as makepkg.conf-s "PKGDEST", "BUILDDIR" are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool. Merge requests for moving built artifacts elsewhere are welcomed.
+* Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever dependencies re-downloading with each build. See [safety](#safety) section below on how to whitelist certain directories.
+* Environment variables "PKGDEST" and "BUILDDIR" of makepkg.conf are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool.
 
 
 ## Safety
@@ -117,7 +115,9 @@ When building packages, RUA uses the following filesystem isolation by default:
 * Files `"$GNUPGHOME"/pubring.kbx` and `"$GNUPGHOME"/pubring.gpg` are mounted read-only (if exists). This allows signature verification to work.
 * The rest of `~` is not visible to the build process, mounted under tmpfs.
 * The rest of `/` is mounted read-only.
-* You can add your mount points by configuring "wrap_args".
+* You can whitelist/add your mount points by configuring "wrap_args". See examples in ~/.config/rua/wrap_args.d/ (none enabled by default).
+
+As mentioned in the header, `seccomp` also applies to all builds, and there is a CLI option for offline builds.
 
 
 ## Other

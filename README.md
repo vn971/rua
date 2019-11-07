@@ -55,10 +55,10 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 
 ## Install (the Rust way)
 ```sh
-cargo install rua
+RUSTUP_TOOLCHAIN=stable cargo install --force rua
 ```
 
-Does not include bash/zsh/fish completions, but everything else should work.
+This does not include bash/zsh/fish completions, but everything else should work.
 If you use development version `pacman-git`, use `cargo install --features git rua` instead.
 
 

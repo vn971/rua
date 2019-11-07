@@ -82,7 +82,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 			list.sort();
 			eprintln!("Packages need to be installed:");
 			eprintln!(
-				"\n    pacman {} --needed {}\n",
+				"\n    pacman {} {}\n",
 				base_args.join(" "),
 				list.iter()
 					.map(|p| terminal_util::escape_bash_arg(p)) // this is only printing. rua does not use bash to install packages
@@ -107,7 +107,6 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				let exit_status = Command::new(rua_environment::sudo_command())
 					.arg("pacman")
 					.args(base_args)
-					.arg("--needed")
 					.args(&list)
 					.status();
 				if exit_status.map(|c| c.success()).unwrap_or(false) {
@@ -137,7 +136,7 @@ pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
 		let path = Path::new(&package).to_path_buf();
 		map.push((package, path));
 	}
-	ensure_packages_installed(map, &["-S", "--asdeps"]);
+	ensure_packages_installed(map, &["-S", "--asdeps", "--needed"]);
 }
 
 // Some old functions that invoke shelling below.

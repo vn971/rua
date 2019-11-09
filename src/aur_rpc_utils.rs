@@ -130,7 +130,7 @@ mod tests {
 	use crate::aur_rpc_utils::*;
 
 	#[test]
-	fn test_starting_hyphen() {
+	fn test_clean_package_name() {
 		assert_eq!(clean_package_name("test"), Some("test".to_string()));
 		assert_eq!(
 			clean_package_name("abcdefghijklmnopqrstuvwxyz0123456789@_+.-"),
@@ -152,5 +152,6 @@ mod tests {
 		assert_eq!(clean_package_name("test<0"), Some("test".to_string()));
 		assert_eq!(clean_package_name("test<=0"), Some("test".to_string()));
 		assert_eq!(clean_package_name("test=0"), Some("test".to_string()));
+		assert_eq!(clean_package_name("test==0"), Some("test".to_string()));
 	}
 }

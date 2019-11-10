@@ -3,8 +3,7 @@
 wrap_args=(--unshare-user --unshare-ipc --unshare-pid --unshare-uts --unshare-cgroup)
 
 for filename in ~/.config/rua/wrap_args.d/*.sh ; do
-  test -e "$filename" || continue
-  source "$filename"
+  if test -e "$filename"; then source "$filename"; fi
 done
 
 exec nice -n19 \

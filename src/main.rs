@@ -72,8 +72,7 @@ fn main() {
 			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel, printonly } => {
-			let dirs = rua_files::RuaDirs::new();
-			action_upgrade::upgrade(&dirs, *devel, *printonly);
+			action_upgrade::upgrade(*devel, *printonly);
 		}
 	};
 }

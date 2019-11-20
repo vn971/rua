@@ -27,7 +27,7 @@ pub struct RuaDirs {
 
 impl RuaDirs {
 	pub fn new() -> RuaDirs {
-		let dirs = ProjectDirs::from("com.gitlab", "vn971", "rua")
+		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.cache_dir())
 			.expect("Failed to create project cache directory");
@@ -76,10 +76,12 @@ impl RuaDirs {
 			eprintln!("Another RUA instance already running.");
 			std::process::exit(2)
 		});
+		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");
+		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
 		RuaDirs {
 			global_build_dir: dirs.cache_dir().join("build"),
 			global_review_dir: dirs.config_dir().join("pkg"),
-			global_checked_tars_dir: dirs.cache_dir().join("checked_tars"),
+			global_checked_tars_dir,
 			wrapper_bwrap_script: dirs.config_dir().join(WRAP_SCRIPT_PATH),
 			_global_lock: locked_file,
 		}
@@ -97,9 +99,7 @@ impl RuaDirs {
 
 	/// Same as `global_checked_tars_dir`, but for a specific pkgbase
 	pub fn checked_tars_dir(&self, pkg_name: &str) -> PathBuf {
-		self.global_checked_tars_dir
-			.join("checked_tars")
-			.join(pkg_name)
+		self.global_checked_tars_dir.join(pkg_name)
 	}
 }
 
@@ -140,6 +140,20 @@ fn overwrite_script(path: &Path, content: &[u8]) {
 	overwrite_file(path, content);
 	fs::set_permissions(path, Permissions::from_mode(0o755))
 		.unwrap_or_else(|e| panic!("Failed to set permissions for {:?}, {}", path, e));
+}
+
+fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
+	let old_dir = dirs.cache_dir().join("checked_tars");
+	if old_dir.exists() {
+		let old_dir_str = old_dir
+			.to_str()
+			.unwrap_or_else(|| "~/.cache/rua/checked_tars");
+		eprintln!(
+			"INFO: you have a legacy directory from an older RUA version: {}",
+			&old_dir_str
+		);
+		eprintln!("Please delete it or move all contents to {:?}", correct_dir);
+	};
 }
 
 pub const SHELLCHECK_WRAPPER_BYTES: &str = include_str!("../res/shellcheck-wrapper");

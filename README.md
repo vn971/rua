@@ -63,13 +63,20 @@ If you use development version `pacman-git`, use `cargo install --features git r
 
 
 ## How it works / reviewing
-When a new AUR package is fetched by RUA for the first time, it is stored in `~/.config/rua/pkg/pkg_name`.
-This is done via git, with an empty branch as your currently accepted state.
+Knowing the underlying machinery is not required to work with RUA,
+but if you're curious anyway, this section is for you.
 
-If you review upstream changes and accept them, upstream is merged into your local branch.
-RUA will only allow you building once upstream is your ancestor, making sure you merged it.
+All AUR packages are stored in designated `git` repositories,
+with `upstream/master` pointing to remote AUR head and
+local `master` meaning your reviewed and accepted state.
+Local branch does not track the remote one.
 
-When you later install a new version of the package, RUA will fetch the new version and show you the diff since your last review.
+RUA works by fetching remote updates when needed,
+presenting remote changes to you and merging them if you accept them.
+Merging and basic diff view are built-in commands in RUA, and you can
+drop to shell and do more from git CLI if you want.
+
+Merging the latest `upstream/master` is required to upgrade the package.
 
 ## How it works / dependency grouping and installation
 RUA will:

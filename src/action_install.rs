@@ -190,7 +190,11 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 				.expect("Non-UTF8 characters in tar file name");
 			(file, file_name)
 		})
-		.filter(|(_, name)| (name.ends_with(".pkg.tar") || name.ends_with(".pkg.tar.xz")))
+		.filter(|(_, name)| {
+			(name.ends_with(".pkg.tar")
+				|| name.ends_with(".pkg.tar.xz")
+				|| name.ends_with(".pkg.tar.gz"))
+		})
 		.collect::<Vec<_>>();
 	let dir_items_names = dir_items
 		.iter()

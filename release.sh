@@ -18,16 +18,16 @@ cargo test
 cargo clippy --all-targets --all-features -- -D warnings
 cargo publish
 
-tag=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')
-export tag
-git tag -m "release" "$tag"
+ver=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')
+export ver
+git tag -m "release" "v$ver"
 
 git push hub
 git push lab
 
 # prepare and test AUR package
 if test -e .vasya-personal/aur_prepare.sh; then
-  ./.vasya-personal/aur_prepare.sh
+  .vasya-personal/aur_prepare.sh
 fi
 
 exit

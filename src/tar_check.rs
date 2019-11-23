@@ -1,9 +1,11 @@
 use crate::terminal_util;
 extern crate libflate;
+extern crate ruzstd;
 use colored::*;
 use indexmap::IndexSet;
 use libflate::gzip::Decoder;
 use log::debug;
+use ruzstd::frame_decoder::FrameDecoder;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -21,12 +23,11 @@ pub fn tar_check_unwrap(tar_file: &Path, file_name: &str) {
 
 pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
-	if tar_str.ends_with(".tar.xz") {
-		debug!("Checking tar.xz file {}", tar_str);
+	debug!("Checking file {}", tar_str);
+	if tar_str.ends_with(".tar.xz") || tar_str.ends_with(".tar.lzma") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
 		Ok(())
-	} else if tar_str.ends_with(".tar.gz") {
-		debug!("Checking tar.gz file {}", tar_str);
+	} else if tar_str.ends_with(".tar.gz") || tar_str.ends_with(".tar.gzip") {
 		match Decoder::new(archive) {
 			Ok(decoded) => {
 				tar_check_archive(Archive::new(decoded), tar_str);
@@ -36,8 +37,20 @@ pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 				Err(format!("File {:?} seems to be corrupted, could not decode the gzip contents. Underlying libflate error: {}", tar_file, err))
 			},
 		}
+	} else if tar_str.ends_with(".tar.zst") || tar_str.ends_with(".tar.zstd") {
+		eprintln!("yes, this code is actually run");
+		let mut decoder = FrameDecoder::new();
+		let mut archive = archive;
+		match decoder.reset(&mut archive) {
+			Ok(()) => {
+				tar_check_archive(Archive::new(decoder), tar_str);
+				Ok(())
+			},
+			Err(err) => {
+				Err(format!("File {:?} seems to be corrupted, could not decode the zstd contents. Underlying ruzstd error: {}", tar_file, err))
+			},
+		}
 	} else if tar_str.ends_with(".tar") {
-		debug!("Checking  tar file {}", tar_str);
 		tar_check_archive(Archive::new(archive), tar_str);
 		Ok(())
 	} else {

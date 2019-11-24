@@ -5,7 +5,7 @@ use colored::*;
 use indexmap::IndexSet;
 use libflate::gzip::Decoder;
 use log::debug;
-use ruzstd::frame_decoder::FrameDecoder;
+use ruzstd::StreamingDecoder;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -38,11 +38,9 @@ pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 			},
 		}
 	} else if tar_str.ends_with(".tar.zst") || tar_str.ends_with(".tar.zstd") {
-		eprintln!("yes, this code is actually run");
-		let mut decoder = FrameDecoder::new();
 		let mut archive = archive;
-		match decoder.reset(&mut archive) {
-			Ok(()) => {
+		match StreamingDecoder::new(&mut archive) {
+			Ok(decoder) => {
 				tar_check_archive(Archive::new(decoder), tar_str);
 				Ok(())
 			},

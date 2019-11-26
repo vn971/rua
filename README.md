@@ -4,15 +4,15 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 - Allows local patch application
 - Provides detailed information:
-  * warn if SUID files are present in an already built package, and show them
-  * show upstream diff before building, or full diff if the package is new
+  * show upstream changes upon package upgrade
   * see code problems in PKGBUILD via `shellcheck`, taking care of special variables
-  * show INSTALL script (if present), executable and file list previews in already built package
+  * warn if SUID files are present in an already built package, and show them
+  * show file list, executable list and INSTALL script in already built archives
 - Minimize user distractions:
   * verify all packages once, build without interruptions
-  * group built dependencies for batch review/install
+  * group built dependencies for batch review
 - Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap):
-  * supports "offline" builds
+  * supports `--offline` builds
   * builds in isolated filesystem, see [safety](#Safety) section below
   * uses `seccomp` to limit available syscalls (e.g. the build cannot call `ptrace`)
   * the build cannot execute `sudo` (filesystem is mounted with `nosuid`)
@@ -27,13 +27,13 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua info freecad`
 
-`rua upgrade`  # upgrade AUR packages. You can selectively ignore packages by adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`).
+`rua upgrade`  # upgrade all AUR packages. You can selectively ignore packages by adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`). You can upgrade only specific packages with `rua install A B C`.
 
 `rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of PKGBUILD-specific variables.
 
 `rua tarcheck xcalib.pkg.tar`  # if you already have a *.pkg.tar package built, run RUA checks on it (SUID, executable list, INSTALL script review etc).
 
-`rua builddir --offline /path/to/pkgbuild/directory`  # build a directory. Don't fetch any dependencies. Assumes a clean directory.
+`rua builddir --offline /path/to/pkgbuild/directory`  # build a directory.
 
 `rua --help; rua subcommand --help`  # shows CLI help
 

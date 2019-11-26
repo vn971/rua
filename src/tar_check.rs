@@ -24,7 +24,10 @@ pub fn tar_check_unwrap(tar_file: &Path, file_name: &str) {
 pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	debug!("Checking file {}", tar_str);
-	if tar_str.ends_with(".tar.xz") || tar_str.ends_with(".tar.lzma") {
+	if tar_str.ends_with(".tar") {
+		tar_check_archive(Archive::new(archive), tar_str);
+		Ok(())
+	} else if tar_str.ends_with(".tar.xz") || tar_str.ends_with(".tar.lzma") {
 		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
 		Ok(())
 	} else if tar_str.ends_with(".tar.gz") || tar_str.ends_with(".tar.gzip") {
@@ -48,12 +51,9 @@ pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 				Err(format!("File {:?} seems to be corrupted, could not decode the zstd contents. Underlying ruzstd error: {}", tar_file, err))
 			},
 		}
-	} else if tar_str.ends_with(".tar") {
-		tar_check_archive(Archive::new(archive), tar_str);
-		Ok(())
 	} else {
 		Err(format!(
-			"Archive {:?} cannot be analyzed. Only .tar, .tar.xz and .tar.gz files are supported",
+			"Archive {:?} cannot be analyzed. Only .tar or .tar.xz or .tar.gz or .tar.zst files are supported",
 			tar_file
 		))
 	}

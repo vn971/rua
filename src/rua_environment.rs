@@ -76,9 +76,15 @@ pub fn prepare_environment(config: &CliArgs) {
 	env::set_var("BUILDDIR", "/dev/null"); // make sure it's overridden later
 	if let Some(extension) = std::env::var_os("PKGEXT") {
 		assert!(
-			extension == ".pkg.tar" || extension == ".pkg.tar.xz" || extension == ".pkg.tar.gz",
+			extension == ".pkg.tar"
+				|| extension == ".pkg.tar.xz"
+				|| extension == ".pkg.tar.lzma"
+				|| extension == ".pkg.tar.gz"
+				|| extension == ".pkg.tar.gzip"
+				|| extension == ".pkg.tar.zst"
+				|| extension == ".pkg.tar.zstd",
 			"PKGEXT environment is set to an incompatible value. \
-			 Only .pkg.tar or .pkg.tar.xz or .pkg.tar.gz archives are supported for now.\
+			 Only .pkg.tar or .pkg.tar.xz or .pkg.tar.gz or .pkg.tar.zst archives are supported for now.\
 			 RUA needs those extensions to look inside the archives for 'tar_check' analysis."
 		);
 	} else {

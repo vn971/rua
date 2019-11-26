@@ -191,9 +191,13 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 			(file, file_name)
 		})
 		.filter(|(_, name)| {
-			(name.ends_with(".pkg.tar")
+			name.ends_with(".pkg.tar")
 				|| name.ends_with(".pkg.tar.xz")
-				|| name.ends_with(".pkg.tar.gz"))
+				|| name.ends_with(".pkg.tar.lzma")
+				|| name.ends_with(".pkg.tar.gz")
+				|| name.ends_with(".pkg.tar.gzip")
+				|| name.ends_with(".pkg.tar.zst")
+				|| name.ends_with(".pkg.tar.zstd")
 		})
 		.collect::<Vec<_>>();
 	let dir_items_names = dir_items

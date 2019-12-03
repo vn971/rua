@@ -111,6 +111,8 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 * Development packages such as "-git" packages are only rebuilt when running `rua upgrade --devel`. No version checks are done to avoid unnecessary rebuilds. Merge requests welcomed.
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever dependencies re-downloading with each build. See [safety](#safety) section below on how to whitelist certain directories.
 * Environment variables "PKGDEST" and "BUILDDIR" of makepkg.conf are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool.
+* Due of [safety](#Safety) restrictions, [X11 access might not work](./docs/x11access.md) during build.
+* Due to a [bug in fakeroot](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=909727), creation of root-owned packages inside PKGBUILD-s `package()` does not work. This happens when archives are extracted in `package()` function. Doing it in `prepare()` or giving a key like `tar --no-same-owner` is the work-around.
 
 
 ## Safety
@@ -121,10 +123,13 @@ When building packages, RUA uses the following filesystem isolation by default:
 * Build directory is mounted read-write.
 * Files `"$GNUPGHOME"/pubring.kbx` and `"$GNUPGHOME"/pubring.gpg` are mounted read-only (if exists). This allows signature verification to work.
 * The rest of `~` is not visible to the build process, mounted under tmpfs.
+* `/tmp` and `/dev` and `/proc` are re-mounted with empty tmpfs, devtmpfs and procfs accordingly.
 * The rest of `/` is mounted read-only.
 * You can whitelist/add your mount points by configuring "wrap_args". See examples in ~/.config/rua/wrap_args.d/ (none enabled by default).
 
-As mentioned in the header, `seccomp` also applies to all builds, and there is a CLI option for offline builds.
+Additionally, all builds are run in a namespace jail, with `seccomp` enabled
+and `user`, `ipc,`, `pid`, `uts`, `cgroup` being unshared by default.
+If asked from CLI, builds can be run in offline mode.
 
 
 ## Other

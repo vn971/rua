@@ -8,7 +8,7 @@ This is explained in sections below.
 
 Whether your X11 session is available to the build depends not only on RUA, but also on configuration of your system.
 
-* If you build the package with internet access being disabled, X11 is disallowed.
+* If you build the package with `--offline`, X11 is disallowed.
 * If you run your Xorg server with `-nolisten tcp -nolisten local`, X11 is disallowed.
 * If none of the above apply, a build might totally skip file access restrictions
 and access your X11 via the abstract socket (as opposed to the normal unix sockets).
@@ -24,7 +24,7 @@ Now, what can or should you do about it?
 
 ## What to do?
 
-If you're writing a PKGBUILD and want to access X11 for e.g. testing/CI,
+If you're writing a PKGBUILD and want to access X11 for e.g. auto-tests,
 don't rely on already existing session (it might not even exist!).
 Instead, create a new virtual one. It is as easy as running
 ```

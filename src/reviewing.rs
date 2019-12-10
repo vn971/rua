@@ -68,7 +68,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 		} else if &string == "s" && is_upstream_merged {
 			match wrapped::shellcheck(&dir.join("PKGBUILD")) {
 				Err(err) => eprintln!("{}", err),
-				Ok(_) => eprintln!("shellcheck found no problems"),
+				Ok(_) => (),
 			};
 		} else if &string == "d" && is_upstream_merged {
 			git_utils::show_upstream_diff(dir, false);

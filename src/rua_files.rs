@@ -156,7 +156,7 @@ fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 	};
 }
 
-pub const SHELLCHECK_WRAPPER_BYTES: &str = include_str!("../res/shellcheck-wrapper");
+pub const SHELLCHECK_WRAPPER: &str = include_str!("../res/shellcheck-wrapper");
 pub const SECCOMP_I686: &[u8] = include_bytes!("../res/seccomp-i686.bpf");
 pub const SECCOMP_X86_64: &[u8] = include_bytes!("../res/seccomp-x86_64.bpf");
 pub const WRAP_SH: &[u8] = include_bytes!("../res/wrap.sh");

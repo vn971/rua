@@ -77,7 +77,7 @@ Sources are downloaded using .SRCINFO only"
 		about = "Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables"
 	)]
 	Shellcheck {
-		#[structopt(help = "PKGBUILD to check (or ./PKGBUILD if not provided)")]
+		/// PKGBUILD or directory to check. Defaults to /dev/stdin if not specified. Appends ./PKGBUILD for directories
 		target: Option<PathBuf>,
 	},
 	#[structopt(

@@ -1,14 +1,11 @@
 #!/bin/bash -euET
 
-## use as:
-## shellcheck --check-sourced --norc -x shellcheck-wrapper
-
 # declare variables used by PKGBUILD
 srcdir=
 pkgdir=
 
-# source it!
-source PKGBUILD
+# the actual PKGBUILD gets inlined by RUA here
+inline PKGBUILD
 
 # ensure that obligatory PKGBUILD values are defined, and avoid "unused" warning for them:
 test "${#pkgname[@]}" -gt 0

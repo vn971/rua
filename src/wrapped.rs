@@ -3,7 +3,6 @@
 use crate::rua_files;
 use crate::rua_files::RuaDirs;
 use crate::srcinfo_to_pkgbuild;
-use crate::terminal_util;
 use log::debug;
 use log::info;
 use log::trace;
@@ -139,16 +138,15 @@ pub fn build_directory(dir: &str, project_dirs: &RuaDirs, offline: bool, force: 
 	build_local(dir, project_dirs, offline, force);
 }
 
-pub fn shellcheck(target: &Path) -> Result<(), String> {
-	let target = if target.is_dir() {
-		target.join("PKGBUILD")
-	} else {
-		target.to_path_buf()
+pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
+	let target = match target {
+		None => Path::new("/dev/stdin").to_path_buf(),
+		Some(path) if path.is_dir() => path.join("PKGBUILD"),
+		Some(path) => path.to_path_buf(),
 	};
-	if !target.exists() {
-		return Err("Could not find target for shellcheck, aborting".to_string());
-	} else if !target.is_file() {
-		return Err("Shellcheck target is not a file, aborting".to_string());
+	let target_contents = match std::fs::read_to_string(&target) {
+		Err(err) => return Err(format!("Failed to open {:?} for reading: {}", target, err)),
+		Ok(ok) => ok,
 	};
 	check_bubblewrap_runnable();
 	let mut command = Command::new("bwrap");
@@ -157,9 +155,7 @@ pub fn shellcheck(target: &Path) -> Result<(), String> {
 	command.args(&["--unshare-all"]);
 	command.args(&[
 		"shellcheck",
-		"--check-sourced",
 		"--norc",
-		"--external-sources",
 		// "--exclude", "SC2128"  // this would avoid warning for split packages, where $pkgname looks like an array to shellcheck, but it isn't an array later with `makepkg`
 		"/dev/stdin",
 	]);
@@ -172,10 +168,7 @@ pub fn shellcheck(target: &Path) -> Result<(), String> {
 		.stdin
 		.as_mut()
 		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
-	let target = target.to_str().expect("Failed to parse shellcheck target");
-	let target = terminal_util::escape_bash_arg(target);
-	let target = format!("source {}", target);
-	let bytes = rua_files::SHELLCHECK_WRAPPER_BYTES.replace("source PKGBUILD", &target);
+	let bytes = rua_files::SHELLCHECK_WRAPPER.replace("source PKGBUILD", &target_contents);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(
 			"Failed to write shellcheck wrapper script to shellcheck-s stdin, {}",

@@ -24,7 +24,6 @@ use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
 use cli_args::Action;
 use cli_args::CliArgs;
-use std::path::PathBuf;
 use std::process::exit;
 use structopt::StructOpt;
 
@@ -53,10 +52,7 @@ fn main() {
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
-			let target = target
-				.as_ref()
-				.map_or_else(|| PathBuf::from("./PKGBUILD"), |p| p.clone());
-			let result = shellcheck(&target);
+			let result = shellcheck(target);
 			result
 				.map_err(|err| {
 					eprintln!("{}", err);

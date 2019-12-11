@@ -66,9 +66,8 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
 		} else if &string == "s" && is_upstream_merged {
-			match wrapped::shellcheck(&dir.join("PKGBUILD")) {
-				Err(err) => eprintln!("{}", err),
-				Ok(_) => (),
+			if let Err(err) = wrapped::shellcheck(&dir.join("PKGBUILD")) {
+				eprintln!("{}", err);
 			};
 		} else if &string == "d" && is_upstream_merged {
 			git_utils::show_upstream_diff(dir, false);

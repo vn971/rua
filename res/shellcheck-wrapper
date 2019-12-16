@@ -8,10 +8,10 @@ pkgdir=
 %PKGBUILD%
 
 # ensure that obligatory PKGBUILD values are defined, and avoid "unused" warning for them:
-test "$pkgname should be declared in PKGBUILD"
-test "$pkgver should be declared in PKGBUILD"
-test "$pkgrel should be declared in PKGBUILD"
-test "$arch should be declared in PKGBUILD"
+test "${pkgname[*]} should be declared in PKGBUILD"
+test "${pkgver[*]} should be declared in PKGBUILD"
+test "${pkgrel[*]} should be declared in PKGBUILD"
+test "${arch[*]} should be declared in PKGBUILD"
 
 # avoid "unused" warning for optional PKGBUILD variables:
 export pkgbase

@@ -168,7 +168,7 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 		.stdin
 		.as_mut()
 		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
-	let bytes = rua_files::SHELLCHECK_WRAPPER.replace("source PKGBUILD", &target_contents);
+	let bytes = rua_files::SHELLCHECK_WRAPPER.replace("%PKGBUILD%", &target_contents);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(
 			"Failed to write shellcheck wrapper script to shellcheck-s stdin, {}",

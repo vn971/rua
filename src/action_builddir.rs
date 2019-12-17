@@ -3,7 +3,7 @@ use crate::rua_environment;
 use crate::rua_files::RuaDirs;
 use crate::tar_check;
 use crate::wrapped;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 pub fn action_builddir(dir: &Option<PathBuf>, dirs: &RuaDirs, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.

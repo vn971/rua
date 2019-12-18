@@ -65,7 +65,9 @@ Sources are downloaded using .SRCINFO only"
 			help = "use --force option with makepkg, see makepkg(8)"
 		)]
 		force: bool,
-		#[structopt(help = "Target directory")]
+		#[structopt(
+			help = "Target directory. Defaults to current directory '.' if not specified."
+		)]
 		target: Option<PathBuf>,
 	},
 	#[structopt(about = "Opens AUR web search page")]

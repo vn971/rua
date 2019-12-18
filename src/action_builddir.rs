@@ -7,16 +7,13 @@ use std::path::{Path, PathBuf};
 
 pub fn action_builddir(dir: &Option<PathBuf>, dirs: &RuaDirs, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.
-	let direc_param = {
-		match dir {
-			Some(path) => &path,
-			None => Path::new("."),
-		}
+	let dir = match dir {
+		Some(path) => &path,
+		None => Path::new("."),
 	};
-
-	let dir = direc_param
+	let dir = dir
 		.canonicalize()
-		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", direc_param, err));
+		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", dir, err));
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));

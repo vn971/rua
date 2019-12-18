@@ -1,5 +1,6 @@
 use crate::print_package_table;
-use raur::{Package, SearchBy};
+use raur::Package;
+use raur::SearchBy;
 
 fn is_package_ok(pkg: &Package, filter: &str) -> bool {
 	let filter = filter.to_lowercase();

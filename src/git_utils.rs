@@ -1,6 +1,7 @@
 use colored::*;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Command;
+use std::process::Stdio;
 
 /// Note that we're using `git init` instead of `git clone`-like command
 /// to let the user review the initial diff.

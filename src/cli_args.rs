@@ -79,7 +79,9 @@ Sources are downloaded using .SRCINFO only"
 		about = "Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables"
 	)]
 	Shellcheck {
-		/// PKGBUILD or directory to check. Defaults to /dev/stdin if not specified. Appends ./PKGBUILD for directories
+		#[structopt(
+			help = "PKGBUILD or directory to check. Defaults to /dev/stdin if not specified. Appends ./PKGBUILD for directories"
+		)]
 		target: Option<PathBuf>,
 	},
 	#[structopt(
@@ -109,5 +111,5 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 }
 
 /// environment variable that we expect the user might fill
-// !! make sure it's the same as in CliArgs above !!
+// !WARNING! make sure it's the same as in CliArgs above.
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";

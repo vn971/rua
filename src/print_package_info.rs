@@ -1,5 +1,7 @@
 use crate::aur_rpc_utils::info_map;
-use crate::print_format::{date, opt, print_indent};
+use crate::print_format::date;
+use crate::print_format::opt;
+use crate::print_format::print_indent;
 
 use colored::*;
 use failure::Error;

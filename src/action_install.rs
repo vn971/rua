@@ -250,3 +250,11 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 		});
 	}
 }
+
+fn indent_n(n: usize) -> String {
+	let mut ind = String::new();
+	for _ in 0..n {
+		ind.push_str("\t");
+	}
+	ind
+}

@@ -37,8 +37,7 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 		);
 		std::process::exit(1)
 	}
-
-	show_install_summary(&pacman_deps, &split_to_depth);
+	show_install_summary(&targets[0], &pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = dirs.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
@@ -50,15 +49,30 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 	install_all(dirs, split_to_depth, split_to_pkgbase, is_offline, asdeps);
 }
 
-fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
+fn show_install_summary(
+	pkg_name: &String,
+	pacman_deps: &IndexSet<String>,
+	aur_packages: &IndexMap<String, i32>,
+) {
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
 	if !pacman_deps.is_empty() {
 		eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
+		eprintln!("\n{}", pkg_name);
 		eprintln!(
 			"{}",
-			pacman_deps.iter().map(|s| format!("  {}", s)).join("\n")
+			pacman_deps
+				.iter()
+				.enumerate()
+				.map(|(i, s)| {
+					if i < pacman_deps.len() - 1 {
+						format!(" ├── {}", s)
+					} else {
+						format!(" └── {}", s)
+					}
+				})
+				.join("\n")
 		);
 	};
 	eprintln!("\nAnd the following AUR packages will need to be built and installed:");

@@ -81,10 +81,55 @@ fn show_install_summary(
 	for (aur, dep) in &aur_packages {
 		debug!("depth {}: {}", dep, aur);
 	}
+	let mut prev_depth = 0i32;
+	/*let mut iter = aur_packages.into_iter().rev().skip(0);
+	while iter.next().is_some() {
+		let (name, depth) = iter.next().unwrap();
+		if *depth != 0 {
+			eprintln!("{}", indent_n(depth));
+		}
+		if *depth < prev_depth {
+			eprint!(" ┌── {}", name);
+		} else if *depth == prev_depth {
+			eprint!(" ├── {}", name);
+		} else {
+			eprint!(" └── {}", name);
+		}
+		prev_depth = *depth;
+	}*/
 	eprintln!(
 		"{}\n",
-		aur_packages.iter().map(|s| format!("  {}", s.0)).join("\n")
+		aur_packages
+			.iter()
+			.rev()
+			.skip(0)
+			.zip(aur_packages.iter().rev().skip(1))
+			.map(|(act, next)| {
+				if *act.1 == 0 {
+					format!("{}", act.0)
+				} else if *act.1 < prev_depth {
+					format!("{}┌── {}", indent_n(act.1, &mut prev_depth), act.0)
+				} else if *act.1 < *next.1 {
+					format!("{}└── {}", indent_n(act.1, &mut prev_depth), act.0)
+				} else if *act.1 == *next.1 {
+					format!("{}├── {}", indent_n(act.1, &mut prev_depth), act.0)
+				} else {
+					format!("{}└── {}", indent_n(act.1, &mut prev_depth), act.0)
+				}
+			})
+			.join("\n")
 	);
+	/*for (name, depth) in aur_packages {
+		eprintln!("{}", &indent_n(depth));
+		if *depth < prev_depth {
+			eprint!(" ┌── {} {}", name, *depth);
+		} else if *depth == prev_depth {
+			eprint!(" ├── {} {}", name, *depth);
+		} else {
+			eprint!(" └── {} {}", name, *depth);
+		}
+		prev_depth = *depth;
+	}*/
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();
@@ -251,10 +296,11 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 	}
 }
 
-fn indent_n(n: usize) -> String {
+fn indent_n(n: &i32, prev_n: &mut i32) -> String {
+	*prev_n = *n;
 	let mut ind = String::new();
-	for _ in 0..n {
-		ind.push_str("\t");
+	for _ in 0..*n - 1 {
+		ind.push_str("     ");
 	}
 	ind
 }

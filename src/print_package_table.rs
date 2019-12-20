@@ -23,7 +23,7 @@ pub fn print_package_table(mut packages: Vec<Package>, keywords: &[String]) {
 	]);
 
 	for package in packages {
-		let name = highlight(trunc(&package.name, 36), keywords).yellow();
+		let name = highlight(package.name, keywords).yellow();
 		let version = highlight(trunc(&package.version, 14), keywords).green();
 		let description = package.description.unwrap_or_else(|| String::from(""));
 		let description = highlight(description, keywords);

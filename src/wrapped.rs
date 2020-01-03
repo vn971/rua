@@ -28,7 +28,9 @@ pub fn check_bubblewrap_runnable() {
 			.success()
 		{
 			eprintln!("Failed to run bwrap.");
-			eprintln!("A possible cause is if RUA itself is run in jail (docker, bwrap, firejail,..).");
+			eprintln!(
+				"A possible cause is if RUA itself is run in jail (docker, bwrap, firejail,..)."
+			);
 			eprintln!("If so, see https://github.com/vn971/rua/issues/8");
 			std::process::exit(4)
 		}

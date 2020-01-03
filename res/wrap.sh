@@ -18,7 +18,5 @@ exec nice -n19 \
   --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx" "${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx" \
   --ro-bind-try "${GNUPGHOME:-$HOME/.gnupg}/pubring.gpg" "${GNUPGHOME:-$HOME/.gnupg}/pubring.gpg" \
   "${wrap_args[@]}" \
-  --ro-bind ~/.config/rua ~/.config/rua \
-  --ro-bind "$PWD" "$PWD" \
   --seccomp 3 3< "$RUA_SECCOMP_FILE" \
   "$@"

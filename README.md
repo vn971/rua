@@ -11,7 +11,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Minimize user distractions:
   * verify all packages once, build without interruptions
   * group built dependencies for batch review
-- Uses a security namespace [jail](https://github.com/projectatomic/bubblewrap):
+- Uses a security namespace jail:
   * supports `--offline` builds
   * builds in isolated filesystem, see [safety](#Safety) section below
   * uses `seccomp` to limit available syscalls (e.g. the build cannot call `ptrace`)
@@ -62,6 +62,21 @@ This does not include bash/zsh/fish completions, but everything else should work
 If you use development version `pacman-git`, use `cargo install --features git rua` instead.
 
 
+## How it works / directories
+RUA uses the following dirs in your home:
+
+| directory | meaning |
+| ------------- | ------------- |
+| `~/.config/rua/pkg/` | Step 1, directory where AUR packages are cloned into. You review and make local modifications here |
+| `~/.cache/rua/build/` | Step 2, reviewed packages are copied here, and then built |
+| `~/.local/share/rua/checked_tars/` | Step 3, directory where built and tarcheck-ed packages are stored (*.pkg.tar.xz) |
+| `~/.config/rua/wrap_args.d/` | entrypoint for basic configuration of the security wrapper script |
+| `~/.config/rua/.system/` | internal files |
+| `$GNUPGHOME/pubring.kbx` <br/> `$GNUPGHOME/pubring.gpg` | read-only access to these two files is granted when building, to allow signature verification |
+
+All other files are not accessed by RUA and inaccessible by built packages (see Safety section below).
+
+
 ## How it works / reviewing
 Knowing the underlying machinery is not required to work with RUA,
 but if you're curious anyway, this section is for you.
@@ -77,6 +92,7 @@ Merging and basic diff view are built-in commands in RUA, and you can
 drop to shell and do more from git CLI if you want.
 
 Merging the latest `upstream/master` is required to upgrade the package.
+
 
 ## How it works / dependency grouping and installation
 RUA will:
@@ -103,6 +119,7 @@ your_original_package
 ```
 RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. It also won't disrupt you if it knows recursion breaks down the line (with unsatisfiable dependencies).
 
+
 ## Limitations
 
 * This tool focuses on AUR packages only, you cannot `-Suy` your system with it. Use pacman for that.
@@ -125,10 +142,10 @@ When building packages, RUA uses the following filesystem isolation by default:
 * The rest of `~` is not visible to the build process, mounted under tmpfs.
 * `/tmp` and `/dev` and `/proc` are re-mounted with empty tmpfs, devtmpfs and procfs accordingly.
 * The rest of `/` is mounted read-only.
-* You can whitelist/add your mount points by configuring "wrap_args". See examples in ~/.config/rua/wrap_args.d/ (none enabled by default).
+* You can whitelist/add your mount points by configuring "wrap_args". See example in ~/.config/rua/.system/wrap_args.sh.example.
 
 Additionally, all builds are run in a namespace jail, with `seccomp` enabled
-and `user`, `ipc,`, `pid`, `uts`, `cgroup` being unshared by default.
+and `user`, `ipc`, `pid`, `uts`, `cgroup` being unshared by default.
 If asked from CLI, builds can be run in offline mode.
 
 

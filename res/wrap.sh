@@ -2,6 +2,8 @@
 
 wrap_args=(--unshare-user --unshare-ipc --unshare-pid --unshare-uts --unshare-cgroup)
 
+# If you want to configure this script, do it by via wrap_args.d.
+# See an example in this directory.
 for filename in ~/.config/rua/wrap_args.d/*.sh ; do
   if test -e "$filename"; then source "$filename"; fi
 done

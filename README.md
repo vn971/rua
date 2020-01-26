@@ -21,11 +21,11 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 # Use
 
-`rua install xcalib`  # install or upgrade a package
-
 `rua search wesnoth`
 
 `rua info freecad`
+
+`rua install xcalib`  # install or upgrade a package
 
 `rua upgrade`  # upgrade all AUR packages. You can selectively ignore packages by adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`). You can upgrade only specific packages with `rua install A B C`.
 
@@ -63,8 +63,6 @@ If you use development version `pacman-git`, use `cargo install --features git r
 
 
 ## How it works / directories
-RUA uses the following dirs in your home:
-
 | directory | meaning |
 | ------------- | ------------- |
 | `~/.config/rua/pkg/` | Step 1, directory where AUR packages are cloned into. You review and make local modifications here |
@@ -90,8 +88,6 @@ RUA works by fetching remote updates when needed,
 presenting remote changes to you and merging them if you accept them.
 Merging and basic diff view are built-in commands in RUA, and you can
 drop to shell and do more from git CLI if you want.
-
-Merging the latest `upstream/master` is required to upgrade the package.
 
 
 ## How it works / dependency grouping and installation

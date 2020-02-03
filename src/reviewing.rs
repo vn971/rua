@@ -56,7 +56,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 		}
 		eprint!("[T]=run shell to edit/inspect, ");
 		if is_upstream_merged {
-			eprint!("[O]=ok, use package ");
+			eprint!("[O]=ok, use package. ");
 		} else {
 			eprint!("[O]=(cannot use the package until you merge) ");
 		}

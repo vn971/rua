@@ -119,7 +119,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprint!("{}", "[I]=show install file, ".bright_red());
 		};
 		if !suid_files.is_empty() {
-			eprint!("{}", "!!! [S]=list SUID files!!!, ".bright_red());
+			eprint!("{}, ", "!!! [S]=list SUID files!!!".bright_red());
 		};
 		eprint!("[O]=ok, proceed. ");
 		let string = terminal_util::read_line_lowercase();

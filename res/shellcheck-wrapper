@@ -1,8 +1,8 @@
 #!/bin/bash -euET
 
 # declare variables used by PKGBUILD
-srcdir=
-pkgdir=
+srcdir='~!@#$%^&*() /\|'
+pkgdir='~!@#$%^&*() /\|'
 
 # the actual PKGBUILD gets inlined by RUA here
 %PKGBUILD%

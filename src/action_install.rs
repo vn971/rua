@@ -332,20 +332,3 @@ fn print_deps_with_depth(parent_dep: &String, dep_names: &Vec<(String, String)>,
 		println!("│   └── {} ({})", last_name, last_repo);
 	}
 }
-
-fn indent_n(n: &i32) -> String {
-	let mut ind = String::new();
-	for _ in 0..*n - 1 {
-		ind.push_str("     ");
-	}
-	ind
-}
-
-fn indent_n_update_prev(n: &i32, prev_n: &mut i32) -> String {
-	*prev_n = *n;
-	let mut ind = String::new();
-	for _ in 0..*n - 1 {
-		ind.push_str("     ");
-	}
-	ind
-}

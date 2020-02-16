@@ -11,6 +11,7 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use log::debug;
 use log::trace;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::ReadDir;
@@ -37,7 +38,7 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 		);
 		std::process::exit(1)
 	}
-	show_install_summary(&targets[0], &pacman_deps, &split_to_depth);
+	show_install_summary(&targets[0], &alpm);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = dirs.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
@@ -49,90 +50,19 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 	install_all(dirs, split_to_depth, split_to_pkgbase, is_offline, asdeps);
 }
 
-fn show_install_summary(
-	pkg_name: &String,
-	pacman_deps: &IndexSet<String>,
-	aur_packages: &IndexMap<String, i32>,
-) {
-	if pacman_deps.len() + aur_packages.len() == 1 {
+// Prints the dependency tree
+fn show_install_summary(pkg_name: &String, alpm: &alpm::Alpm) {
+	// Create dep_map of depth 1 and 2
+	let mut deps_1_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
+	let mut deps_2_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
+	// Add deps-dependencies into the map
+	gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, pkg_name.clone(), alpm);
+	// If there are no dependencies to install, return
+	if deps_1_map.len() == 0 {
 		return;
 	}
-	if !pacman_deps.is_empty() {
-		eprintln!("\nIn order to install all targets, the following pacman packages will need to be installed:");
-		eprintln!("\n{}", pkg_name);
-		eprintln!(
-			"{}",
-			pacman_deps
-				.iter()
-				.enumerate()
-				.map(|(i, s)| {
-					if i < pacman_deps.len() - 1 {
-						format!(" ├── {}", s)
-					} else {
-						format!(" └── {}", s)
-					}
-				})
-				.join("\n")
-		);
-	};
-	eprintln!("\nAnd the following AUR packages will need to be built and installed:");
-	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
-	aur_packages.sort_by_key(|pair| -*pair.1);
-	for (aur, dep) in &aur_packages {
-		debug!("depth {}: {}", dep, aur);
-	}
-	//
-	let mut prev_depth = 0i32;
-	let mut iter = aur_packages.into_iter().rev().peekable();
-	// This works perfect but it's quite ugly.
-	while iter.peek().is_some() {
-		let (act_name, act_depth) = iter.next().unwrap();
-		let post_depth;
-		let opt = iter.peek();
-		if opt.is_none() {
-			// Ungly, any better solution?
-			post_depth = 999
-		} else {
-			post_depth = *opt.unwrap().1;
-		}
-		if *act_depth == 0 {
-			eprintln!("{}", act_name)
-		} else if *act_depth < prev_depth {
-			eprintln!("{}┌── {}", indent_n(act_depth), act_name)
-		} else if act_depth < &post_depth {
-			eprintln!("{}└── {}", indent_n(act_depth), act_name)
-		} else if act_depth == &post_depth {
-			eprintln!("{}├── {}", indent_n(act_depth), act_name)
-		} else {
-			eprintln!("{}└── {}", indent_n(act_depth), act_name)
-		}
-		prev_depth = *act_depth;
-	}
-	// This does not show the last item since the zipped iter ends 1 step before.
-	// Not sure if we can simply add a face entry to the zipped iter to make both
-	// finish at the same time.
-	/*eprintln!(
-		"{}\n",
-		aur_packages
-			.iter()
-			.rev()
-			.skip(0)
-			.zip(aur_packages.iter().rev().skip(1))
-			.map(|(act, next)| {
-				if *act.1 == 0 {
-					format!("{}", act.0)
-				} else if *act.1 < prev_depth {
-					format!("{}┌── {}", indent_n_update_prev(act.1, &mut prev_depth), act.0)
-				} else if *act.1 < *next.1 {
-					format!("{}└── {}", indent_n_update_prev(act.1, &mut prev_depth), act.0)
-				} else if *act.1 == *next.1 {
-					format!("{}├── {}", indent_n_update_prev(act.1, &mut prev_depth), act.0)
-				} else {
-					format!("{}└── {}", indent_n_update_prev(act.1, &mut prev_depth), act.0)
-				}
-			})
-			.join("\n")
-	);*/
+	// Print the dependency tree from the dependency map data
+	print_dep_tree(pkg_name, &mut deps_1_map, &deps_2_map);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();
@@ -296,6 +226,114 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 				&file, &checked_tars_dir, e,
 			)
 		});
+	}
+}
+
+/// Generates the dependencies map of 1st and 2nd depth lvl of the
+/// package storing also if the dependencies are from aur or not.
+fn gen_package_deps_map(
+	map: &mut HashMap<String, Vec<(String, String)>>,
+	dep_name: String,
+	alpm: &alpm::Alpm,
+) {
+	let (_, pacman_deps, aur_deps) =
+		aur_rpc_utils::recursive_info(&[dep_name.to_string()], alpm).unwrap();
+	if aur_deps.len() == 0 || pacman_deps.len() == 0 {
+		return;
+	}
+	println!("{:?}", aur_deps);
+	let mut dep_vec = Vec::new();
+	// Push pacman deps to the dep_vec with the pacman option
+	for dep in pacman_deps {
+		dep_vec.push((dep, "pacman".to_string()));
+	}
+	// Push aur deps to the dep_vec with the AUR option
+	for (aur_dep, _) in aur_deps.iter() {
+		match dep_vec.contains(&(aur_dep.clone(), "pacman".to_string()))
+			|| dep_vec.contains(&(aur_dep.clone(), "AUR".to_string()))
+		{
+			true => (),
+			false => {
+				if aur_dep.clone() != dep_name {
+					dep_vec.push((aur_dep.clone(), "AUR".to_string()))
+				}
+			}
+		}
+	}
+	map.insert(dep_name.to_string(), dep_vec);
+}
+
+/// Generates the dependencies map with a depth = 1 and 2 and adds them
+/// into the deps_map provided.
+fn gen_deps_depth_1_and_2(
+	deps_map_1: &mut HashMap<String, Vec<(String, String)>>,
+	deps_map_2: &mut HashMap<String, Vec<(String, String)>>,
+	dep_name: String,
+	alpm: &alpm::Alpm,
+) {
+	// Gen dep-map of depth 1
+	gen_package_deps_map(deps_map_1, dep_name, alpm);
+	// Get 1st depth deps to gen dep-map of depth 2
+	for val in deps_map_1.values().into_iter() {
+		let _: () = val
+			.iter()
+			.map(|(name, _)| gen_package_deps_map(deps_map_2, name.to_string(), alpm))
+			.collect();
+	}
+}
+
+fn print_dep_tree(
+	pack_name: &String,
+	deps_1: &mut HashMap<String, Vec<(String, String)>>,
+	deps_2: &HashMap<String, Vec<(String, String)>>,
+) {
+	// Print package name
+	println!("{}", pack_name);
+	// Print first dep
+	println!(
+		"├── {} ({:?})",
+		deps_1.get(pack_name).unwrap()[0].0,
+		deps_1.get(pack_name).unwrap()[0].1
+	);
+	deps_2
+		.get(&deps_1.get(pack_name).unwrap()[0].0)
+		.and_then(|vec_depth_2_deps| Some(print_deps_with_depth(vec_depth_2_deps, true)));
+
+	// Get last item and remove it from the map
+	let mut deps_1 = deps_1.get(pack_name).unwrap().clone();
+	let last = deps_1.pop().unwrap();
+	// Print the tree except the last item
+	for (name, repo) in deps_1.iter().skip(1) {
+		if deps_2.get(name).is_some() {
+			println!("├── {} ({:?})", name, repo.clone());
+			print_deps_with_depth(deps_2.get(name).unwrap(), true);
+		} else {
+			println!("├── {} ({:?})", name, repo.clone());
+		}
+	}
+	// Print last elem
+	println!("└── {} ({:?})", last.0, last.1);
+}
+
+fn print_deps_with_depth(dep_names: &Vec<(String, String)>, depth: bool) {
+	// Save last elem
+	let (last_name, last_repo) = dep_names.clone().pop().unwrap();
+	// Print the rest of deps
+	let _: () = dep_names
+		.iter()
+		.map(|(dep_name, repo)| {
+			if !depth {
+				println!("├── {} ({})", dep_name, repo.clone());
+			} else {
+				println!("│   ├── {} ({:?})", dep_name, repo.clone());
+			}
+		})
+		.collect();
+	// Print last dep
+	if !depth {
+		println!("└── {} ({})", last_name, last_repo);
+	} else {
+		println!("│   └── {} ({:?})", last_name, last_repo);
 	}
 }
 

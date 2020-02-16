@@ -51,18 +51,18 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 }
 
 // Prints the dependency tree
-fn show_install_summary(pkg_name: &String, alpm: &alpm::Alpm) {
+fn show_install_summary(pkg_name: &str, alpm: &alpm::Alpm) {
 	// Create dep_map of depth 1 and 2
 	let mut deps_1_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
 	let mut deps_2_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
 	// Add deps-dependencies into the map
-	gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, pkg_name.clone(), alpm);
+	gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, pkg_name, alpm);
 	// If there are no dependencies to install, return
-	if deps_1_map.len() == 0 {
+	if deps_1_map.is_empty() {
 		return;
 	}
 	// Print the dependency tree from the dependency map data
-	print_dep_tree(pkg_name, &mut deps_1_map, &deps_2_map);
+	print_dep_tree(&pkg_name, &mut deps_1_map, &deps_2_map);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();
@@ -233,12 +233,12 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 /// package storing also if the dependencies are from aur or not.
 fn gen_package_deps_map(
 	map: &mut HashMap<String, Vec<(String, String)>>,
-	dep_name: String,
+	dep_name: &str,
 	alpm: &alpm::Alpm,
 ) {
 	let (_, pacman_deps, aur_deps) =
 		aur_rpc_utils::recursive_info(&[dep_name.to_string()], alpm).unwrap();
-	if aur_deps.len() == 0 || pacman_deps.len() == 0 {
+	if aur_deps.is_empty() || pacman_deps.is_empty() {
 		return;
 	}
 	let mut dep_vec = Vec::new();
@@ -267,7 +267,7 @@ fn gen_package_deps_map(
 fn gen_deps_depth_1_and_2(
 	deps_map_1: &mut HashMap<String, Vec<(String, String)>>,
 	deps_map_2: &mut HashMap<String, Vec<(String, String)>>,
-	dep_name: String,
+	dep_name: &str,
 	alpm: &alpm::Alpm,
 ) {
 	// Gen dep-map of depth 1
@@ -276,13 +276,13 @@ fn gen_deps_depth_1_and_2(
 	for val in deps_map_1.values().into_iter() {
 		let _: () = val
 			.iter()
-			.map(|(name, _)| gen_package_deps_map(deps_map_2, name.to_string(), alpm))
+			.map(|(name, _)| gen_package_deps_map(deps_map_2, name, alpm))
 			.collect();
 	}
 }
 
 fn print_dep_tree(
-	pack_name: &String,
+	pack_name: &str,
 	deps_1: &mut HashMap<String, Vec<(String, String)>>,
 	deps_2: &HashMap<String, Vec<(String, String)>>,
 ) {
@@ -308,7 +308,7 @@ fn print_dep_tree(
 	println!("└── {} ({})", last.0, last.1);
 }
 
-fn print_deps_with_depth(parent_dep: &String, dep_names: &Vec<(String, String)>, depth: bool) {
+fn print_deps_with_depth(parent_dep: &str, dep_names: &Vec<(String, String)>, depth: bool) {
 	// Save last elem
 	let (last_name, last_repo) = dep_names.clone().pop().unwrap();
 	// Print first elem (OG package) without indent

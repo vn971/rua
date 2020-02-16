@@ -248,15 +248,11 @@ fn gen_package_deps_map(
 	}
 	// Push aur deps to the dep_vec with the AUR option
 	for pacman_dep in pacman_deps.iter() {
-		match dep_vec.contains(&(pacman_dep.clone(), "pacman".to_string()))
-			|| dep_vec.contains(&(pacman_dep.clone(), "AUR".to_string()))
+		if !(dep_vec.contains(&(pacman_dep.clone(), "pacman".to_string()))
+			|| dep_vec.contains(&(pacman_dep.clone(), "AUR".to_string())))
+			&& pacman_dep.clone() != dep_name
 		{
-			true => (),
-			false => {
-				if pacman_dep.clone() != dep_name {
-					dep_vec.push((pacman_dep.clone(), "pacman".to_string()))
-				}
-			}
+			dep_vec.push((pacman_dep.clone(), "pacman".to_string()))
 		}
 	}
 	map.insert(dep_name.to_string(), dep_vec);
@@ -274,10 +270,9 @@ fn gen_deps_depth_1_and_2(
 	gen_package_deps_map(deps_map_1, dep_name, alpm);
 	// Get 1st depth deps to gen dep-map of depth 2
 	for val in deps_map_1.values().into_iter() {
-		let _: () = val
-			.iter()
+		val.iter()
 			.map(|(name, _)| gen_package_deps_map(deps_map_2, name, alpm))
-			.collect();
+			.for_each(drop);
 	}
 }
 
@@ -308,13 +303,14 @@ fn print_dep_tree(
 	println!("└── {} ({})", last.0, last.1);
 }
 
-fn print_deps_with_depth(parent_dep: &str, dep_names: &Vec<(String, String)>, depth: bool) {
+fn print_deps_with_depth(parent_dep: &str, dep_names: &[(String, String)], depth: bool) {
+	let dep_names = dep_names.to_vec();
 	// Save last elem
 	let (last_name, last_repo) = dep_names.clone().pop().unwrap();
 	// Print first elem (OG package) without indent
 	println!("├── {} ({})", dep_names[0].0, dep_names[0].1);
 	// Print the rest of deps
-	let _: () = dep_names
+	dep_names
 		.iter()
 		.filter(|(dep_name, _)| dep_name != parent_dep)
 		.map(|(dep_name, repo)| {
@@ -324,7 +320,7 @@ fn print_deps_with_depth(parent_dep: &str, dep_names: &Vec<(String, String)>, de
 				println!("│   ├── {} ({})", dep_name, repo.clone());
 			}
 		})
-		.collect();
+		.for_each(drop);
 	// Print last dep
 	if !depth {
 		println!("└── {} ({})", last_name, last_repo);

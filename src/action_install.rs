@@ -241,21 +241,20 @@ fn gen_package_deps_map(
 	if aur_deps.len() == 0 || pacman_deps.len() == 0 {
 		return;
 	}
-	println!("{:?}", aur_deps);
 	let mut dep_vec = Vec::new();
 	// Push pacman deps to the dep_vec with the pacman option
-	for dep in pacman_deps {
-		dep_vec.push((dep, "pacman".to_string()));
+	for (dep, _) in aur_deps {
+		dep_vec.push((dep, "AUR".to_string()));
 	}
 	// Push aur deps to the dep_vec with the AUR option
-	for (aur_dep, _) in aur_deps.iter() {
-		match dep_vec.contains(&(aur_dep.clone(), "pacman".to_string()))
-			|| dep_vec.contains(&(aur_dep.clone(), "AUR".to_string()))
+	for pacman_dep in pacman_deps.iter() {
+		match dep_vec.contains(&(pacman_dep.clone(), "pacman".to_string()))
+			|| dep_vec.contains(&(pacman_dep.clone(), "AUR".to_string()))
 		{
 			true => (),
 			false => {
-				if aur_dep.clone() != dep_name {
-					dep_vec.push((aur_dep.clone(), "AUR".to_string()))
+				if pacman_dep.clone() != dep_name {
+					dep_vec.push((pacman_dep.clone(), "pacman".to_string()))
 				}
 			}
 		}
@@ -287,17 +286,12 @@ fn print_dep_tree(
 	deps_1: &mut HashMap<String, Vec<(String, String)>>,
 	deps_2: &HashMap<String, Vec<(String, String)>>,
 ) {
-	// Print package name
-	println!("{}", pack_name);
 	// Print first dep
 	println!(
-		"├── {} ({:?})",
+		"{} ({})",
 		deps_1.get(pack_name).unwrap()[0].0,
 		deps_1.get(pack_name).unwrap()[0].1
 	);
-	deps_2
-		.get(&deps_1.get(pack_name).unwrap()[0].0)
-		.and_then(|vec_depth_2_deps| Some(print_deps_with_depth(vec_depth_2_deps, true)));
 
 	// Get last item and remove it from the map
 	let mut deps_1 = deps_1.get(pack_name).unwrap().clone();
@@ -305,27 +299,29 @@ fn print_dep_tree(
 	// Print the tree except the last item
 	for (name, repo) in deps_1.iter().skip(1) {
 		if deps_2.get(name).is_some() {
-			println!("├── {} ({:?})", name, repo.clone());
-			print_deps_with_depth(deps_2.get(name).unwrap(), true);
+			print_deps_with_depth(name, deps_2.get(name).unwrap(), true);
 		} else {
-			println!("├── {} ({:?})", name, repo.clone());
+			println!("├── {} ({})", name, repo.clone());
 		}
 	}
 	// Print last elem
-	println!("└── {} ({:?})", last.0, last.1);
+	println!("└── {} ({})", last.0, last.1);
 }
 
-fn print_deps_with_depth(dep_names: &Vec<(String, String)>, depth: bool) {
+fn print_deps_with_depth(parent_dep: &String, dep_names: &Vec<(String, String)>, depth: bool) {
 	// Save last elem
 	let (last_name, last_repo) = dep_names.clone().pop().unwrap();
+	// Print first elem (OG package) without indent
+	println!("├── {} ({})", dep_names[0].0, dep_names[0].1);
 	// Print the rest of deps
 	let _: () = dep_names
 		.iter()
+		.filter(|(dep_name, _)| dep_name != parent_dep)
 		.map(|(dep_name, repo)| {
 			if !depth {
 				println!("├── {} ({})", dep_name, repo.clone());
 			} else {
-				println!("│   ├── {} ({:?})", dep_name, repo.clone());
+				println!("│   ├── {} ({})", dep_name, repo.clone());
 			}
 		})
 		.collect();
@@ -333,7 +329,7 @@ fn print_deps_with_depth(dep_names: &Vec<(String, String)>, depth: bool) {
 	if !depth {
 		println!("└── {} ({})", last_name, last_repo);
 	} else {
-		println!("│   └── {} ({:?})", last_name, last_repo);
+		println!("│   └── {} ({})", last_name, last_repo);
 	}
 }
 

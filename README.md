@@ -40,7 +40,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed git base-devel bubblewrap-suid lz shellcheck cargo
+sudo pacman -S --needed git base-devel bubblewrap-suid xz shellcheck cargo
 ```
 
 

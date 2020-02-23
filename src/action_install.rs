@@ -38,7 +38,7 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 		);
 		std::process::exit(1)
 	}
-	show_install_summary(&targets[0], &alpm);
+	show_install_summary(targets, &alpm);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = dirs.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
@@ -51,18 +51,20 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 }
 
 // Prints the dependency tree
-fn show_install_summary(pkg_name: &str, alpm: &alpm::Alpm) {
-	// Create dep_map of depth 1 and 2
-	let mut deps_1_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
-	let mut deps_2_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
-	// Add deps-dependencies into the map
-	gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, pkg_name, alpm);
-	// If there are no dependencies to install, return
-	if deps_1_map.is_empty() {
-		return;
+fn show_install_summary(targets: &[String], alpm: &alpm::Alpm) {
+	for target in targets {
+		// Create dep_map of depth 1 and 2
+		let mut deps_1_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
+		let mut deps_2_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
+		// Add deps-dependencies into the map
+		gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, target, alpm);
+		// If there are no dependencies to install, return
+		if deps_1_map.is_empty() {
+			return;
+		}
+		// Print the dependency tree from the dependency map data
+		print_dep_tree(&target, &mut deps_1_map, &deps_2_map);
 	}
-	// Print the dependency tree from the dependency map data
-	print_dep_tree(&pkg_name, &mut deps_1_map, &deps_2_map);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
 		let string = terminal_util::read_line_lowercase();

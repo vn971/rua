@@ -63,6 +63,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, dirs: &RuaDirs) {
 		let string = terminal_util::read_line_lowercase();
 
 		if &string == "t" {
+			eprintln!("Changes that you make will be rebased upon future upgrades.");
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
 		} else if &string == "s" && is_upstream_merged {

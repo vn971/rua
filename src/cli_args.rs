@@ -92,7 +92,7 @@ Sources are downloaded using .SRCINFO only"
 		target: PathBuf,
 	},
 	#[structopt(
-		about = "Upgrade AUR packages. To ignore upgrade proposals for a certain package, add it to IgnorePkg in pacman.conf"
+		about = "Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf"
 	)]
 	Upgrade {
 		#[structopt(

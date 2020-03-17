@@ -79,12 +79,12 @@ pub fn upgrade(devel: bool, printonly: bool) {
 		} else {
 			print_outdated(&outdated, &unexistent);
 			eprintln!();
+			let dirs = rua_files::RuaDirs::new();
 			loop {
 				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 				let string = terminal_util::read_line_lowercase();
 				if &string == "o" {
 					let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-					let dirs = rua_files::RuaDirs::new();
 					action_install::install(&outdated, &dirs, false, true);
 					break;
 				} else if &string == "x" {

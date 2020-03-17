@@ -73,7 +73,7 @@ impl RuaDirs {
 			);
 		});
 		locked_file.try_lock_exclusive().unwrap_or_else(|_| {
-			eprintln!("Another RUA instance already running.");
+			eprintln!("Error: another RUA instance already running.");
 			std::process::exit(2)
 		});
 		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");

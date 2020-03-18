@@ -118,11 +118,7 @@ fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, Stri
 	]);
 
 	for (pkg, local, remote) in outdated {
-		table.add_row(row![
-			print_package_table::trunc(pkg, 39).yellow(),
-			print_package_table::trunc(local, 19),
-			print_package_table::trunc(remote, 19).green(),
-		]);
+		table.add_row(row![pkg.yellow(), local, remote.green(),]);
 	}
 	for (pkg, local) in unexistent {
 		table.add_row(row![

@@ -9,6 +9,7 @@ use colored::*;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::debug;
+use log::warn;
 use prettytable::format::*;
 use prettytable::*;
 use regex::Regex;
@@ -28,18 +29,31 @@ pub fn upgrade(devel: bool, printonly: bool) {
 		.localdb()
 		.pkgs()
 		.expect("Could not get alpm.localdb().pkgs() packages");
-	let ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
-		eprintln!("Warning: Could not get ignored packages, {}", err);
+	let system_ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
+		warn!("Could not get ignored packages, {}", err);
 		HashSet::new()
 	});
-	let aur_pkgs = pkg_cache
+	let (ignored, non_ignored) = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.filter(|pkg| !ignored_packages.contains(pkg.name()))
+		.partition::<Vec<_>, _>(|pkg| system_ignored_packages.contains(pkg.name()));
+	if !ignored.is_empty() {
+		let ignored_string = ignored
+			.iter()
+			.map(|pkg| pkg.name())
+			.collect::<Vec<_>>()
+			.join(" ");
+		warn!(
+			"Ignoring updates for non-system packages: {}",
+			ignored_string
+		);
+	}
+	let aur_pkgs = non_ignored
+		.iter()
 		.map(|pkg| (pkg.name(), pkg.version()))
 		.collect::<Vec<_>>();
-	let aur_pkgs_string = aur_pkgs
+	let aur_pkgs_string = non_ignored
 		.iter()
-		.map(|(pkg, _ver)| *pkg)
+		.map(|pkg| pkg.name())
 		.collect::<Vec<_>>()
 		.join(" ");
 	let mut up_to_date = Vec::new();

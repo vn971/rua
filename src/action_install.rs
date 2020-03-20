@@ -228,11 +228,27 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 	});
 
 	for (file, file_name) in dir_items {
-		fs::rename(&file.path(), checked_tars_dir.join(file_name)).unwrap_or_else(|e| {
-			panic!(
-				"Failed to move {:?} (build artifact) to {:?}, {}",
-				&file, &checked_tars_dir, e,
-			)
-		});
+		let src = &file.path();
+		let dst = &checked_tars_dir.join(file_name);
+
+		fs::rename(src, dst)
+			.or_else(|err| {
+				// EXDEV (invalid cross-device link) gets aggregated into io::ErrorKind::Other
+				if err.raw_os_error() != Some(libc::EXDEV) {
+					return Err(err);
+				}
+
+				// can't move across disks, copy & delete instead
+				fs::copy(src, dst)?;
+				let _ = fs::remove_file(src);
+
+				Ok(())
+			})
+			.unwrap_or_else(|e| {
+				panic!(
+					"Failed to move {:?} (build artifact) to {:?}, {}",
+					&file, &checked_tars_dir, e,
+				)
+			});
 	}
 }

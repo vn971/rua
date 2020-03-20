@@ -48,6 +48,7 @@ term_size = "0.3.1"
 uname = "0.1.1"
 users = "0.9.1"
 xz2 = "0.1.6"
+libc = "0.2.66"
 
 [profile.release]
 lto = true

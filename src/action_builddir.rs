@@ -1,12 +1,11 @@
 use crate::pacman;
-use crate::rua_environment;
-use crate::rua_files::RuaDirs;
+use crate::rua_environment::RuaEnv;
 use crate::tar_check;
 use crate::wrapped;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn action_builddir(dir: &Option<PathBuf>, dirs: &RuaDirs, offline: bool, force: bool) {
+pub fn action_builddir(dir: &Option<PathBuf>, rua_env: &RuaEnv, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.
 	let dir = match dir {
 		Some(path) => &path,
@@ -18,18 +17,18 @@ pub fn action_builddir(dir: &Option<PathBuf>, dirs: &RuaDirs, offline: bool, for
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));
-	wrapped::build_directory(dir_str, &dirs, offline, force);
+	wrapped::build_directory(dir_str, &rua_env.dirs, offline, force);
 
-	let srcinfo = wrapped::generate_srcinfo(dir_str, dirs).expect("Failed to obtain SRCINFO");
+	let srcinfo =
+		wrapped::generate_srcinfo(dir_str, &rua_env.dirs).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
-	let ext = rua_environment::extension();
 	let archive_names = srcinfo.pkgs.iter().map(|package| {
 		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {
 			pacman::PACMAN_ARCH.to_string()
 		} else {
 			"any".to_string()
 		};
-		format!("{}-{}-{}{}", package.pkgname, ver, arch, ext)
+		format!("{}-{}-{}{}", package.pkgname, ver, arch, rua_env.pkgext)
 	});
 
 	for archive_name in archive_names {

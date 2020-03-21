@@ -33,14 +33,7 @@ pub fn recursive_info(
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
 		for info in raur_handle.info(&to_process)? {
-			let make_deps = info.make_depends.iter();
-			let check_deps = info.check_depends.iter();
-			let flat_deps = info.depends.iter();
-			let deps = make_deps
-				.chain(flat_deps)
-				.chain(check_deps)
-				.map(|d| clean_and_check_package_name(d))
-				.collect_vec();
+			let deps = all_dependencies_of(&info);
 
 			for dependency in deps.into_iter() {
 				if pacman::is_installed(alpm, &dependency) {
@@ -70,6 +63,17 @@ pub fn recursive_info(
 		}
 	}
 	Ok((info_map, pacman_deps, depth_map))
+}
+
+pub fn all_dependencies_of(pkg: &Package) -> Vec<String> {
+	let make_deps = pkg.make_depends.iter();
+	let check_deps = pkg.check_depends.iter();
+	let flat_deps = pkg.depends.iter();
+	make_deps
+		.chain(flat_deps)
+		.chain(check_deps)
+		.map(|d| clean_and_check_package_name(d))
+		.collect_vec()
 }
 
 /// Queries the AUR for the provided given package names and returns a map all packages

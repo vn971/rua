@@ -9,8 +9,8 @@ use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use log::debug;
-use log::trace;
+use log::*;
+use raur::Package;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
@@ -38,7 +38,7 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 		);
 		std::process::exit(1)
 	}
-	show_install_summary(targets, &alpm);
+	show_install_summary(targets, split_to_raur, &alpm);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = dirs.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
@@ -51,13 +51,23 @@ pub fn install(targets: &[String], dirs: &RuaDirs, is_offline: bool, asdeps: boo
 }
 
 // Prints the dependency tree
-fn show_install_summary(targets: &[String], alpm: &alpm::Alpm) {
+fn show_install_summary(
+	targets: &[String],
+	split_to_raur: IndexMap<String, Package>,
+	alpm: &alpm::Alpm,
+) {
 	for target in targets {
 		// Create dep_map of depth 1 and 2
 		let mut deps_1_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
 		let mut deps_2_map: HashMap<String, Vec<(String, String)>> = HashMap::default();
 		// Add deps-dependencies into the map
-		gen_deps_depth_1_and_2(&mut deps_1_map, &mut deps_2_map, target, alpm);
+		gen_deps_depth_1_and_2(
+			&mut deps_1_map,
+			&mut deps_2_map,
+			&split_to_raur,
+			target,
+			alpm,
+		);
 		// If there are no dependencies to install, return
 		if deps_1_map.is_empty() {
 			return;
@@ -235,26 +245,54 @@ pub fn check_tars_and_move(name: &str, dirs: &RuaDirs, archive_whitelist: &Index
 /// package storing also if the dependencies are from aur or not.
 fn gen_package_deps_map(
 	map: &mut HashMap<String, Vec<(String, String)>>,
+	split_to_raur: &IndexMap<String, Package>,
 	dep_name: &str,
 	alpm: &alpm::Alpm,
 ) {
-	let (_, pacman_deps, aur_deps) =
-		aur_rpc_utils::recursive_info(&[dep_name.to_string()], alpm).unwrap();
-	if aur_deps.is_empty() || pacman_deps.is_empty() {
+	// info!("INPUT. dep_name: {}, map: {:?}", dep_name, map);
+	let raur_package: &Package = match split_to_raur.get(dep_name) {
+		Some(pkg) => pkg,
+		None => {
+			warn!("package not found in the map: {}", dep_name);
+			return
+		}
+	};
+	let all_deps = aur_rpc_utils::all_dependencies_of(raur_package);
+	let all_deps = all_deps.into_iter().filter(|pkg| !pacman::is_installed(alpm, pkg));
+
+	let mut pacman_deps: IndexSet<String> = IndexSet::new();
+	let mut aur_deps: IndexSet<String> = IndexSet::new();
+	if pacman::is_installable(alpm, dep_name) {
+		// pacman_deps.insert(dep_name.to_string());
+	} else {
+		// info!("Adding dependency {} because it is not installable", dep_name);
+		aur_deps.insert(dep_name.to_string());
+	};
+
+	for dep in all_deps {
+		if pacman::is_installable(alpm, &dep) {
+			pacman_deps.insert(dep);
+		} else {
+			aur_deps.insert(dep);
+		}
+	}
+	// info!("dep_name: {}, pacman deps: {:?}, aur_deps: {:?}", dep_name, pacman_deps, aur_deps);
+
+	if aur_deps.is_empty() && pacman_deps.is_empty() {
 		return;
 	}
 	let mut dep_vec = Vec::new();
 	// Push pacman deps to the dep_vec with the pacman option
-	for (dep, _) in aur_deps {
-		dep_vec.push((dep, "AUR".to_string()));
+	for dep in aur_deps {
+		dep_vec.push((dep.to_string(), "AUR".to_string()));
 	}
 	// Push aur deps to the dep_vec with the AUR option
 	for pacman_dep in pacman_deps.iter() {
-		if !(dep_vec.contains(&(pacman_dep.clone(), "pacman".to_string()))
-			|| dep_vec.contains(&(pacman_dep.clone(), "AUR".to_string())))
+		if !(dep_vec.contains(&(pacman_dep.to_string(), "pacman".to_string()))
+			|| dep_vec.contains(&(pacman_dep.to_string(), "AUR".to_string())))
 			&& pacman_dep.clone() != dep_name
 		{
-			dep_vec.push((pacman_dep.clone(), "pacman".to_string()))
+			dep_vec.push((pacman_dep.to_string(), "pacman".to_string()))
 		}
 	}
 	map.insert(dep_name.to_string(), dep_vec);
@@ -265,15 +303,16 @@ fn gen_package_deps_map(
 fn gen_deps_depth_1_and_2(
 	deps_map_1: &mut HashMap<String, Vec<(String, String)>>,
 	deps_map_2: &mut HashMap<String, Vec<(String, String)>>,
+	split_to_raur: &IndexMap<String, Package>,
 	dep_name: &str,
 	alpm: &alpm::Alpm,
 ) {
 	// Gen dep-map of depth 1
-	gen_package_deps_map(deps_map_1, dep_name, alpm);
+	gen_package_deps_map(deps_map_1, split_to_raur, dep_name, alpm);
 	// Get 1st depth deps to gen dep-map of depth 2
 	for val in deps_map_1.values().into_iter() {
 		val.iter()
-			.map(|(name, _)| gen_package_deps_map(deps_map_2, name, alpm))
+			.map(|(name, _)| gen_package_deps_map(deps_map_2, split_to_raur, name, alpm))
 			.for_each(drop);
 	}
 }

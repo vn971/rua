@@ -1,7 +1,6 @@
 // Commands that are run inside "bubblewrap" jail
 
-use crate::rua_files;
-use crate::rua_files::RuaPaths;
+use crate::rua_files::{self, RuaPaths};
 use crate::srcinfo_to_pkgbuild;
 use log::debug;
 use log::info;
@@ -14,12 +13,11 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
-use std::str;
 use std::str::FromStr;
 use std::sync::Once;
 
 static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
-pub fn check_bubblewrap_runnable() {
+pub fn assert_bubblewrap_runnable() {
 	BUBBLEWRAP_IS_RUNNABLE.call_once(|| {
 		if !Command::new("bwrap")
 			.args(&["--ro-bind", "/", "/", "true"])
@@ -37,121 +35,167 @@ pub fn check_bubblewrap_runnable() {
 	});
 }
 
-fn wrap_yes_internet(rua_paths: &RuaPaths, cur_dir: &str, makepkg_dir: &str) -> Command {
-	let mut command = Command::new(&rua_paths.wrapper_bwrap_script);
-	command.current_dir(cur_dir);
-	command.env("PKGDEST", makepkg_dir);
-	command.env("SRCDEST", makepkg_dir);
-	command.env("SRCPKGDEST", makepkg_dir);
-	command.env("LOGDEST", makepkg_dir);
-	command.env("BUILDDIR", makepkg_dir);
-	command
+impl<'cmd> Sandbox<'cmd> {
+	pub fn new(rua_paths: &'cmd RuaPaths) -> Self {
+		Self {
+			jail_cmd: &rua_paths.wrapper_bwrap_script,
+		}
+	}
+
+	fn makepkg(&self, pkgbuild_dir: &Path, work_dir: Option<&Path>, opts: SandboxOpts) -> Command {
+		let mut command = Command::new(self.jail_cmd);
+
+		let pkgbuild_dir = pkgbuild_dir.canonicalize().unwrap();
+		command.current_dir(&pkgbuild_dir);
+
+		let work_dir = work_dir.unwrap_or(&pkgbuild_dir);
+		command.env("PKGDEST", work_dir);
+		command.env("SRCDEST", work_dir);
+		command.env("LOGDEST", work_dir);
+		command.env("SRCPKGDEST", work_dir);
+		command.env("BUILDDIR", work_dir);
+
+		if !opts.network_access {
+			command.arg("--unshare-net");
+		}
+
+		if !opts.writable_pkgbuild_dir {
+			command.arg("--ro-bind");
+		} else {
+			command.arg("--bind");
+		};
+		command.args(&[&pkgbuild_dir, &pkgbuild_dir]);
+
+		command.arg("makepkg");
+		command
+	}
 }
 
-fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
-	let dir_path = PathBuf::from(dir).join("PKGBUILD.static");
-	let mut file = File::create(&dir_path)
-		.unwrap_or_else(|err| panic!("Cannot create {}/PKGBUILD.static, {}", dir, err));
-	let srcinfo_path = PathBuf::from(dir)
+fn download_srcinfo_sources(sandbox: Sandbox, dir: &Path) {
+	let static_pkgbuild_path = dir.join("PKGBUILD.static");
+	let srcinfo_path = dir
 		.join(".SRCINFO")
 		.canonicalize()
-		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir, e));
-	file.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
+		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir.display(), e));
+
+	File::create(&static_pkgbuild_path)
+		.unwrap_or_else(|e| panic!("Cannot create {}/PKGBUILD.static, {}", dir.display(), e))
+		.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
+
 	info!("Downloading sources using .SRCINFO...");
-	let command = wrap_yes_internet(rua_paths, dir, dir)
-		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "-f", "--verifysource"])
-		.args(&["-p", "PKGBUILD.static"])
+
+	let makepkg_result = sandbox
+		.makepkg(dir, None, SandboxOpts {
+			writable_pkgbuild_dir: true,
+			..SandboxOpts::default()
+		})
+		.args(&["--force", "--verifysource", "-p", "PKGBUILD.static"])
 		.status()
-		.unwrap_or_else(|e| panic!("Failed to fetch dependencies in directory {}, {}", dir, e));
-	assert!(command.success(), "Failed to download PKGBUILD sources");
-	fs::remove_file(PathBuf::from(dir).join("PKGBUILD.static"))
-		.expect("Failed to clean up PKGBUILD.static");
+		.unwrap_or_else(|e| panic!("Failed to fetch sources in {}, {}", dir.display(), e));
+
+	assert!(makepkg_result.success(), "Failed to fetch PKGBUILD sources");
+
+	fs::remove_file(static_pkgbuild_path).expect("Failed to clean up PKGBUILD.static");
 }
 
-pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, String> {
-	debug!("Getting srcinfo in directory {}", dir);
-	let mut command = wrap_yes_internet(rua_paths, dir, "/tmp");
-	command.arg("--unshare-net");
-	command.args(&["--ro-bind", dir, dir]);
-	command
-		.arg("makepkg")
-		.arg("--holdver")
-		.arg("--printsrcinfo");
+pub fn generate_srcinfo(sandbox: Sandbox, dir: &Path) -> Result<Srcinfo, String> {
+	debug!("Getting srcinfo in directory {}", dir.display());
 
-	let output = command
+	let makepkg = sandbox
+		.makepkg(&dir, Some("/tmp".as_ref()), SandboxOpts::default())
+		.args(&["--holdver", "--printsrcinfo"])
 		.output()
 		.map_err(|err| format!("cannot execute makepkg --holdver --printsrcinfo, {}", err))?;
-	if !output.status.success() {
+
+	if !makepkg.status.success() {
 		return Err(format!(
 			"makepkg failed to execute, Stdout:\n{}\n\nStderr:\n{}\n",
-			String::from_utf8_lossy(&output.stdout),
-			String::from_utf8_lossy(&output.stderr),
+			String::from_utf8_lossy(&makepkg.stdout),
+			String::from_utf8_lossy(&makepkg.stderr),
 		));
 	}
-	let output = String::from_utf8(output.stdout).map_err(|err| {
+
+	let srcinfo = String::from_utf8(makepkg.stdout).map_err(|err| {
 		format!(
 			"Non-UTF8 in output of makepkg --holdver --printsrcinfo, {}",
 			err
 		)
 	})?;
-	trace!("generated SRCINFO content:\n{}", output);
-	let srcinfo = Srcinfo::from_str(&output).map_err(|e| {
+
+	trace!("generated SRCINFO content:\n{}", srcinfo);
+	let srcinfo = Srcinfo::from_str(&srcinfo).map_err(|e| {
 		format!(
 			"{}:{} Failed to parse SRCINFO:\n{:?}\nError is: {}",
 			file!(),
 			line!(),
-			output,
+			srcinfo,
 			e
 		)
 	})?;
+
 	Ok(srcinfo)
 }
 
-fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
-	debug!("{}:{} Building directory {}", file!(), line!(), dir);
-	let mut command = wrap_yes_internet(rua_paths, dir, dir);
+pub fn build_directory(sandbox: Sandbox, dir: &Path, offline: bool, force: bool) {
 	if offline {
-		command.arg("--unshare-net");
+		download_srcinfo_sources(sandbox, dir);
 	}
-	command.args(&["--bind", dir, dir]).arg("makepkg");
+
+	debug!("Building directory {}", dir.display());
+
+	let mut makepkg = sandbox.makepkg(dir, None, SandboxOpts {
+		network_access: !offline,
+		writable_pkgbuild_dir: true,
+		..SandboxOpts::default()
+	});
+
 	if force {
-		command.arg("--force");
+		makepkg.arg("--force");
 	}
-	let command = command
+
+	let makepkg = makepkg
 		.status()
-		.unwrap_or_else(|e| panic!("Failed to execute ~/.config/rua/.system/wrap.sh, {}", e));
-	if !command.success() {
+		.unwrap_or_else(|e| panic!("Failed to execute {}: {}", sandbox.jail_cmd.display(), e));
+
+	if !makepkg.success() {
 		eprintln!(
 			"Build failed with exit code {} in {}",
-			command
+			makepkg
 				.code()
 				.map_or_else(|| "???".to_owned(), |c| c.to_string()),
-			dir,
+			dir.display(),
 		);
-		std::process::exit(command.code().unwrap_or(1));
+		std::process::exit(makepkg.code().unwrap_or(1));
 	}
 }
 
-pub fn build_directory(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
-	if offline {
-		download_srcinfo_sources(dir, rua_paths);
-	}
-	build_local(dir, rua_paths, offline, force);
+#[derive(Clone, Copy)]
+pub struct Sandbox<'cmd> {
+	jail_cmd: &'cmd Path,
 }
 
-pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
+#[derive(Default)]
+struct SandboxOpts {
+	network_access: bool,
+	writable_pkgbuild_dir: bool,
+	_non_exhaustive: (),
+}
+
+pub fn shellcheck(target: Option<PathBuf>) -> Result<(), String> {
 	let target = match target {
 		None => Path::new("/dev/stdin").to_path_buf(),
 		Some(path) if path.is_dir() => path.join("PKGBUILD"),
-		Some(path) => path.to_path_buf(),
+		Some(path) => path,
 	};
+
 	let target_contents = match std::fs::read_to_string(&target) {
 		Err(err) => return Err(format!("Failed to open {:?} for reading: {}", target, err)),
 		Ok(ok) => ok,
 	};
-	check_bubblewrap_runnable();
+
+	assert_bubblewrap_runnable();
+
 	let mut command = Command::new("bwrap");
 	command.args(&["--ro-bind", "/", "/"]);
 	command.args(&["--proc", "/proc", "--dev", "/dev"]);
@@ -163,14 +207,17 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 		"/dev/stdin",
 	]);
 	command.stdin(Stdio::piped());
+
 	let mut child = command.spawn().map_err(|_| {
 		"Failed to spawn shellcheck process. Do you have shellcheck installed?\
 		 sudo pacman -S --needed shellcheck"
 	})?;
+
 	let stdin: &mut std::process::ChildStdin = child
 		.stdin
 		.as_mut()
 		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
+
 	let bytes = rua_files::SHELLCHECK_WRAPPER.replace("%PKGBUILD%", &target_contents);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(
@@ -178,9 +225,11 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 			err
 		)
 	})?;
+
 	let child = child
 		.wait_with_output()
 		.map_err(|e| format!("Failed waiting for shellcheck to exit: {}", e))?;
+
 	if child.status.success() {
 		eprintln!("Good job, shellcheck didn't find problems in the PKGBUILD.");
 		Ok(())

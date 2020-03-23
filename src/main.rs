@@ -30,7 +30,7 @@ use structopt::StructOpt;
 fn main() {
 	let cli_args: CliArgs = CliArgs::from_args();
 	let rua_env = rua_environment::prepare_environment(&cli_args);
-	match &cli_args.action {
+	match cli_args.action {
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
 		}
@@ -39,14 +39,14 @@ fn main() {
 			offline,
 			target,
 		} => {
-			action_install::install(&target, &rua_env, *offline, *asdeps);
+			action_install::install(&target, &rua_env, offline, asdeps);
 		}
 		Action::Builddir {
 			offline,
 			force,
 			target,
 		} => {
-			action_builddir::action_builddir(target, &rua_env, *offline, *force);
+			action_builddir::action_builddir(target, &rua_env, offline, force);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
@@ -59,14 +59,11 @@ fn main() {
 				.ok();
 		}
 		Action::Tarcheck { target } => {
-			tar_check::tar_check_unwrap(
-				&target,
-				target.to_str().expect("target is not valid UTF-8"),
-			);
+			tar_check::tar_check_unwrap(&target);
 			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel, printonly } => {
-			action_upgrade::upgrade(&rua_env, *devel, *printonly);
+			action_upgrade::upgrade(&rua_env, devel, printonly);
 		}
 	};
 }

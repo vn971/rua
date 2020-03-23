@@ -5,22 +5,15 @@ use crate::wrapped;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn action_builddir(dir: &Option<PathBuf>, rua_env: &RuaEnv, offline: bool, force: bool) {
+pub fn action_builddir(dir: Option<PathBuf>, rua_env: &RuaEnv, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.
-	let dir = match dir {
-		Some(path) => &path,
-		None => Path::new("."),
-	};
-	let dir = dir
-		.canonicalize()
-		.unwrap_or_else(|err| panic!("Cannot canonicalize path {:?}, {}", dir, err));
-	let dir_str = dir
-		.to_str()
-		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));
-	wrapped::build_directory(dir_str, &rua_env.paths, offline, force);
+	let dir = dir.as_deref().unwrap_or_else(|| Path::new("."));
 
-	let srcinfo =
-		wrapped::generate_srcinfo(dir_str, &rua_env.paths).expect("Failed to obtain SRCINFO");
+	let sandbox = wrapped::Sandbox::new(&rua_env.paths);
+
+	wrapped::build_directory(sandbox, &dir, offline, force);
+
+	let srcinfo = wrapped::generate_srcinfo(sandbox, &dir).unwrap();
 	let ver = srcinfo.version();
 	let archive_names = srcinfo.pkgs.iter().map(|package| {
 		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {
@@ -32,11 +25,9 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_env: &RuaEnv, offline: bool, f
 	});
 
 	for archive_name in archive_names {
-		let file = dir.join(archive_name);
-		let file_str = file.to_str().expect("Builddir target has unvalid UTF-8");
-		tar_check::tar_check(&file, file_str).ok();
+		tar_check::tar_check_unwrap(&dir.join(archive_name));
 	}
 
-	eprintln!("Package built and checked in: {}", dir_str);
+	eprintln!("Package built and checked in: {}", dir.display());
 	eprintln!("If you want to install the built artifacts, do it manually.");
 }

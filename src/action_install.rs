@@ -13,7 +13,7 @@ use log::debug;
 use log::trace;
 use std::collections::HashSet;
 use std::fs;
-use std::fs::ReadDir;
+use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 
 pub fn install(targets: &[String], rua_env: &RuaEnv, is_offline: bool, asdeps: bool) {
@@ -115,6 +115,7 @@ fn install_all(
 	let packages: Vec<(String, i32, String)> = packages
 		.unique_by(|(pkgbase, _depth, _split)| pkgbase.to_string())
 		.collect::<Vec<_>>();
+	let sandbox = wrapped::Sandbox::new(&rua_env.paths);
 	// once we have a collection of pkgname-s and their depth, proceed straightforwardly.
 	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
 		let packages = packages.collect::<Vec<&(String, i32, String)>>();
@@ -143,12 +144,7 @@ fn install_all(
 				rm_rf::ensure_removed(build_dir.join(".git"))
 					.unwrap_or_else(|err| panic!("Failed to remove {:?}, {}", dir_to_remove, err));
 			}
-			wrapped::build_directory(
-				&build_dir.to_str().expect("Non-UTF8 directory name"),
-				&rua_env.paths,
-				offline,
-				false,
-			);
+			wrapped::build_directory(sandbox, &build_dir, offline, false);
 		}
 		for (pkgbase, _depth, _split) in &packages {
 			check_tars_and_move(pkgbase, rua_env, &archive_whitelist);
@@ -181,36 +177,37 @@ fn install_all(
 pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &IndexSet<&str>) {
 	debug!("checking tars and moving for package {}", name);
 	let build_dir = rua_env.paths.build_dir(name);
-	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
-		panic!(
-			"Failed to read directory contents for {:?}, {}",
-			&build_dir, err
-		)
-	});
-	let dir_items = dir_items.map(|f| f.expect("Failed to open file for tar_check analysis"));
-	let mut dir_items = dir_items
-		.map(|file| {
-			let file_name = file.file_name();
-			let file_name = file_name
-				.into_string()
-				.expect("Non-UTF8 characters in tar file name");
-			(file, file_name)
+
+	let pkgfiles = build_dir
+		.read_dir()
+		.unwrap_or_else(|e| {
+			panic!(
+				"Failed to read directory contents for {}: {}",
+				build_dir.display(),
+				e
+			)
 		})
-		.filter(|(_, name)| name.ends_with(&rua_env.pkgext))
-		.collect::<Vec<_>>();
-	let dir_items_names = dir_items
-		.iter()
-		.map(|(_, name)| name.as_str())
+		.map(|f| f.expect("Failed to open file for tar_check analysis"))
+		.filter(|dir_entry| {
+			let file_name = dir_entry.file_name();
+			file_name.as_bytes().ends_with(rua_env.pkgext.as_bytes())
+		})
+		.filter(|pkgfile| {
+			let file_name = pkgfile.file_name();
+			archive_whitelist
+				.iter()
+				.any(|prefix| file_name.as_bytes().starts_with(prefix.as_bytes()))
+		})
+		.map(|pkgfile| pkgfile.path())
 		.collect_vec();
-	let common_suffix_length =
-		tar_check::common_suffix_length(&dir_items_names, &archive_whitelist);
-	dir_items
-		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
-	trace!("Files filtered for tar checking: {:?}", &dir_items);
-	for (file, file_name) in dir_items.iter() {
-		tar_check::tar_check_unwrap(&file.path(), file_name);
+
+	trace!("Files filtered for tar checking: {:?}", &pkgfiles);
+	for pkgfile in &pkgfiles {
+		tar_check::tar_check_unwrap(pkgfile);
 	}
+
 	debug!("all package (tar) files checked, moving them");
+
 	let checked_tars_dir = rua_env.paths.checked_tars_dir(name);
 	rm_rf::ensure_removed(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
@@ -225,9 +222,9 @@ pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &Ind
 		);
 	});
 
-	for (file, file_name) in dir_items {
-		let src = &file.path();
-		let dst = &checked_tars_dir.join(file_name);
+	for pkgfile in pkgfiles {
+		let src = &pkgfile;
+		let dst = &checked_tars_dir.join(pkgfile.file_name().unwrap());
 
 		fs::rename(src, dst)
 			.or_else(|err| {
@@ -255,8 +252,10 @@ pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &Ind
 			})
 			.unwrap_or_else(|e| {
 				panic!(
-					"Failed to move {:?} (build artifact) to {:?}, {}",
-					&file, &checked_tars_dir, e,
+					"Failed to move {} (build artifact) to {}: {}",
+					pkgfile.display(),
+					checked_tars_dir.display(),
+					e,
 				)
 			});
 	}

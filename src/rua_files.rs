@@ -70,7 +70,7 @@ impl RuaPaths {
 			eprintln!("Also, makepkg will not allow you building as root anyway.");
 			exit(1)
 		}
-		wrapped::check_bubblewrap_runnable();
+		wrapped::assert_bubblewrap_runnable();
 		let locked_file = File::open(dirs.config_dir()).unwrap_or_else(|err| {
 			panic!(
 				"Failed to open config dir {:?} for locking, {}",

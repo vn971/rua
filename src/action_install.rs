@@ -226,11 +226,38 @@ pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &Ind
 	});
 
 	for (file, file_name) in dir_items {
-		fs::rename(&file.path(), checked_tars_dir.join(file_name)).unwrap_or_else(|e| {
-			panic!(
-				"Failed to move {:?} (build artifact) to {:?}, {}",
-				&file, &checked_tars_dir, e,
-			)
-		});
+		let src = &file.path();
+		let dst = &checked_tars_dir.join(file_name);
+
+		fs::rename(src, dst)
+			.or_else(|err| {
+				// We want to make the "move" operation as fast as possible.
+				// First we attempt to do it in one single system call, "rename".
+				//
+				// That might fail if the XDG directories ~/.cache/rua and /.local/share/
+				// live on different devices (or your XDG directories do, if you defined them).
+				// In that, and only in that case, we try to copy the file and remove upon completion.
+
+				// References:
+				// RUA pull request: https://github.com/vn971/rua/pull/109
+				// coreutils copying: https://github.com/coreutils/coreutils/blob/9b4bb9d28a6a5f84c407f795d518726fd7902121/src/copy.c#L2466
+
+				if err.raw_os_error() != Some(libc::EXDEV) {
+					// EXDEV (invalid cross-device link) gets aggregated into io::ErrorKind::Other
+					return Err(err);
+				}
+
+				// can't move across disks, copy & delete instead
+				fs::copy(src, dst)?;
+				let _ = fs::remove_file(src);
+
+				Ok(())
+			})
+			.unwrap_or_else(|e| {
+				panic!(
+					"Failed to move {:?} (build artifact) to {:?}, {}",
+					&file, &checked_tars_dir, e,
+				)
+			});
 	}
 }

@@ -65,11 +65,13 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 		.output()
 		.unwrap_or_else(|e| panic!("Internal error: failed to run makepkg config loader: {}", e))
 		.stdout;
-	let config = String::from_utf8(config).expect("makepkg config contains non-UTF-8 data");
+	let config = String::from_utf8(config).expect("makepkg config loader returned non-UTF-8 data");
 
 	// format: `VAR=VALUE\0`
 	let config_entries = config.split_terminator('\0').map(|line| {
-		let sep_pos = line.find('=').expect("Malformed config loader output");
+		let sep_pos = line
+			.find('=')
+			.unwrap_or_else(|| panic!("Malformed config loader output, line: {}", line));
 		(&line[..sep_pos], &line[sep_pos + 1..])
 	});
 
@@ -80,7 +82,12 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 		match var {
 			"PKGDEST" | "SRCDEST" | "SRCPKGDEST" | "LOGDEST" | "BUILDDIR" => {
 				let warn = "WARNING".yellow();
-				eprintln!("{}: custom ${} location is not supported.", warn, var);
+				eprintln!(
+					"{}: Ignoring custom makepkg location {}. \
+						RUA needs to use custom locations for its safety model, see: \
+						https://github.com/vn971/rua#how-it-works--directories",
+					warn, var
+				);
 			}
 
 			"PKGEXT" => match value {
@@ -90,7 +97,7 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 				}
 
 				_ => panic!(
-					"$PKGEXT is set to an unsupported value: {:?}. \
+					"PKGEXT is set to an unsupported value: {}. \
 					Only .pkg.tar or .pkg.tar.xz or .pkg.tar.gz or .pkg.tar.zst archives are \
 					allowed for now. RUA needs those extensions to look inside the archives for \
 					'tar_check' analysis.",
@@ -108,7 +115,7 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 
 	RuaEnv {
 		dirs,
-		pkgext: pkgext.expect("Internal error: no $PKGEXT entry in makepkg configuration?!"),
+		pkgext: pkgext.expect("Internal error: no PKGEXT entry in makepkg configuration?!"),
 	}
 }
 

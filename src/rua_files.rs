@@ -21,6 +21,8 @@ pub struct RuaDirs {
 	global_checked_tars_dir: PathBuf,
 	/// Script used to wrap `makepkg` and related commands
 	pub wrapper_bwrap_script: PathBuf,
+	/// Script used to read `makepkg` config
+	pub makepkg_config_loader: PathBuf,
 	/// Global lock to prevent concurrent access to project dirs
 	_global_lock: File,
 }
@@ -55,6 +57,10 @@ impl RuaDirs {
 			dirs.config_dir().join(seccomp_path).to_str().unwrap(),
 		);
 		overwrite_script(&dirs.config_dir().join(WRAP_SCRIPT_PATH), WRAP_SH);
+		overwrite_script(
+			&dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH),
+			CONFIG_LOADER,
+		);
 		ensure_script(
 			&dirs.config_dir().join(".system/wrap_args.sh.example"),
 			WRAP_ARGS_EXAMPLE,
@@ -83,6 +89,7 @@ impl RuaDirs {
 			global_review_dir: dirs.config_dir().join("pkg"),
 			global_checked_tars_dir,
 			wrapper_bwrap_script: dirs.config_dir().join(WRAP_SCRIPT_PATH),
+			makepkg_config_loader: dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH),
 			_global_lock: locked_file,
 		}
 	}
@@ -161,5 +168,7 @@ pub const SECCOMP_I686: &[u8] = include_bytes!("../res/seccomp-i686.bpf");
 pub const SECCOMP_X86_64: &[u8] = include_bytes!("../res/seccomp-x86_64.bpf");
 pub const WRAP_SH: &[u8] = include_bytes!("../res/wrap.sh");
 pub const WRAP_ARGS_EXAMPLE: &[u8] = include_bytes!("../res/wrap_args.sh.example");
+pub const CONFIG_LOADER: &[u8] = include_bytes!("../res/print_makepkg_config.sh");
 
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
+pub const MAKEPKG_CONFIG_LOADER_PATH: &str = ".system/print_makepkg_config.sh";

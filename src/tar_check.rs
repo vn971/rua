@@ -116,10 +116,10 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			 [T]=run shell to inspect, "
 		);
 		if has_install {
-			eprint!("{}", "[I]=show install file, ".bright_red());
+			eprint!("{}", "[I]=show install file, ".bright_red().bold());
 		};
 		if !suid_files.is_empty() {
-			eprint!("{}, ", "!!! [S]=list SUID files!!!".bright_red());
+			eprint!("{}, ", "!!! [S]=list SUID files!!!".bright_red().bold());
 		};
 		eprint!("[O]=ok, proceed. ");
 		let string = terminal_util::read_line_lowercase();

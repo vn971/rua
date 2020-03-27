@@ -2,7 +2,7 @@ use crate::action_install;
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::print_package_table;
-use crate::rua_paths;
+use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
 use alpm::Version;
 use colored::*;
@@ -23,7 +23,20 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade(devel: bool, printonly: bool) {
+pub fn upgrade_printonly(devel: bool) {
+	upgrade(devel, UpgradeType::Printonly);
+}
+pub fn upgrade_real(devel: bool, rua_paths: RuaPaths) {
+	// we could also calculate paths inside `upgrade`, but we semantically want it in "main.rs"
+	upgrade(devel, UpgradeType::Real { paths: rua_paths });
+}
+
+enum UpgradeType {
+	Printonly,
+	Real { paths: RuaPaths },
+}
+
+fn upgrade(devel: bool, upgrade_type: UpgradeType) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()
@@ -56,6 +69,9 @@ pub fn upgrade(devel: bool, printonly: bool) {
 		.map(|pkg| pkg.name())
 		.collect::<Vec<_>>()
 		.join(" ");
+	debug!("You have the following packages outside of main repos installed:");
+	debug!("{}", aur_pkgs_string);
+	debug!("");
 	let mut up_to_date = Vec::new();
 	let mut outdated = Vec::new();
 	let mut unexistent = Vec::new();
@@ -73,36 +89,36 @@ pub fn upgrade(devel: bool, printonly: bool) {
 			unexistent.push((pkg, local_ver.to_string()));
 		}
 	}
-	if printonly {
-		if outdated.is_empty() && unexistent.is_empty() {
-			std::process::exit(-1)
-		} else {
-			for (pkg, _, _) in outdated {
-				println!("{}", pkg);
-			}
-			for (pkg, _) in unexistent {
-				println!("{}", pkg);
+	match upgrade_type {
+		UpgradeType::Printonly => {
+			if outdated.is_empty() && unexistent.is_empty() {
+				std::process::exit(-1)
+			} else {
+				for (pkg, _, _) in outdated {
+					println!("{}", pkg);
+				}
+				for (pkg, _) in unexistent {
+					println!("{}", pkg);
+				}
 			}
 		}
-	} else {
-		debug!("You have the following packages outside of main repos installed:");
-		debug!("{}", aur_pkgs_string);
-		debug!("");
-		if outdated.is_empty() && unexistent.is_empty() {
-			eprintln!("Good job! All AUR packages are up-to-date.");
-		} else {
-			print_outdated(&outdated, &unexistent);
-			eprintln!();
-			let paths = rua_paths::RuaPaths::initialize_paths();
-			loop {
-				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
-				let string = terminal_util::read_line_lowercase();
-				if &string == "o" {
-					let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-					action_install::install(&outdated, &paths, false, true);
-					break;
-				} else if &string == "x" {
-					break;
+		UpgradeType::Real { paths } => {
+			if outdated.is_empty() && unexistent.is_empty() {
+				eprintln!("Good job! All AUR packages are up-to-date.");
+			} else {
+				print_outdated(&outdated, &unexistent);
+				eprintln!();
+				loop {
+					eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
+					let string = terminal_util::read_line_lowercase();
+					if &string == "o" {
+						let outdated: Vec<String> =
+							outdated.iter().map(|o| o.0.to_string()).collect();
+						action_install::install(&outdated, &paths, false, true);
+						break;
+					} else if &string == "x" {
+						break;
+					}
 				}
 			}
 		}

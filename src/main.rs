@@ -68,7 +68,12 @@ fn main() {
 			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel, printonly } => {
-			action_upgrade::upgrade(*devel, *printonly);
+			if *printonly {
+				action_upgrade::upgrade_printonly(*devel);
+			} else {
+				let paths = rua_paths::RuaPaths::initialize_paths();
+				action_upgrade::upgrade_real(*devel, paths);
+			}
 		}
 	};
 }

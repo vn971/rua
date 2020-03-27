@@ -12,7 +12,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::exit;
 
-pub struct RuaDirs {
+pub struct RuaPaths {
 	/// Subdirectory of ~/.cache/rua where packages are built after review
 	pub global_build_dir: PathBuf,
 	/// Subdirectory of ~/.config/rua where the package is reviewed by user, and changes are kept
@@ -27,8 +27,8 @@ pub struct RuaDirs {
 	_global_lock: File,
 }
 
-impl RuaDirs {
-	pub fn new() -> RuaDirs {
+impl RuaPaths {
+	pub fn new() -> RuaPaths {
 		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.cache_dir())
@@ -84,7 +84,7 @@ impl RuaDirs {
 		});
 		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");
 		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
-		RuaDirs {
+		RuaPaths {
 			global_build_dir: dirs.cache_dir().join("build"),
 			global_review_dir: dirs.config_dir().join("pkg"),
 			global_checked_tars_dir,

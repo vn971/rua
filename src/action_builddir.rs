@@ -17,10 +17,10 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_env: &RuaEnv, offline: bool, f
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));
-	wrapped::build_directory(dir_str, &rua_env.dirs, offline, force);
+	wrapped::build_directory(dir_str, &rua_env.paths, offline, force);
 
 	let srcinfo =
-		wrapped::generate_srcinfo(dir_str, &rua_env.dirs).expect("Failed to obtain SRCINFO");
+		wrapped::generate_srcinfo(dir_str, &rua_env.paths).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
 	let archive_names = srcinfo.pkgs.iter().map(|package| {
 		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {

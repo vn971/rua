@@ -1,7 +1,7 @@
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::reviewing;
-use crate::rua_environment::RuaEnv;
+use crate::rua_paths::RuaPaths;
 use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
@@ -16,7 +16,7 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], rua_env: &RuaEnv, is_offline: bool, asdeps: bool) {
+pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
 	let alpm = pacman::create_alpm();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
@@ -40,15 +40,15 @@ pub fn install(targets: &[String], rua_env: &RuaEnv, is_offline: bool, asdeps: b
 
 	show_install_summary(&pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
-		let dir = rua_env.paths.review_dir(pkgbase);
+		let dir = rua_paths.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
 			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
 		});
-		reviewing::review_repo(&dir, pkgbase, &rua_env.paths);
+		reviewing::review_repo(&dir, pkgbase, &rua_paths);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
 	install_all(
-		rua_env,
+		rua_paths,
 		split_to_depth,
 		split_to_pkgbase,
 		is_offline,
@@ -87,7 +87,7 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 }
 
 fn install_all(
-	rua_env: &RuaEnv,
+	rua_paths: &RuaPaths,
 	split_to_depth: IndexMap<String, i32>,
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
@@ -119,8 +119,8 @@ fn install_all(
 	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
 		let packages = packages.collect::<Vec<&(String, i32, String)>>();
 		for (pkgbase, _depth, _split) in &packages {
-			let review_dir = rua_env.paths.review_dir(pkgbase);
-			let build_dir = rua_env.paths.build_dir(pkgbase);
+			let review_dir = rua_paths.review_dir(pkgbase);
+			let build_dir = rua_paths.build_dir(pkgbase);
 			rm_rf::ensure_removed(&build_dir).unwrap_or_else(|err| {
 				panic!("Failed to remove old build dir {:?}, {}", &build_dir, err)
 			});
@@ -129,13 +129,13 @@ fn install_all(
 			});
 			fs_extra::copy_items(
 				&vec![&review_dir],
-				&rua_env.paths.global_build_dir,
+				&rua_paths.global_build_dir,
 				&CopyOptions::new(),
 			)
 			.unwrap_or_else(|err| {
 				panic!(
 					"failed to copy reviewed dir {:?} to build dir {:?}, error is {}",
-					&review_dir, rua_env.paths.global_build_dir, err
+					&review_dir, rua_paths.global_build_dir, err
 				)
 			});
 			{
@@ -145,13 +145,13 @@ fn install_all(
 			}
 			wrapped::build_directory(
 				&build_dir.to_str().expect("Non-UTF8 directory name"),
-				&rua_env.paths,
+				&rua_paths,
 				offline,
 				false,
 			);
 		}
 		for (pkgbase, _depth, _split) in &packages {
-			check_tars_and_move(pkgbase, rua_env, &archive_whitelist);
+			check_tars_and_move(pkgbase, rua_paths, &archive_whitelist);
 		}
 		// This relation between split_name and the archive file is not actually correct here.
 		// Instead, all archive files of some group will be bound to one split name only here.
@@ -159,7 +159,7 @@ fn install_all(
 		// and we only use this relation for this purpose. Feel free to improve, if you want...
 		let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for (pkgbase, _depth, split) in &packages {
-			let checked_tars = rua_env.paths.checked_tars_dir(&pkgbase);
+			let checked_tars = rua_paths.checked_tars_dir(&pkgbase);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
 				panic!(
 					"Failed to read 'checked_tars' directory for {}, {}",
@@ -178,9 +178,9 @@ fn install_all(
 	}
 }
 
-pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &IndexSet<&str>) {
+pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: &IndexSet<&str>) {
 	debug!("checking tars and moving for package {}", name);
-	let build_dir = rua_env.paths.build_dir(name);
+	let build_dir = rua_paths.build_dir(name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"Failed to read directory contents for {:?}, {}",
@@ -196,7 +196,7 @@ pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &Ind
 				.expect("Non-UTF8 characters in tar file name");
 			(file, file_name)
 		})
-		.filter(|(_, name)| name.ends_with(&rua_env.pkgext))
+		.filter(|(_, name)| name.ends_with(&rua_paths.makepkg_pkgext))
 		.collect::<Vec<_>>();
 	let dir_items_names = dir_items
 		.iter()
@@ -211,7 +211,7 @@ pub fn check_tars_and_move(name: &str, rua_env: &RuaEnv, archive_whitelist: &Ind
 		tar_check::tar_check_unwrap(&file.path(), file_name);
 	}
 	debug!("all package (tar) files checked, moving them");
-	let checked_tars_dir = rua_env.paths.checked_tars_dir(name);
+	let checked_tars_dir = rua_paths.checked_tars_dir(name);
 	rm_rf::ensure_removed(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
 			"Failed to clean checked tar files dir {:?}, {}",

@@ -2,7 +2,7 @@ use crate::action_install;
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::print_package_table;
-use crate::rua_environment::RuaEnv;
+use crate::rua_paths;
 use crate::terminal_util;
 use alpm::Version;
 use colored::*;
@@ -23,7 +23,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade(rua_env: &RuaEnv, devel: bool, printonly: bool) {
+pub fn upgrade(devel: bool, printonly: bool) {
 	let alpm = pacman::create_alpm();
 	let pkg_cache = alpm
 		.localdb()
@@ -93,12 +93,13 @@ pub fn upgrade(rua_env: &RuaEnv, devel: bool, printonly: bool) {
 		} else {
 			print_outdated(&outdated, &unexistent);
 			eprintln!();
+			let paths = rua_paths::RuaPaths::new();
 			loop {
 				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 				let string = terminal_util::read_line_lowercase();
 				if &string == "o" {
 					let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-					action_install::install(&outdated, &rua_env, false, true);
+					action_install::install(&outdated, &paths, false, true);
 					break;
 				} else if &string == "x" {
 					break;

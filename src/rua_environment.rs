@@ -1,19 +1,11 @@
 use crate::cli_args;
 use crate::cli_args::CLIColorType;
 use crate::cli_args::CliArgs;
-use crate::rua_files::RuaPaths;
 use chrono::Utc;
-use colored::Colorize;
 use env_logger::Env;
 use log::debug;
 use std::env;
 use std::io::Write;
-use std::process::Command;
-
-pub struct RuaEnv {
-	pub paths: RuaPaths,
-	pub pkgext: String,
-}
 
 pub fn set_env_if_not_set(key: &str, value: &str) {
 	if env::var_os(key).is_none() {
@@ -21,8 +13,8 @@ pub fn set_env_if_not_set(key: &str, value: &str) {
 	}
 }
 
-// sets environment and other things applicable to all RUA commands
-pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
+/// Set and check environment applicable to all RUA commands
+pub fn prepare_environment(config: &CliArgs) {
 	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
 		.format(|buf, record| {
 			writeln!(
@@ -57,66 +49,6 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 		env!("CARGO_PKG_NAME"),
 		env!("CARGO_PKG_VERSION")
 	);
-
-	let rua_paths = RuaPaths::new();
-	let mut pkgext = None;
-
-	let config = Command::new(&rua_paths.makepkg_config_loader)
-		.output()
-		.unwrap_or_else(|e| panic!("Internal error: failed to run makepkg config loader: {}", e))
-		.stdout;
-	let config = String::from_utf8(config).expect("makepkg config loader returned non-UTF-8 data");
-
-	// format: `VAR=VALUE\0`
-	let config_entries = config.split_terminator('\0').map(|line| {
-		let sep_pos = line
-			.find('=')
-			.unwrap_or_else(|| panic!("Malformed config loader output, line: {}", line));
-		(&line[..sep_pos], &line[sep_pos + 1..])
-	});
-
-	// config entries won't appear here unless set
-	for (var, value) in config_entries {
-		debug!("makepkg option: {} = {:?}", var, value);
-
-		match var {
-			"PKGDEST" | "SRCDEST" | "SRCPKGDEST" | "LOGDEST" | "BUILDDIR" => {
-				let warn = "WARNING".yellow();
-				eprintln!(
-					"{}: Ignoring custom makepkg location {}. \
-						RUA needs to use custom locations for its safety model, see: \
-						https://github.com/vn971/rua#how-it-works--directories",
-					warn, var
-				);
-			}
-
-			"PKGEXT" => match value {
-				".pkg.tar" | ".pkg.tar.xz" | ".pkg.tar.lzma" | ".pkg.tar.gz" | ".pkg.tar.gzip"
-				| ".pkg.tar.zst" | ".pkg.tar.zstd" => {
-					pkgext = Some(value.to_owned());
-				}
-
-				_ => panic!(
-					"PKGEXT is set to an unsupported value: {}. \
-					Only .pkg.tar or .pkg.tar.xz or .pkg.tar.gz or .pkg.tar.zst archives are \
-					allowed for now. RUA needs those extensions to look inside the archives for \
-					'tar_check' analysis.",
-					value
-				),
-			},
-
-			_ => {}
-		}
-	}
-
-	for &var in &["PKGDEST", "SRCDEST", "SRCPKGDEST", "LOGDEST", "BUILDDIR"] {
-		env::set_var(var, "/dev/null"); // make sure we override it later
-	}
-
-	RuaEnv {
-		paths: rua_paths,
-		pkgext: pkgext.expect("Internal error: no PKGEXT entry in makepkg configuration?!"),
-	}
 }
 
 pub fn sudo_command() -> String {

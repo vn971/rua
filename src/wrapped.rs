@@ -1,7 +1,7 @@
 // Commands that are run inside "bubblewrap" jail
 
 use crate::rua_files;
-use crate::rua_files::RuaDirs;
+use crate::rua_files::RuaPaths;
 use crate::srcinfo_to_pkgbuild;
 use log::debug;
 use log::info;
@@ -37,8 +37,8 @@ pub fn check_bubblewrap_runnable() {
 	});
 }
 
-fn wrap_yes_internet(dirs: &RuaDirs, cur_dir: &str, makepkg_dir: &str) -> Command {
-	let mut command = Command::new(&dirs.wrapper_bwrap_script);
+fn wrap_yes_internet(rua_paths: &RuaPaths, cur_dir: &str, makepkg_dir: &str) -> Command {
+	let mut command = Command::new(&rua_paths.wrapper_bwrap_script);
 	command.current_dir(cur_dir);
 	command.env("PKGDEST", makepkg_dir);
 	command.env("SRCDEST", makepkg_dir);
@@ -48,7 +48,7 @@ fn wrap_yes_internet(dirs: &RuaDirs, cur_dir: &str, makepkg_dir: &str) -> Comman
 	command
 }
 
-fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
+fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
 	let dir_path = PathBuf::from(dir).join("PKGBUILD.static");
 	let mut file = File::create(&dir_path)
 		.unwrap_or_else(|err| panic!("Cannot create {}/PKGBUILD.static, {}", dir, err));
@@ -59,7 +59,7 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 	file.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	info!("Downloading sources using .SRCINFO...");
-	let command = wrap_yes_internet(dirs, dir, dir)
+	let command = wrap_yes_internet(rua_paths, dir, dir)
 		.args(&["--bind", dir, dir])
 		.args(&["makepkg", "-f", "--verifysource"])
 		.args(&["-p", "PKGBUILD.static"])
@@ -70,9 +70,9 @@ fn download_srcinfo_sources(dir: &str, dirs: &RuaDirs) {
 		.expect("Failed to clean up PKGBUILD.static");
 }
 
-pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
+pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, String> {
 	debug!("Getting srcinfo in directory {}", dir);
-	let mut command = wrap_yes_internet(dirs, dir, "/tmp");
+	let mut command = wrap_yes_internet(rua_paths, dir, "/tmp");
 	command.arg("--unshare-net");
 	command.args(&["--ro-bind", dir, dir]);
 	command
@@ -109,9 +109,9 @@ pub fn generate_srcinfo(dir: &str, dirs: &RuaDirs) -> Result<Srcinfo, String> {
 	Ok(srcinfo)
 }
 
-fn build_local(dir: &str, dirs: &RuaDirs, offline: bool, force: bool) {
+fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
-	let mut command = wrap_yes_internet(dirs, dir, dir);
+	let mut command = wrap_yes_internet(rua_paths, dir, dir);
 	if offline {
 		command.arg("--unshare-net");
 	}
@@ -134,11 +134,11 @@ fn build_local(dir: &str, dirs: &RuaDirs, offline: bool, force: bool) {
 	}
 }
 
-pub fn build_directory(dir: &str, project_dirs: &RuaDirs, offline: bool, force: bool) {
+pub fn build_directory(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	if offline {
-		download_srcinfo_sources(dir, project_dirs);
+		download_srcinfo_sources(dir, rua_paths);
 	}
-	build_local(dir, project_dirs, offline, force);
+	build_local(dir, rua_paths, offline, force);
 }
 
 pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {

@@ -1,7 +1,7 @@
 use crate::cli_args;
 use crate::cli_args::CLIColorType;
 use crate::cli_args::CliArgs;
-use crate::rua_files::RuaDirs;
+use crate::rua_files::RuaPaths;
 use chrono::Utc;
 use colored::Colorize;
 use env_logger::Env;
@@ -11,7 +11,7 @@ use std::io::Write;
 use std::process::Command;
 
 pub struct RuaEnv {
-	pub dirs: RuaDirs,
+	pub paths: RuaPaths,
 	pub pkgext: String,
 }
 
@@ -58,10 +58,10 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 		env!("CARGO_PKG_VERSION")
 	);
 
-	let dirs = RuaDirs::new();
+	let rua_paths = RuaPaths::new();
 	let mut pkgext = None;
 
-	let config = Command::new(&dirs.makepkg_config_loader)
+	let config = Command::new(&rua_paths.makepkg_config_loader)
 		.output()
 		.unwrap_or_else(|e| panic!("Internal error: failed to run makepkg config loader: {}", e))
 		.stdout;
@@ -114,7 +114,7 @@ pub fn prepare_environment(config: &CliArgs) -> RuaEnv {
 	}
 
 	RuaEnv {
-		dirs,
+		paths: rua_paths,
 		pkgext: pkgext.expect("Internal error: no PKGEXT entry in makepkg configuration?!"),
 	}
 }

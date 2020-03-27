@@ -39,7 +39,7 @@ fn main() {
 			offline,
 			target,
 		} => {
-			let paths = rua_paths::RuaPaths::new();
+			let paths = rua_paths::RuaPaths::initialize_paths();
 			action_install::install(&target, &paths, *offline, *asdeps);
 		}
 		Action::Builddir {
@@ -47,7 +47,7 @@ fn main() {
 			force,
 			target,
 		} => {
-			let paths = rua_paths::RuaPaths::new();
+			let paths = rua_paths::RuaPaths::initialize_paths();
 			action_builddir::action_builddir(target, &paths, *offline, *force);
 		}
 		Action::Search { target } => action_search::action_search(target),

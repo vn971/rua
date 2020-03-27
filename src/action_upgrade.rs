@@ -93,7 +93,7 @@ pub fn upgrade(devel: bool, printonly: bool) {
 		} else {
 			print_outdated(&outdated, &unexistent);
 			eprintln!();
-			let paths = rua_paths::RuaPaths::new();
+			let paths = rua_paths::RuaPaths::initialize_paths();
 			loop {
 				eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
 				let string = terminal_util::read_line_lowercase();

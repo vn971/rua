@@ -35,7 +35,7 @@ impl RuaPaths {
 	/// Calculates various paths and files related to RUA.
 	/// Only use for actions that require `makepkg` execution,
 	/// because it does root and single-instance checks as well.
-	pub fn new() -> RuaPaths {
+	pub fn initialize_paths() -> RuaPaths {
 		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.cache_dir())

@@ -1,5 +1,5 @@
 use crate::git_utils;
-use crate::rua_files::RuaPaths;
+use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
 use crate::wrapped;
 use log::debug;

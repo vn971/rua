@@ -1,7 +1,10 @@
 use crate::rua_environment;
 use crate::wrapped;
+use colored::Colorize;
 use directories::ProjectDirs;
 use fs2::FileExt;
+use log::debug;
+use std::env;
 use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -11,6 +14,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::exit;
+use std::process::Command;
 
 pub struct RuaPaths {
 	/// Subdirectory of ~/.cache/rua where packages are built after review
@@ -21,14 +25,17 @@ pub struct RuaPaths {
 	global_checked_tars_dir: PathBuf,
 	/// Script used to wrap `makepkg` and related commands
 	pub wrapper_bwrap_script: PathBuf,
-	/// Script used to read `makepkg` config
-	pub makepkg_config_loader: PathBuf,
+	/// makepkg configuration for PKGEXT
+	pub makepkg_pkgext: String,
 	/// Global lock to prevent concurrent access to project dirs
 	_global_lock: File,
 }
 
 impl RuaPaths {
-	pub fn new() -> RuaPaths {
+	/// Calculates various paths and files related to RUA.
+	/// Only use for actions that require `makepkg` execution,
+	/// because it does root and single-instance checks as well.
+	pub fn initialize_paths() -> RuaPaths {
 		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.cache_dir())
@@ -84,12 +91,14 @@ impl RuaPaths {
 		});
 		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");
 		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
+		let makepkg_config_loader_path = dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH);
+
 		RuaPaths {
 			global_build_dir: dirs.cache_dir().join("build"),
 			global_review_dir: dirs.config_dir().join("pkg"),
 			global_checked_tars_dir,
 			wrapper_bwrap_script: dirs.config_dir().join(WRAP_SCRIPT_PATH),
-			makepkg_config_loader: dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH),
+			makepkg_pkgext: perform_makepkg_checks_and_return_pkgext(&makepkg_config_loader_path),
 			_global_lock: locked_file,
 		}
 	}
@@ -108,6 +117,64 @@ impl RuaPaths {
 	pub fn checked_tars_dir(&self, pkg_name: &str) -> PathBuf {
 		self.global_checked_tars_dir.join(pkg_name)
 	}
+}
+
+fn perform_makepkg_checks_and_return_pkgext(makepkg_config_loader_path: &Path) -> String {
+	let mut pkgext = None;
+
+	let config = Command::new(makepkg_config_loader_path)
+		.output()
+		.unwrap_or_else(|e| panic!("Internal error: failed to run makepkg config loader: {}", e))
+		.stdout;
+	let config = String::from_utf8(config).expect("makepkg config loader returned non-UTF-8 data");
+
+	// format: `VAR=VALUE\0`
+	let config_entries = config.split_terminator('\0').map(|line| {
+		let sep_pos = line
+			.find('=')
+			.unwrap_or_else(|| panic!("Malformed config loader output, line: {}", line));
+		(&line[..sep_pos], &line[sep_pos + 1..])
+	});
+
+	// config entries won't appear here unless set
+	for (var, value) in config_entries {
+		debug!("makepkg option: {} = {:?}", var, value);
+
+		match var {
+			"PKGDEST" | "SRCDEST" | "SRCPKGDEST" | "LOGDEST" | "BUILDDIR" => {
+				let warn = "WARNING".yellow();
+				eprintln!(
+					"{}: Ignoring custom makepkg location {}. \
+						RUA needs to use custom locations for its safety model, see: \
+						https://github.com/vn971/rua#how-it-works--directories",
+					warn, var
+				);
+			}
+
+			"PKGEXT" => match value {
+				".pkg.tar" | ".pkg.tar.xz" | ".pkg.tar.lzma" | ".pkg.tar.gz" | ".pkg.tar.gzip"
+				| ".pkg.tar.zst" | ".pkg.tar.zstd" => {
+					pkgext = Some(value.to_owned());
+				}
+
+				_ => panic!(
+					"PKGEXT is set to an unsupported value: {}. \
+					Only .pkg.tar or .pkg.tar.xz or .pkg.tar.gz or .pkg.tar.zst archives are \
+					allowed for now. RUA needs those extensions to look inside the archives for \
+					'tar_check' analysis.",
+					value
+				),
+			},
+
+			_ => {}
+		}
+	}
+
+	for &var in &["PKGDEST", "SRCDEST", "SRCPKGDEST", "LOGDEST", "BUILDDIR"] {
+		env::set_var(var, "/dev/null"); // make sure we override it later
+	}
+
+	pkgext.expect("Internal error: no PKGEXT entry in makepkg configuration?!")
 }
 
 fn overwrite_file(path: &Path, content: &[u8]) {

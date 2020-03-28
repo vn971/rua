@@ -1,7 +1,7 @@
 // Commands that are run inside "bubblewrap" jail
 
-use crate::rua_files;
-use crate::rua_files::RuaPaths;
+use crate::rua_paths;
+use crate::rua_paths::RuaPaths;
 use crate::srcinfo_to_pkgbuild;
 use log::debug;
 use log::info;
@@ -171,7 +171,7 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 		.stdin
 		.as_mut()
 		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
-	let bytes = rua_files::SHELLCHECK_WRAPPER.replace("%PKGBUILD%", &target_contents);
+	let bytes = rua_paths::SHELLCHECK_WRAPPER.replace("%PKGBUILD%", &target_contents);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(
 			"Failed to write shellcheck wrapper script to shellcheck-s stdin, {}",

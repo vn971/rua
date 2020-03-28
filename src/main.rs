@@ -14,7 +14,7 @@ mod print_package_info;
 mod print_package_table;
 mod reviewing;
 mod rua_environment;
-mod rua_files;
+mod rua_paths;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
@@ -29,7 +29,7 @@ use structopt::StructOpt;
 
 fn main() {
 	let cli_args: CliArgs = CliArgs::from_args();
-	let rua_env = rua_environment::prepare_environment(&cli_args);
+	rua_environment::prepare_environment(&cli_args);
 	match &cli_args.action {
 		Action::Info { ref target } => {
 			info(target, false).unwrap();
@@ -39,14 +39,16 @@ fn main() {
 			offline,
 			target,
 		} => {
-			action_install::install(&target, &rua_env, *offline, *asdeps);
+			let paths = rua_paths::RuaPaths::initialize_paths();
+			action_install::install(&target, &paths, *offline, *asdeps);
 		}
 		Action::Builddir {
 			offline,
 			force,
 			target,
 		} => {
-			action_builddir::action_builddir(target, &rua_env, *offline, *force);
+			let paths = rua_paths::RuaPaths::initialize_paths();
+			action_builddir::action_builddir(target, &paths, *offline, *force);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
@@ -66,7 +68,12 @@ fn main() {
 			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel, printonly } => {
-			action_upgrade::upgrade(&rua_env, *devel, *printonly);
+			if *printonly {
+				action_upgrade::upgrade_printonly(*devel);
+			} else {
+				let paths = rua_paths::RuaPaths::initialize_paths();
+				action_upgrade::upgrade_real(*devel, &paths);
+			}
 		}
 	};
 }

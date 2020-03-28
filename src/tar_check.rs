@@ -2,15 +2,15 @@ use crate::terminal_util;
 extern crate libflate;
 extern crate ruzstd;
 use colored::*;
-use libflate::gzip::Decoder;
+use libflate::gzip::Decoder as GzipDecoder;
 use log::debug;
-use ruzstd::StreamingDecoder;
+use ruzstd::StreamingDecoder as ZstdDecoder;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
-use tar::*;
+use tar::Archive as TarArchive;
 use xz2::read::XzDecoder;
 
 pub fn tar_check_unwrap(tar: &Path) {
@@ -20,44 +20,52 @@ pub fn tar_check_unwrap(tar: &Path) {
 	})
 }
 
-pub fn tar_check(tar: &Path) -> Result<(), String> {
-	let archive =
-		File::open(&tar).unwrap_or_else(|e| panic!("cannot open file {}: {}", tar.display(), e));
+pub fn tar_check(path: &Path) -> Result<(), String> {
+	debug!("Checking file {}", path.display());
 
-	debug!("Checking file {}", tar.display());
+	let mut archive =
+		File::open(&path).unwrap_or_else(|e| panic!("cannot open file {}: {}", path.display(), e));
 
-	let extension = tar.extension().unwrap_or_else(|| OsStr::new(""));
-	match extension.as_bytes() {
-		b"tar" => tar_check_archive(Archive::new(archive), tar),
+	let mut lzma_decoder;
+	let mut gzip_decoder;
+	let mut zstd_decoder;
 
-		b"xz" | b"lzma" => tar_check_archive(Archive::new(XzDecoder::new(archive)), tar),
+	let extension = path.extension().unwrap_or_else(|| OsStr::new(""));
+	let decoder: &mut dyn Read = match extension.as_bytes() {
+		b"tar" => &mut archive,
+
+		b"xz" | b"lzma" => {
+			lzma_decoder = XzDecoder::new(&archive);
+			&mut lzma_decoder
+		}
 
 		b"gz" | b"gzip" => {
-			let decoder = Decoder::new(archive)
-				.map_err(|e| format!("Corrupted gzip archive {}?. Error: {}", tar.display(), e))?;
-			tar_check_archive(Archive::new(decoder), tar);
+			gzip_decoder = GzipDecoder::new(archive)
+				.map_err(|e| format!("Corrupted gzip archive {}?. Error: {}", path.display(), e))?;
+			&mut gzip_decoder
 		}
 
 		b"zst" | b"zstd" => {
-			let mut archive = archive;
-			let decoder = StreamingDecoder::new(&mut archive)
-				.map_err(|e| format!("Corrupted zstd archive {}?. Error: {}", tar.display(), e))?;
-			tar_check_archive(Archive::new(decoder), tar);
+			zstd_decoder = ZstdDecoder::new(&mut archive)
+				.map_err(|e| format!("Corrupted zstd archive {}?. Error: {}", path.display(), e))?;
+			&mut zstd_decoder
 		}
 
 		_ => {
 			return Err(format!(
 				"Archive {} cannot be analyzed. \
 				Only .tar or .tar.xz or .tar.gz or .tar.zst files are supported",
-				tar.display()
+				path.display()
 			))
 		}
 	};
 
+	tar_check_archive(TarArchive::new(decoder), path);
+
 	Ok(())
 }
 
-fn tar_check_archive<R: Read>(mut archive: Archive<R>, path: &Path) {
+fn tar_check_archive(mut archive: TarArchive<&mut dyn Read>, path: &Path) {
 	let dir = path.parent().unwrap_or_else(|| Path::new("."));
 	let path = path.display();
 	let mut install_file = String::new();

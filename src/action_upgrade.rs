@@ -65,7 +65,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths) {
 type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
 type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
 
-fn calculate_upgrade<'p>(alpm: &'p alpm::Alpm, devel: bool) -> (OutdatedPkgs<'p>, ForeignPkgs<'p>) {
+fn calculate_upgrade(alpm: &alpm::Alpm, devel: bool) -> (OutdatedPkgs, ForeignPkgs) {
 	let pkg_cache = alpm
 		.localdb()
 		.pkgs()

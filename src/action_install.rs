@@ -121,9 +121,12 @@ fn install_all(
 		for (pkgbase, _depth, _split) in &packages {
 			let review_dir = rua_env.dirs.review_dir(pkgbase);
 			let build_dir = rua_env.dirs.build_dir(pkgbase);
-			let build_dir = build_dir
-				.canonicalize()
-				.unwrap_or_else(|e| panic!("Cannot canonicalize path {:?}, {}", build_dir, e));
+			let build_dir = build_dir.canonicalize().unwrap_or_else(|err| {
+				panic!(
+					"Failed to canonicalize build dir {:?} for pkgbase {}, {}",
+					build_dir, pkgbase, err
+				)
+			});
 			rm_rf::ensure_removed(&build_dir).unwrap_or_else(|err| {
 				panic!("Failed to remove old build dir {:?}, {}", &build_dir, err)
 			});

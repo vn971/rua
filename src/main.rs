@@ -72,7 +72,7 @@ fn main() {
 				action_upgrade::upgrade_printonly(*devel);
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, paths);
+				action_upgrade::upgrade_real(*devel, &paths);
 			}
 		}
 	};

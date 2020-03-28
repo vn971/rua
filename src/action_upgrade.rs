@@ -24,31 +24,62 @@ fn pkg_is_devel(name: &str) -> bool {
 }
 
 pub fn upgrade_printonly(devel: bool) {
-	upgrade(devel, UpgradeType::Printonly);
-}
-pub fn upgrade_real(devel: bool, rua_paths: RuaPaths) {
-	// we could also calculate paths inside `upgrade`, but we semantically want it in "main.rs"
-	upgrade(devel, UpgradeType::Real { paths: rua_paths });
-}
-
-enum UpgradeType {
-	Printonly,
-	Real { paths: RuaPaths },
-}
-
-fn upgrade(devel: bool, upgrade_type: UpgradeType) {
 	let alpm = pacman::create_alpm();
+	let (outdated, unexistent) = calculate_upgrade(&alpm, devel);
+
+	if outdated.is_empty() && unexistent.is_empty() {
+		std::process::exit(-1)
+	} else {
+		for (pkg, _, _) in outdated {
+			println!("{}", pkg);
+		}
+		for (pkg, _) in unexistent {
+			println!("{}", pkg);
+		}
+	}
+}
+
+pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths) {
+	let alpm = pacman::create_alpm();
+	let (outdated, unexistent) = calculate_upgrade(&alpm, devel);
+
+	if outdated.is_empty() && unexistent.is_empty() {
+		eprintln!("Good job! All AUR packages are up-to-date.");
+	} else {
+		print_outdated(&outdated, &unexistent);
+		eprintln!();
+		loop {
+			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
+			let string = terminal_util::read_line_lowercase();
+			if &string == "o" {
+				let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
+				action_install::install(&outdated, rua_paths, false, true);
+				break;
+			} else if &string == "x" {
+				break;
+			}
+		}
+	}
+}
+
+type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
+type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
+
+fn calculate_upgrade<'p>(alpm: &'p alpm::Alpm, devel: bool) -> (OutdatedPkgs<'p>, ForeignPkgs<'p>) {
 	let pkg_cache = alpm
 		.localdb()
 		.pkgs()
 		.expect("Could not get alpm.localdb().pkgs() packages");
+
 	let system_ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
 		warn!("Could not get ignored packages, {}", err);
 		HashSet::new()
 	});
+
 	let (ignored, non_ignored) = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
 		.partition::<Vec<_>, _>(|pkg| system_ignored_packages.contains(pkg.name()));
+
 	if !ignored.is_empty() {
 		let ignored_string = ignored
 			.iter()
@@ -60,69 +91,40 @@ fn upgrade(devel: bool, upgrade_type: UpgradeType) {
 			ignored_string
 		);
 	}
+
 	let aur_pkgs = non_ignored
 		.iter()
 		.map(|pkg| (pkg.name(), pkg.version()))
 		.collect::<Vec<_>>();
-	let aur_pkgs_string = non_ignored
+
+	let aur_pkgs_string = aur_pkgs
 		.iter()
-		.map(|pkg| pkg.name())
+		.map(|&(name, _version)| name)
 		.collect::<Vec<_>>()
 		.join(" ");
 	debug!("You have the following packages outside of main repos installed:");
 	debug!("{}", aur_pkgs_string);
 	debug!("");
-	let mut up_to_date = Vec::new();
+
 	let mut outdated = Vec::new();
 	let mut unexistent = Vec::new();
+
 	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| *p).collect_vec());
 	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
+
 	for (pkg, local_ver) in aur_pkgs {
 		let raur_ver = info_map.get(pkg).map(|p| p.version.to_string());
+
 		if let Some(raur_ver) = raur_ver {
 			if local_ver < Version::new(&raur_ver) || (devel && pkg_is_devel(pkg)) {
 				outdated.push((pkg, local_ver.to_string(), raur_ver));
-			} else {
-				up_to_date.push(pkg);
 			}
 		} else {
 			unexistent.push((pkg, local_ver.to_string()));
 		}
 	}
-	match upgrade_type {
-		UpgradeType::Printonly => {
-			if outdated.is_empty() && unexistent.is_empty() {
-				std::process::exit(-1)
-			} else {
-				for (pkg, _, _) in outdated {
-					println!("{}", pkg);
-				}
-				for (pkg, _) in unexistent {
-					println!("{}", pkg);
-				}
-			}
-		}
-		UpgradeType::Real { paths } => {
-			if outdated.is_empty() && unexistent.is_empty() {
-				eprintln!("Good job! All AUR packages are up-to-date.");
-			} else {
-				print_outdated(&outdated, &unexistent);
-				eprintln!();
-				loop {
-					eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
-					let string = terminal_util::read_line_lowercase();
-					if &string == "o" {
-						let outdated: Vec<String> =
-							outdated.iter().map(|o| o.0.to_string()).collect();
-						action_install::install(&outdated, &paths, false, true);
-						break;
-					} else if &string == "x" {
-						break;
-					}
-				}
-			}
-		}
-	}
+
+	(outdated, unexistent)
 }
 
 fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, String)]) {

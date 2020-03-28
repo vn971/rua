@@ -35,6 +35,18 @@ pub fn assert_bubblewrap_runnable() {
 	});
 }
 
+#[derive(Clone, Copy)]
+pub struct Sandbox<'cmd> {
+	jail_cmd: &'cmd Path,
+}
+
+#[derive(Default)]
+struct SandboxOpts {
+	network_access: bool,
+	writable_pkgbuild_dir: bool,
+	_non_exhaustive: (),
+}
+
 impl<'cmd> Sandbox<'cmd> {
 	pub fn new(rua_paths: &'cmd RuaPaths) -> Self {
 		Self {
@@ -69,34 +81,6 @@ impl<'cmd> Sandbox<'cmd> {
 		command.arg("makepkg");
 		command
 	}
-}
-
-fn download_srcinfo_sources(sandbox: Sandbox, dir: &Path) {
-	let static_pkgbuild_path = dir.join("PKGBUILD.static");
-	let srcinfo_path = dir
-		.join(".SRCINFO")
-		.canonicalize()
-		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir.display(), e));
-
-	File::create(&static_pkgbuild_path)
-		.unwrap_or_else(|e| panic!("Cannot create {}/PKGBUILD.static, {}", dir.display(), e))
-		.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
-		.expect("cannot write to PKGBUILD.static");
-
-	info!("Downloading sources using .SRCINFO...");
-
-	let makepkg_result = sandbox
-		.makepkg(dir, None, SandboxOpts {
-			writable_pkgbuild_dir: true,
-			..SandboxOpts::default()
-		})
-		.args(&["--force", "--verifysource", "-p", "PKGBUILD.static"])
-		.status()
-		.unwrap_or_else(|e| panic!("Failed to fetch sources in {}, {}", dir.display(), e));
-
-	assert!(makepkg_result.success(), "Failed to fetch PKGBUILD sources");
-
-	fs::remove_file(static_pkgbuild_path).expect("Failed to clean up PKGBUILD.static");
 }
 
 pub fn generate_srcinfo(sandbox: Sandbox, dir: &Path) -> Result<Srcinfo, String> {
@@ -170,18 +154,6 @@ pub fn build_directory(sandbox: Sandbox, dir: &Path, offline: bool, force: bool)
 	}
 }
 
-#[derive(Clone, Copy)]
-pub struct Sandbox<'cmd> {
-	jail_cmd: &'cmd Path,
-}
-
-#[derive(Default)]
-struct SandboxOpts {
-	network_access: bool,
-	writable_pkgbuild_dir: bool,
-	_non_exhaustive: (),
-}
-
 pub fn shellcheck(target: Option<PathBuf>) -> Result<(), String> {
 	let target = match target {
 		None => Path::new("/dev/stdin").to_path_buf(),
@@ -236,4 +208,32 @@ pub fn shellcheck(target: Option<PathBuf>) -> Result<(), String> {
 	} else {
 		Err("".to_string())
 	}
+}
+
+fn download_srcinfo_sources(sandbox: Sandbox, dir: &Path) {
+	let static_pkgbuild_path = dir.join("PKGBUILD.static");
+	let srcinfo_path = dir
+		.join(".SRCINFO")
+		.canonicalize()
+		.unwrap_or_else(|e| panic!("Cannot resolve .SRCINFO path in {}, {}", dir.display(), e));
+
+	File::create(&static_pkgbuild_path)
+		.unwrap_or_else(|e| panic!("Cannot create {}/PKGBUILD.static, {}", dir.display(), e))
+		.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
+		.expect("cannot write to PKGBUILD.static");
+
+	info!("Downloading sources using .SRCINFO...");
+
+	let makepkg_result = sandbox
+		.makepkg(dir, None, SandboxOpts {
+			writable_pkgbuild_dir: true,
+			..SandboxOpts::default()
+		})
+		.args(&["--force", "--verifysource", "-p", "PKGBUILD.static"])
+		.status()
+		.unwrap_or_else(|e| panic!("Failed to fetch sources in {}, {}", dir.display(), e));
+
+	assert!(makepkg_result.success(), "Failed to fetch PKGBUILD sources");
+
+	fs::remove_file(static_pkgbuild_path).expect("Failed to clean up PKGBUILD.static");
 }

@@ -28,7 +28,7 @@ pub fn upgrade_printonly(devel: bool) {
 	let (outdated, unexistent) = calculate_upgrade(&alpm, devel);
 
 	if outdated.is_empty() && unexistent.is_empty() {
-		std::process::exit(-1)
+		eprintln!("Good job! All AUR packages are up-to-date.");
 	} else {
 		for (pkg, _, _) in outdated {
 			println!("{}", pkg);

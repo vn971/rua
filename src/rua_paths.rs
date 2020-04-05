@@ -38,8 +38,19 @@ impl RuaPaths {
 	pub fn initialize_paths() -> RuaPaths {
 		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
-		std::fs::create_dir_all(dirs.cache_dir())
-			.expect("Failed to create project cache directory");
+		std::fs::create_dir_all(dirs.config_dir())
+			.expect("Failed to create project config directory");
+		let locked_file = File::open(dirs.config_dir()).unwrap_or_else(|err| {
+			panic!(
+				"Failed to open config dir {:?} for locking, {}",
+				dirs.config_dir(),
+				err
+			);
+		});
+		locked_file.try_lock_exclusive().unwrap_or_else(|_| {
+			eprintln!("Error: another RUA instance already running.");
+			std::process::exit(2)
+		});
 		rm_rf::ensure_removed(dirs.config_dir().join(".system")).ok();
 		std::fs::create_dir_all(dirs.config_dir().join(".system"))
 			.expect("Failed to create project config directory");
@@ -72,26 +83,21 @@ impl RuaPaths {
 			&dirs.config_dir().join(".system/wrap_args.sh.example"),
 			WRAP_ARGS_EXAMPLE,
 		);
+		let makepkg_config_loader_path = dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH);
+
+		std::fs::create_dir_all(dirs.cache_dir())
+			.expect("Failed to create project cache directory");
+
 		if users::get_current_uid() == 0 {
 			eprintln!("RUA does not allow building as root.");
 			eprintln!("Also, makepkg will not allow you building as root anyway.");
 			exit(1)
 		}
+
 		wrapped::check_bubblewrap_runnable();
-		let locked_file = File::open(dirs.config_dir()).unwrap_or_else(|err| {
-			panic!(
-				"Failed to open config dir {:?} for locking, {}",
-				dirs.config_dir(),
-				err
-			);
-		});
-		locked_file.try_lock_exclusive().unwrap_or_else(|_| {
-			eprintln!("Error: another RUA instance already running.");
-			std::process::exit(2)
-		});
+
 		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");
 		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
-		let makepkg_config_loader_path = dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH);
 
 		RuaPaths {
 			global_build_dir: dirs.cache_dir().join("build"),

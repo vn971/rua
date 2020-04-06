@@ -1,7 +1,6 @@
 use crate::action_install;
 use crate::aur_rpc_utils;
 use crate::pacman;
-use crate::print_package_table;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
 use alpm::Version;
@@ -140,8 +139,8 @@ fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, Stri
 	}
 	for (pkg, local) in unexistent {
 		table.add_row(row![
-			print_package_table::trunc(pkg, 39).yellow(),
-			print_package_table::trunc(local, 19),
+			pkg.yellow(),
+			local,
 			"NOT FOUND, ignored".red(),
 		]);
 	}

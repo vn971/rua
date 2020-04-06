@@ -50,12 +50,12 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths) {
 		eprintln!();
 		loop {
 			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
-			let string = terminal_util::read_line_lowercase();
-			if &string == "o" {
+			let user_input = terminal_util::read_line_lowercase();
+			if &user_input == "o" {
 				let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
 				action_install::install(&outdated, rua_paths, false, true);
 				break;
-			} else if &string == "x" {
+			} else if &user_input == "x" {
 				break;
 			}
 		}

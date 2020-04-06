@@ -111,5 +111,5 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 }
 
 /// environment variable that we expect the user might fill
-// !WARNING! make sure it's the same as in CliArgs above.
+// !WARNING! If you change this, make sure the value the same as documented in CliArgs above.
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";

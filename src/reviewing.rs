@@ -60,23 +60,23 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 		} else {
 			eprint!("[O]=(cannot use the package until you merge) ");
 		}
-		let string = terminal_util::read_line_lowercase();
+		let user_input = terminal_util::read_line_lowercase();
 
-		if &string == "t" {
+		if &user_input == "t" {
 			eprintln!("Changes that you make will be rebased upon future upgrades.");
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
-		} else if &string == "s" && is_upstream_merged {
+		} else if &user_input == "s" && is_upstream_merged {
 			if let Err(err) = wrapped::shellcheck(&Some(dir.join("PKGBUILD"))) {
 				eprintln!("{}", err);
 			};
-		} else if &string == "d" && is_upstream_merged {
+		} else if &user_input == "d" && is_upstream_merged {
 			git_utils::show_upstream_diff(dir, false);
-		} else if &string == "d" && !is_upstream_merged {
+		} else if &user_input == "d" && !is_upstream_merged {
 			git_utils::show_upstream_diff(dir, true);
-		} else if &string == "m" && !is_upstream_merged {
+		} else if &user_input == "m" && !is_upstream_merged {
 			git_utils::merge_upstream(dir);
-		} else if &string == "o" && is_upstream_merged {
+		} else if &user_input == "o" && is_upstream_merged {
 			break;
 		}
 	}

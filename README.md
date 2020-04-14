@@ -71,8 +71,7 @@ If you use development version `pacman-git`, use `cargo install --features git r
 | `~/.config/rua/wrap_args.d/` | entrypoint for basic configuration of the security wrapper script |
 | `~/.config/rua/.system/` | internal files |
 | `$GNUPGHOME/pubring.kbx` <br/> `$GNUPGHOME/pubring.gpg` | read-only access to these two files is granted when building, to allow signature verification |
-
-All other files are not accessed by RUA and inaccessible by built packages (see Safety section below).
+| All other files | All other files in `~` are not accessed by RUA and inaccessible by built packages (see Safety section below) |
 
 
 ## How it works / reviewing
@@ -124,7 +123,7 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 * Development packages such as "-git" packages are only rebuilt when running `rua upgrade --devel`. No version checks are done to avoid unnecessary rebuilds. Merge requests welcomed.
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever dependencies re-downloading with each build. See [safety](#safety) section below on how to whitelist certain directories.
 * Environment variables "PKGDEST" and "BUILDDIR" of makepkg.conf are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool.
-* Due of [safety](#Safety) restrictions, [X11 access might not work](./docs/x11access.md) during build.
+* Due of safety restrictions, [X11 access might not work](./docs/x11access.md) during build.
 * Due to a [bug in fakeroot](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=909727), creation of root-owned packages inside PKGBUILD-s `package()` does not work. This happens when archives are extracted in `package()` function. Doing it in `prepare()` or giving a key like `tar --no-same-owner` is the work-around.
 
 
@@ -147,7 +146,7 @@ If asked from CLI, builds can be run in offline mode.
 
 ## Other
 
-The RUA name can be read as "RUst Aur jail", also an inversion of "AUR".
+The RUA name is an inversion of "AUR".
 
 This work was made possible by the excellent libraries of
 [libalpm](https://github.com/jameslzhu/alpm),

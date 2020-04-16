@@ -16,6 +16,7 @@ use std::path::PathBuf;
 use std::process::exit;
 use std::process::Command;
 
+/// All directories must exist upon `RuaPaths` creation.
 pub struct RuaPaths {
 	/// Subdirectory of ~/.cache/rua where packages are built after review
 	pub global_build_dir: PathBuf,
@@ -85,9 +86,6 @@ impl RuaPaths {
 		);
 		let makepkg_config_loader_path = dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH);
 
-		std::fs::create_dir_all(dirs.cache_dir())
-			.expect("Failed to create project cache directory");
-
 		if users::get_current_uid() == 0 {
 			eprintln!("RUA does not allow building as root.");
 			eprintln!("Also, makepkg will not allow you building as root anyway.");
@@ -96,12 +94,22 @@ impl RuaPaths {
 
 		wrapped::check_bubblewrap_runnable();
 
+		let global_build_dir = dirs.cache_dir().join("build");
 		let global_checked_tars_dir = dirs.data_local_dir().join("checked_tars");
-		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
+		let global_review_dir = dirs.config_dir().join("pkg");
 
+		std::fs::create_dir_all(&global_build_dir)
+			.expect("Failed to create global build directory");
+		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
+		std::fs::create_dir_all(&global_checked_tars_dir)
+			.expect("Failed to create global checked_tars directory");
+		std::fs::create_dir_all(&global_review_dir)
+			.expect("Failed to create global review directory");
+
+		// All directories must exist upon `RuaPaths` creation.
 		RuaPaths {
-			global_build_dir: dirs.cache_dir().join("build"),
-			global_review_dir: dirs.config_dir().join("pkg"),
+			global_build_dir,
+			global_review_dir,
 			global_checked_tars_dir,
 			wrapper_bwrap_script: dirs.config_dir().join(WRAP_SCRIPT_PATH),
 			makepkg_pkgext: perform_makepkg_checks_and_return_pkgext(&makepkg_config_loader_path),

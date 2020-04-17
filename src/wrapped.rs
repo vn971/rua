@@ -21,12 +21,14 @@ use std::sync::Once;
 static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
 pub fn check_bubblewrap_runnable() {
 	BUBBLEWRAP_IS_RUNNABLE.call_once(|| {
-		if !Command::new("bwrap")
+		let command = Command::new("bwrap")
 			.args(&["--ro-bind", "/", "/", "true"])
-			.status()
-			.expect("bwrap binary not found. RUA uses bubblewrap for security isolation.")
-			.success()
-		{
+			.status();
+		let command = command.unwrap_or_else(|err| {
+			eprintln!("bwrap binary not found. RUA uses bubblewrap for security isolation. {}", err);
+			std::process::exit(4)
+		});
+		if !command.success() {
 			eprintln!("Failed to run bwrap.");
 			eprintln!(
 				"A possible cause is if RUA itself is run in jail (docker, bwrap, firejail,..)."

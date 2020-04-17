@@ -37,6 +37,12 @@ impl RuaPaths {
 	/// Only use for actions that require `makepkg` execution,
 	/// because it does root and single-instance checks as well.
 	pub fn initialize_paths() -> RuaPaths {
+		if users::get_current_uid() == 0 {
+			eprintln!("RUA does not allow building as root.");
+			eprintln!("Also, makepkg will not allow you building as root anyway.");
+			exit(1)
+		}
+
 		let dirs = &ProjectDirs::from("com.gitlab", "vn971", "rua")
 			.expect("Failed to determine XDG directories");
 		std::fs::create_dir_all(dirs.config_dir())
@@ -85,12 +91,6 @@ impl RuaPaths {
 			WRAP_ARGS_EXAMPLE,
 		);
 		let makepkg_config_loader_path = dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH);
-
-		if users::get_current_uid() == 0 {
-			eprintln!("RUA does not allow building as root.");
-			eprintln!("Also, makepkg will not allow you building as root anyway.");
-			exit(1)
-		}
 
 		wrapped::check_bubblewrap_runnable();
 

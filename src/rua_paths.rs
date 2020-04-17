@@ -100,6 +100,12 @@ impl RuaPaths {
 
 		std::fs::create_dir_all(&global_build_dir)
 			.expect("Failed to create global build directory");
+		let global_build_dir = global_build_dir.canonicalize().unwrap_or_else(|err| {
+			panic!(
+				"Failed to canonicalize global build dir {:?}, {}",
+				global_build_dir, err
+			)
+		});
 		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
 		std::fs::create_dir_all(&global_checked_tars_dir)
 			.expect("Failed to create global checked_tars directory");

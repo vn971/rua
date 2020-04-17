@@ -6,6 +6,7 @@ use crate::srcinfo_to_pkgbuild;
 use log::debug;
 use log::info;
 use log::trace;
+use log::error;
 use srcinfo::Srcinfo;
 use std::fs;
 use std::fs::File;
@@ -25,15 +26,20 @@ pub fn check_bubblewrap_runnable() {
 			.args(&["--ro-bind", "/", "/", "true"])
 			.status();
 		let command = command.unwrap_or_else(|err| {
-			eprintln!("bwrap binary not found. RUA uses bubblewrap for security isolation. {}", err);
+			error!(
+				"bwrap binary not found. RUA uses bubblewrap for security isolation. \
+				Please install via `pacman -S bubblewrap-suid` (for hardened kernel) \
+				or `pacman -S bubblewrap` (otherwise). Underlying error: {}",
+				err
+			);
 			std::process::exit(4)
 		});
 		if !command.success() {
-			eprintln!("Failed to run bwrap.");
-			eprintln!(
+			error!("Failed to run bwrap.");
+			error!(
 				"A possible cause is if RUA itself is run in jail (docker, bwrap, firejail,..)."
 			);
-			eprintln!("If so, see https://github.com/vn971/rua/issues/8");
+			error!("If so, see https://github.com/vn971/rua/issues/8");
 			std::process::exit(4)
 		}
 	});

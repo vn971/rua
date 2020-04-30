@@ -27,7 +27,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua install xcalib`  # install or upgrade a package
 
-`rua upgrade`  # upgrade all AUR packages. You can selectively ignore packages by adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`). You can upgrade only specific packages with `rua install A B C`.
+`rua upgrade`  # upgrade all AUR packages. You can selectively ignore packages by using `--ignore` or adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`). You can upgrade only specific packages with `rua install A B C`.
 
 `rua shellcheck path/to/my/PKGBUILD`  # run `shellcheck` on a PKGBUILD, discovering potential problems with the build instruction. Takes care of PKGBUILD-specific variables.
 

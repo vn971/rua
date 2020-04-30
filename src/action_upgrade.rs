@@ -22,9 +22,9 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade_printonly(devel: bool) {
+pub fn upgrade_printonly(devel: bool, ignored:&HashSet<String>) {
 	let alpm = pacman::create_alpm();
-	let (outdated, unexistent) = calculate_upgrade(&alpm, devel);
+	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
 
 	if outdated.is_empty() && unexistent.is_empty() {
 		eprintln!("Good job! All AUR packages are up-to-date.");
@@ -38,9 +38,9 @@ pub fn upgrade_printonly(devel: bool) {
 	}
 }
 
-pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths) {
+pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<String>) {
 	let alpm = pacman::create_alpm();
-	let (outdated, unexistent) = calculate_upgrade(&alpm, devel);
+	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
 
 	if outdated.is_empty() && unexistent.is_empty() {
 		eprintln!("Good job! All AUR packages are up-to-date.");
@@ -64,7 +64,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths) {
 type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
 type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
 
-fn calculate_upgrade(alpm: &alpm::Alpm, devel: bool) -> (OutdatedPkgs, ForeignPkgs) {
+fn calculate_upgrade<'pkgs>(alpm: &'pkgs alpm::Alpm, devel: bool, locally_ignored_packages: &HashSet<String>) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
 	let pkg_cache = alpm
 		.localdb()
 		.pkgs()
@@ -77,7 +77,7 @@ fn calculate_upgrade(alpm: &alpm::Alpm, devel: bool) -> (OutdatedPkgs, ForeignPk
 
 	let (ignored, non_ignored) = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.partition::<Vec<_>, _>(|pkg| system_ignored_packages.contains(pkg.name()));
+		.partition::<Vec<_>, _>(|pkg| locally_ignored_packages.contains(pkg.name()) || system_ignored_packages.contains(pkg.name()));
 
 	if !ignored.is_empty() {
 		let ignored_string = ignored

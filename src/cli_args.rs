@@ -107,6 +107,12 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts)."
 		)]
 		printonly: bool,
+		#[structopt(
+			long = "ignore",
+			short = "I",
+			help = "Don't upgrade the specified package. Can be used more than once."
+		)]
+		ignored: Vec<String>,
 	},
 }
 

@@ -109,8 +109,7 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 		printonly: bool,
 		#[structopt(
 			long = "ignore",
-			short = "I",
-			help = "Don't upgrade the specified package. Can be used more than once."
+			help = "Don't upgrade the specified package(s). Can be used more than once and accepts multiple arguments."
 		)]
 		ignored: Vec<String>,
 	},

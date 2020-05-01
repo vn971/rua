@@ -24,6 +24,7 @@ use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
 use cli_args::Action;
 use cli_args::CliArgs;
+use std::collections::HashSet;
 use std::process::exit;
 use structopt::StructOpt;
 
@@ -67,12 +68,17 @@ fn main() {
 			);
 			eprintln!("Finished checking package: {:?}", target);
 		}
-		Action::Upgrade { devel, printonly } => {
+		Action::Upgrade {
+			devel,
+			printonly,
+			ignored,
+		} => {
+			let ignored_set = ignored.split(',').collect::<HashSet<&str>>();
 			if *printonly {
-				action_upgrade::upgrade_printonly(*devel);
+				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, &paths);
+				action_upgrade::upgrade_real(*devel, &paths, &ignored_set);
 			}
 		}
 	};

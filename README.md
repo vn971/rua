@@ -117,8 +117,8 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 
 ## Limitations
 
-* This tool focuses on AUR packages only, you cannot `-Suy` your system with it. Use pacman for that.
-* Optional dependencies (optdepends) are not installed. They are skipped. Check them out manually when you review PKGBUILD.
+* This tool focuses on AUR packages only, you cannot `-Suy` your system with it. Please use pacman for that.
+* Optional dependencies (optdepends) are not installed. They are skipped. Please check them out manually when you review PKGBUILD.
 * The tool does not handle versions. It will always install the latest version possible, and it will always assume that latest version is enough.
 * Development packages such as "-git" packages are only rebuilt when running `rua upgrade --devel`. No version checks are done to avoid unnecessary rebuilds. Merge requests welcomed.
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever dependencies re-downloading with each build. See [safety](#safety) section below on how to whitelist certain directories.

@@ -24,9 +24,9 @@ use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
 use cli_args::Action;
 use cli_args::CliArgs;
+use std::collections::HashSet;
 use std::process::exit;
 use structopt::StructOpt;
-use std::collections::HashSet;
 
 fn main() {
 	let cli_args: CliArgs = CliArgs::from_args();
@@ -68,8 +68,12 @@ fn main() {
 			);
 			eprintln!("Finished checking package: {:?}", target);
 		}
-		Action::Upgrade { devel, printonly , ignored} => {
-			let ignored_set=ignored.split(',').collect::<HashSet<&str>>();
+		Action::Upgrade {
+			devel,
+			printonly,
+			ignored,
+		} => {
+			let ignored_set = ignored.split(',').collect::<HashSet<&str>>();
 			if *printonly {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {

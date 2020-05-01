@@ -22,7 +22,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade_printonly(devel: bool, ignored:&HashSet<&str>) {
+pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 	let alpm = pacman::create_alpm();
 	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
 
@@ -64,7 +64,11 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
 type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
 
-fn calculate_upgrade<'pkgs>(alpm: &'pkgs alpm::Alpm, devel: bool, locally_ignored_packages: &HashSet<&str>) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
+fn calculate_upgrade<'pkgs>(
+	alpm: &'pkgs alpm::Alpm,
+	devel: bool,
+	locally_ignored_packages: &HashSet<&str>,
+) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
 	let pkg_cache = alpm
 		.localdb()
 		.pkgs()
@@ -77,7 +81,10 @@ fn calculate_upgrade<'pkgs>(alpm: &'pkgs alpm::Alpm, devel: bool, locally_ignore
 
 	let (ignored, non_ignored) = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.partition::<Vec<_>, _>(|pkg| locally_ignored_packages.contains(pkg.name()) || system_ignored_packages.contains(pkg.name()));
+		.partition::<Vec<_>, _>(|pkg| {
+			locally_ignored_packages.contains(pkg.name())
+				|| system_ignored_packages.contains(pkg.name())
+		});
 
 	if !ignored.is_empty() {
 		let ignored_string = ignored

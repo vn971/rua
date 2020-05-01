@@ -22,7 +22,7 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade_printonly(devel: bool, ignored:&HashSet<String>) {
+pub fn upgrade_printonly(devel: bool, ignored:&HashSet<&str>) {
 	let alpm = pacman::create_alpm();
 	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
 
@@ -38,7 +38,7 @@ pub fn upgrade_printonly(devel: bool, ignored:&HashSet<String>) {
 	}
 }
 
-pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<String>) {
+pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) {
 	let alpm = pacman::create_alpm();
 	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
 
@@ -64,7 +64,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<String>
 type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
 type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
 
-fn calculate_upgrade<'pkgs>(alpm: &'pkgs alpm::Alpm, devel: bool, locally_ignored_packages: &HashSet<String>) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
+fn calculate_upgrade<'pkgs>(alpm: &'pkgs alpm::Alpm, devel: bool, locally_ignored_packages: &HashSet<&str>) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
 	let pkg_cache = alpm
 		.localdb()
 		.pkgs()

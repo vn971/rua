@@ -69,7 +69,7 @@ fn main() {
 			eprintln!("Finished checking package: {:?}", target);
 		}
 		Action::Upgrade { devel, printonly , ignored} => {
-			let ignored_set=ignored.iter().cloned().collect::<HashSet<String>>();
+			let ignored_set=ignored.split(',').collect::<HashSet<&str>>();
 			if *printonly {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {

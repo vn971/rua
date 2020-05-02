@@ -73,7 +73,10 @@ fn main() {
 			printonly,
 			ignored,
 		} => {
-			let ignored_set = ignored.split(',').collect::<HashSet<&str>>();
+			let ignored_set = match ignored {
+				Some(ignored_packages) => ignored_packages.split(',').collect::<HashSet<&str>>(),
+				None => HashSet::new(),
+			};
 			if *printonly {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {

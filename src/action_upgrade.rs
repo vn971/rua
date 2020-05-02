@@ -24,15 +24,15 @@ fn pkg_is_devel(name: &str) -> bool {
 
 pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 	let alpm = pacman::create_alpm();
-	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
+	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
 
-	if outdated.is_empty() && unexistent.is_empty() {
+	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!("Good job! All AUR packages are up-to-date.");
 	} else {
 		for (pkg, _, _) in outdated {
 			println!("{}", pkg);
 		}
-		for (pkg, _) in unexistent {
+		for (pkg, _) in nonexistent {
 			println!("{}", pkg);
 		}
 	}
@@ -40,12 +40,12 @@ pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 
 pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) {
 	let alpm = pacman::create_alpm();
-	let (outdated, unexistent) = calculate_upgrade(&alpm, devel, ignored);
+	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
 
-	if outdated.is_empty() && unexistent.is_empty() {
+	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!("Good job! All AUR packages are up-to-date.");
 	} else {
-		print_outdated(&outdated, &unexistent);
+		print_outdated(&outdated, &nonexistent);
 		eprintln!();
 		loop {
 			eprint!("Do you wish to upgrade them? [O]=ok, [X]=exit. ");
@@ -113,7 +113,7 @@ fn calculate_upgrade<'pkgs>(
 	debug!("");
 
 	let mut outdated = Vec::new();
-	let mut unexistent = Vec::new();
+	let mut nonexistent = Vec::new();
 
 	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| *p).collect_vec());
 	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
@@ -126,14 +126,14 @@ fn calculate_upgrade<'pkgs>(
 				outdated.push((pkg, local_ver.to_string(), raur_ver));
 			}
 		} else {
-			unexistent.push((pkg, local_ver.to_string()));
+			nonexistent.push((pkg, local_ver.to_string()));
 		}
 	}
 
-	(outdated, unexistent)
+	(outdated, nonexistent)
 }
 
-fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, String)]) {
+fn print_outdated(outdated: &[(&str, String, String)], nonexistent: &[(&str, String)]) {
 	let mut table = Table::new();
 	table.set_titles(row![
 		"Package".underline(),
@@ -144,7 +144,7 @@ fn print_outdated(outdated: &[(&str, String, String)], unexistent: &[(&str, Stri
 	for (pkg, local, remote) in outdated {
 		table.add_row(row![pkg.yellow(), local, remote.green(),]);
 	}
-	for (pkg, local) in unexistent {
+	for (pkg, local) in nonexistent {
 		table.add_row(row![pkg.yellow(), local, "NOT FOUND, ignored".red(),]);
 	}
 	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();

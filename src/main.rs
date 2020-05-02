@@ -73,7 +73,10 @@ fn main() {
 			printonly,
 			ignored,
 		} => {
-			let ignored_set = ignored.split(',').collect::<HashSet<&str>>();
+			let ignored_set = ignored
+				.iter()
+				.flat_map(|i| i.split(','))
+				.collect::<HashSet<&str>>();
 			if *printonly {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {

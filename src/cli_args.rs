@@ -111,7 +111,7 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 			long = "ignore",
 			help = "Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`."
 		)]
-		ignored: String,
+		ignored: Option<String>,
 	},
 }
 

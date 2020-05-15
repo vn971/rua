@@ -20,6 +20,9 @@ pub fn action_search(keywords: &[String]) {
 	let result = raur::search_by(query, SearchBy::NameDesc);
 	match result {
 		Ok(mut result) => {
+			if result.is_empty() {
+				std::process::exit(1)
+			};
 			for filter in &keywords[1..] {
 				result.retain(|p| is_package_ok(p, filter));
 			}

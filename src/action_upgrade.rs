@@ -27,7 +27,10 @@ pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
 
 	if outdated.is_empty() && nonexistent.is_empty() {
-		eprintln!("Good job! All AUR packages are up-to-date.");
+		eprintln!(
+			"{}",
+			"Good job! All AUR packages are up-to-date.".bright_green()
+		);
 	} else {
 		for (pkg, _, _) in outdated {
 			println!("{}", pkg);
@@ -43,7 +46,10 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
 
 	if outdated.is_empty() && nonexistent.is_empty() {
-		eprintln!("Good job! All AUR packages are up-to-date.");
+		eprintln!(
+			"{}",
+			"Good job! All AUR packages are up-to-date.".bright_green()
+		);
 	} else {
 		print_outdated(&outdated, &nonexistent);
 		eprintln!();

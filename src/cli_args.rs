@@ -21,7 +21,7 @@ pub struct CliArgs {
 		case_insensitive = true,
 		default_value = "auto",
 		long = "color",
-		help = "set colors", // the rest of the description is filled in by structopt
+		help = "Set colors. Respects NO_COLOR environment and CLICOLOR specification", // the rest of the description is filled in by structopt
 	)]
 	pub color: CLIColorType,
 	#[structopt(subcommand)]
@@ -62,7 +62,7 @@ Sources are downloaded using .SRCINFO only"
 		#[structopt(
 			short = "f",
 			long = "force",
-			help = "use --force option with makepkg, see makepkg(8)"
+			help = "Use --force option with makepkg, see makepkg(8)"
 		)]
 		force: bool,
 		#[structopt(

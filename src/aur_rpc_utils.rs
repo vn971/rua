@@ -109,12 +109,12 @@ fn clean_package_name(name: &str) -> Option<String> {
 			err
 		));
 	}
-	let name: String = CLEANUP.replace_all(name, "").to_lowercase();
+	let name: String = CLEANUP.replace_all(name, "").to_string();
 	lazy_static! {
 		// From PKGBUILD manual page:
 		// Valid characters are alphanumerics, and any of the following characters: “@ . _ + -”.
 		// Additionally, names are not allowed to start with hyphens or dots.
-		static ref NAME_REGEX: Regex = Regex::new(r"^[a-z0-9@_+][a-z0-9@_+.-]*$").unwrap_or_else(
+		static ref NAME_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9@_+][a-zA-Z0-9@_+.-]*$").unwrap_or_else(
 			|err| panic!("{}:{} Failed to parse regexp, {}", file!(), line!(), err)
 		);
 	}

@@ -156,4 +156,9 @@ and many others.
 
 IRC: #rua @freenode.net
 
-Project is shared under GPLv3+. For authors, see [Cargo.toml](Cargo.toml) and git history.
+Project is shared under GPLv3+.
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this project (rua) by you,
+shall be licensed as GPLv3+, without any additional terms or conditions.
+
+For authors, see [Cargo.toml](Cargo.toml) and git history.

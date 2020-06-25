@@ -19,7 +19,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 - Written in Rust
 
 
-# Use
+## Use
 
 `rua search wesnoth`
 

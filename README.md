@@ -25,7 +25,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 `rua info freecad`
 
-`rua install xcalib`  # install or upgrade a package
+`rua install pinta`  # install or upgrade a package
 
 `rua upgrade`  # upgrade all AUR packages. You can selectively ignore packages by using `--ignore` or adding them to `IgnorePkg` in `pacman.conf` (same as with non-AUR packages and `pacman`). You can upgrade only specific packages with `rua install A B C`.
 
@@ -128,9 +128,9 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 
 
 ## Safety
-RUA only adds build-time safety and install-time control. Once/if packages pass your review, they are as run-time safe as they were in the first place. Do not install AUR packages you don't trust.
+Do not install AUR packages you don't trust. RUA only adds build-time isolation and install-time control/review.
 
-When building packages, RUA uses the following filesystem isolation by default:
+When building packages, RUA uses the following filesystem isolation:
 
 * Build directory is mounted read-write.
 * Files `"$GNUPGHOME"/pubring.kbx` and `"$GNUPGHOME"/pubring.gpg` are mounted read-only (if exists). This allows signature verification to work.

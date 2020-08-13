@@ -34,20 +34,20 @@ pub enum Action {
 	#[structopt(about = "Build package in specified directory, in jail")]
 	Builddir {
 		#[structopt(
-		short = "o",
-		long = "offline",
-		help = "Forbid internet access while building packages.
+			short = "o",
+			long = "offline",
+			help = "Forbid internet access while building packages.
 Sources are downloaded using .SRCINFO only"
 		)]
 		offline: bool,
 		#[structopt(
-		short = "f",
-		long = "force",
-		help = "Use --force option with makepkg, see makepkg(8)"
+			short = "f",
+			long = "force",
+			help = "Use --force option with makepkg, see makepkg(8)"
 		)]
 		force: bool,
 		#[structopt(
-		help = "Target directory. Defaults to current directory '.' if not specified."
+			help = "Target directory. Defaults to current directory '.' if not specified."
 		)]
 		target: Option<PathBuf>,
 	},

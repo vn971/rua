@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 
-# config.sh is a publicly exposed utility library:
+# script used by RUA to read makepkg configuration
+# makepkg is heavily tied to bash, so we need to source some makepkg files
+# in order to access the configuration
+
+# config.sh is safe to use because it is a publicly exposed utility library:
 # https://git.archlinux.org/pacman.git/commit/scripts/libmakepkg/util/config.sh.in?id=a00615bfdad628299352b94e0f44d211a758fd17
 source "${LIBRARY:-/usr/share/makepkg}/util/config.sh";
 

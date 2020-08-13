@@ -31,6 +31,26 @@ pub struct CliArgs {
 #[derive(StructOpt, Debug)]
 #[structopt(rename_all = "kebab-case")]
 pub enum Action {
+	#[structopt(about = "Build package in specified directory, in jail")]
+	Builddir {
+		#[structopt(
+		short = "o",
+		long = "offline",
+		help = "Forbid internet access while building packages.
+Sources are downloaded using .SRCINFO only"
+		)]
+		offline: bool,
+		#[structopt(
+		short = "f",
+		long = "force",
+		help = "Use --force option with makepkg, see makepkg(8)"
+		)]
+		force: bool,
+		#[structopt(
+		help = "Target directory. Defaults to current directory '.' if not specified."
+		)]
+		target: Option<PathBuf>,
+	},
 	#[structopt(about = "Show package information")]
 	Info {
 		#[structopt(help = "Target to show for", multiple = true, required = true)]
@@ -49,26 +69,6 @@ Sources are downloaded using .SRCINFO only"
 		offline: bool,
 		#[structopt(help = "Target package", multiple = true, required = true)]
 		target: Vec<String>,
-	},
-	#[structopt(about = "Build package in specified directory, in jail")]
-	Builddir {
-		#[structopt(
-			short = "o",
-			long = "offline",
-			help = "Forbid internet access while building packages.
-Sources are downloaded using .SRCINFO only"
-		)]
-		offline: bool,
-		#[structopt(
-			short = "f",
-			long = "force",
-			help = "Use --force option with makepkg, see makepkg(8)"
-		)]
-		force: bool,
-		#[structopt(
-			help = "Target directory. Defaults to current directory '.' if not specified."
-		)]
-		target: Option<PathBuf>,
 	},
 	#[structopt(about = "Opens AUR web search page")]
 	Search {

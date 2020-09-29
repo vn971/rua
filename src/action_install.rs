@@ -128,7 +128,7 @@ fn install_all(
 				panic!("Failed to create build dir {:?}, {}", &build_dir, err)
 			});
 			fs_extra::copy_items(
-				&vec![&review_dir],
+				&[&review_dir],
 				&rua_paths.global_build_dir,
 				&CopyOptions::new(),
 			)

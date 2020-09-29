@@ -20,6 +20,7 @@ use std::str::FromStr;
 use std::sync::Once;
 
 static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
+/// Check if bubblewrap binary is runnable
 pub fn check_bubblewrap_runnable() {
 	BUBBLEWRAP_IS_RUNNABLE.call_once(|| {
 		let command = Command::new("bwrap")
@@ -45,7 +46,9 @@ pub fn check_bubblewrap_runnable() {
 	});
 }
 
-fn wrap_yes_internet(rua_paths: &RuaPaths, cur_dir: &str, makepkg_dir: &str) -> Command {
+/// Creates a new command jail in bubblewrap,
+/// suitable for makepkg build and with no internet restrictions.
+fn jail_for_makepkg(rua_paths: &RuaPaths, cur_dir: &str, makepkg_dir: &str) -> Command {
 	let mut command = Command::new(&rua_paths.wrapper_bwrap_script);
 	command.current_dir(cur_dir);
 	command.env("PKGDEST", makepkg_dir);
@@ -67,7 +70,7 @@ fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
 	file.write_all(srcinfo_to_pkgbuild::static_pkgbuild(&srcinfo_path).as_bytes())
 		.expect("cannot write to PKGBUILD.static");
 	info!("Downloading sources using .SRCINFO...");
-	let command = wrap_yes_internet(rua_paths, dir, dir)
+	let command = jail_for_makepkg(rua_paths, dir, dir)
 		.args(&["--bind", dir, dir])
 		.args(&["makepkg", "-f", "--verifysource"])
 		.args(&["-p", "PKGBUILD.static"])
@@ -80,7 +83,7 @@ fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
 
 pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, String> {
 	debug!("Getting srcinfo in directory {}", dir);
-	let mut command = wrap_yes_internet(rua_paths, dir, "/tmp");
+	let mut command = jail_for_makepkg(rua_paths, dir, "/tmp");
 	command.arg("--unshare-net");
 	command.args(&["--ro-bind", dir, dir]);
 	command
@@ -119,7 +122,7 @@ pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, Stri
 
 fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
-	let mut command = wrap_yes_internet(rua_paths, dir, dir);
+	let mut command = jail_for_makepkg(rua_paths, dir, dir);
 	if offline {
 		command.arg("--unshare-net");
 	}
@@ -149,6 +152,9 @@ pub fn build_directory(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bo
 	build_local(dir, rua_paths, offline, force);
 }
 
+/// Perform a shellcheck check of a PKGBUILD, taking care of special variables
+/// See https://github.com/koalaman/shellcheck
+/// See ../res/shellcheck-wrapper
 pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 	let target = match target {
 		None => Path::new("/dev/stdin").to_path_buf(),

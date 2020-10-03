@@ -79,7 +79,7 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 					})
 				})
 				.collect::<Vec<_>>();
-			list.sort();
+			list.sort_unstable();
 			eprintln!("Packages need to be installed:");
 			eprintln!(
 				"\n    pacman {} {}\n",

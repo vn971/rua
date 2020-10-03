@@ -239,9 +239,7 @@ fn overwrite_script(path: &Path, content: &[u8]) {
 fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 	let old_dir = dirs.cache_dir().join("checked_tars");
 	if old_dir.exists() {
-		let old_dir_str = old_dir
-			.to_str()
-			.unwrap_or_else(|| "~/.cache/rua/checked_tars");
+		let old_dir_str = old_dir.to_str().unwrap_or("~/.cache/rua/checked_tars");
 		eprintln!(
 			"INFO: you have a legacy directory from an older RUA version: {}",
 			&old_dir_str

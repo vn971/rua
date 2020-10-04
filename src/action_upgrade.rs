@@ -85,27 +85,8 @@ fn calculate_upgrade<'pkgs>(
 		HashSet::new()
 	});
 
-	let (ignored, non_ignored) = pkg_cache
+	let aur_pkgs = pkg_cache
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.partition::<Vec<_>, _>(|pkg| {
-			locally_ignored_packages.contains(pkg.name())
-				|| system_ignored_packages.contains(pkg.name())
-		});
-
-	if !ignored.is_empty() {
-		let ignored_string = ignored
-			.iter()
-			.map(|pkg| pkg.name())
-			.collect::<Vec<_>>()
-			.join(" ");
-		warn!(
-			"Ignoring updates for non-system packages: {}",
-			ignored_string
-		);
-	}
-
-	let aur_pkgs = non_ignored
-		.iter()
 		.map(|pkg| (pkg.name(), pkg.version()))
 		.collect::<Vec<_>>();
 
@@ -120,6 +101,7 @@ fn calculate_upgrade<'pkgs>(
 
 	let mut outdated = Vec::new();
 	let mut nonexistent = Vec::new();
+	let mut ignored = Vec::new();
 
 	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| *p).collect_vec());
 	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
@@ -129,12 +111,25 @@ fn calculate_upgrade<'pkgs>(
 
 		if let Some(raur_ver) = raur_ver {
 			if local_ver < Version::new(&raur_ver) || (devel && pkg_is_devel(pkg)) {
-				outdated.push((pkg, local_ver.to_string(), raur_ver));
+				if locally_ignored_packages.contains(pkg) || system_ignored_packages.contains(pkg) {
+					ignored.push(pkg.to_string());
+				} else {
+					outdated.push((pkg, local_ver.to_string(), raur_ver));
+				}
 			}
+		} else if locally_ignored_packages.contains(pkg) || system_ignored_packages.contains(pkg) {
+			ignored.push(pkg.to_string());
 		} else {
 			nonexistent.push((pkg, local_ver.to_string()));
 		}
 	}
+	if !ignored.is_empty() {
+		let ignored_string = ignored.join(" ");
+		warn!(
+			"The following packages have changed in AUR but are ignored in the system: {}",
+			ignored_string
+		);
+	};
 
 	(outdated, nonexistent)
 }

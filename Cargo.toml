@@ -43,7 +43,7 @@ raur = { version = "3.0.1", default-features = false, features = ["rustls"] }
 regex = "1.3.9"
 rm_rf = "0.6.0"
 ruzstd = "0.2.1"
-srcinfo = "0.3.2"
+srcinfo = "1.0.0"
 structopt = "0.3.18"
 tar = "0.4.30"
 term_size = "0.3.2"

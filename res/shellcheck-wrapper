@@ -51,6 +51,10 @@ export sha512sums
 export sha512sums_aarch64
 export sha512sums_i686
 export sha512sums_x86_64
+export b2sums
+export b2sums_aarch64
+export b2sums_i686
+export b2sums_x86_64
 export groups
 export backup
 export depends

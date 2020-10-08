@@ -44,6 +44,7 @@ pub fn static_pkgbuild(path: &Path) -> String {
 	push_arrays(&mut pkgbuild, "sha256sums", &srcinfo.base.sha256sums);
 	push_arrays(&mut pkgbuild, "sha384sums", &srcinfo.base.sha384sums);
 	push_arrays(&mut pkgbuild, "sha512sums", &srcinfo.base.sha512sums);
+	push_arrays(&mut pkgbuild, "b2sums", &srcinfo.base.b2sums);
 
 	pkgbuild
 }

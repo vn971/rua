@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.17.13"
+version = "0.17.14"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -26,7 +26,7 @@ structopt = "0.3.18"
 
 [dependencies]
 alpm = "0.10.1"
-chrono = "0.4.18"
+chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.1"
 env_logger = "0.7.1"
@@ -48,9 +48,9 @@ structopt = "0.3.18"
 tar = "0.4.30"
 term_size = "0.3.2"
 uname = "0.1.1"
-users = "0.10.0"
+users = "0.11.0"
 xz2 = "0.1.6"
-libc = "0.2.77"
+libc = "0.2.79"
 
 [profile.release]
 lto = true

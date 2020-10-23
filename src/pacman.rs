@@ -15,7 +15,6 @@ use std::str;
 pub fn is_installed(alpm: &Alpm, name: &str) -> bool {
 	alpm.localdb()
 		.pkgs()
-		.expect("failed to open alpm.localdb().pkgs()")
 		.find_satisfier(name)
 		.map_or(false, |sat| sat.install_date().is_some())
 }
@@ -61,7 +60,7 @@ fn create_local_alpm() -> Alpm {
 pub fn create_alpm() -> Alpm {
 	let alpm = create_local_alpm();
 	for repo in get_repository_list() {
-		alpm.register_syncdb(&repo, SigLevel::NONE)
+		alpm.register_syncdb(&*repo, SigLevel::NONE)
 			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
 	}
 	alpm

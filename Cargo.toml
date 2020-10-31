@@ -20,12 +20,13 @@ build = "build.rs"
 
 [features]
 git = ["alpm/git"]
+generate = ["alpm/generate"]
 
 [build-dependencies]
 structopt = "0.3.18"
 
 [dependencies]
-alpm = "0.10.1"
+alpm = "1.0.1"
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.1"

@@ -75,17 +75,14 @@ fn calculate_upgrade<'pkgs>(
 	devel: bool,
 	locally_ignored_packages: &HashSet<&str>,
 ) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
-	let pkg_cache = alpm
-		.localdb()
-		.pkgs()
-		.expect("Could not get alpm.localdb().pkgs() packages");
-
+	let pkg_cache = alpm.localdb().pkgs();
 	let system_ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
 		warn!("Could not get ignored packages, {}", err);
 		HashSet::new()
 	});
 
 	let aur_pkgs = pkg_cache
+		.iter()
 		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
 		.map(|pkg| (pkg.name(), pkg.version()))
 		.collect::<Vec<_>>();
@@ -110,7 +107,7 @@ fn calculate_upgrade<'pkgs>(
 		let raur_ver = info_map.get(pkg).map(|p| p.version.to_string());
 
 		if let Some(raur_ver) = raur_ver {
-			if local_ver < Version::new(&raur_ver) || (devel && pkg_is_devel(pkg)) {
+			if local_ver < Version::new(&*raur_ver) || (devel && pkg_is_devel(pkg)) {
 				if locally_ignored_packages.contains(pkg) || system_ignored_packages.contains(pkg) {
 					ignored.push(pkg.to_string());
 				} else {

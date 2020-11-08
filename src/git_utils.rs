@@ -52,6 +52,10 @@ fn silently_run_panic_if_error(first_arg: &str, other_args: &[&str], directory: 
 	let command = Command::new(first_arg)
 		.args(other_args)
 		.current_dir(directory)
+		.env("GIT_CONFIG", "/dev/null") // see `man git-config`
+		.env("GIT_CONFIG_NOSYSTEM", "1") // see `man git`
+		.env("XDG_CONFIG_HOME", "/dev/null") // see `man git`
+		.env("HOME", "/dev/null") // see `man git`
 		.output()
 		.unwrap_or_else(|err| panic!("Failed to execute process {}, {}", first_arg, err));
 	assert!(

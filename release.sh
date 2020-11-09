@@ -15,7 +15,7 @@ fi
 
 shellcheck -e SC1090 res/wrap.sh
 cargo test
-cargo clippy --all-targets --all-features -- -D warnings
+cargo clippy --all-targets --features= -- -D warnings
 cargo publish
 
 ver=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')

@@ -67,8 +67,8 @@ fn git(dir: &Path) -> Command {
 	let mut command = Command::new("git");
 	command.env("GIT_CONFIG", "/dev/null"); // see `man git-config`
 	command.env("GIT_CONFIG_NOSYSTEM", "1"); // see `man git`
-	command.env("XDG_CONFIG_HOME", "/"); // see `man git`
-	command.env("HOME", "/"); // see `man git`
+	command.env("XDG_CONFIG_HOME", "/dev/null"); // see `man git`
+	command.env("HOME", "/dev/null"); // see `man git`
 	command.current_dir(dir);
 	command
 }

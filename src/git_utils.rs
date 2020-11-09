@@ -8,14 +8,14 @@ use std::process::Stdio;
 /// Also, the local branch does NOT track the remote one --
 /// instead it's being merged upon each review.
 pub fn init_repo(pkg: &str, dir: &Path) {
-	silently_run_panic_if_error("git", &["init", "-q"], dir);
+	silently_run_panic_if_error(&["init", "-q"], dir);
 	let http_ref = format!("https://aur.archlinux.org/{}.git", pkg);
-	silently_run_panic_if_error("git", &["remote", "add", "upstream", &http_ref], dir);
+	silently_run_panic_if_error(&["remote", "add", "upstream", &http_ref], dir);
 	fetch(dir);
 }
 
 pub fn fetch(dir: &Path) {
-	silently_run_panic_if_error("git", &["fetch", "-q", "upstream"], dir);
+	silently_run_panic_if_error(&["fetch", "-q", "upstream"], dir);
 }
 
 pub fn is_upstream_merged(dir: &Path) -> bool {
@@ -48,17 +48,15 @@ pub fn merge_upstream(dir: &Path) {
 	git(dir).args(&["merge", "upstream/master"]).status().ok();
 }
 
-fn silently_run_panic_if_error(first_arg: &str, other_args: &[&str], directory: &Path) {
-	let command = Command::new(first_arg)
-		.args(other_args)
-		.current_dir(directory)
+fn silently_run_panic_if_error(args: &[&str], dir: &Path) {
+	let command = git(dir)
+		.args(args)
 		.output()
-		.unwrap_or_else(|err| panic!("Failed to execute process {}, {}", first_arg, err));
+		.unwrap_or_else(|err| panic!("Failed to execute process git {:?}, {}", args, err));
 	assert!(
 		command.status.success(),
-		"Command {} {} failed with exit code {:?}\nStderr: {}\nStdout: {}",
-		first_arg,
-		other_args.join(" "),
+		"Command git {} failed with exit code {:?}\nStderr: {}\nStdout: {}",
+		args.join(" "),
 		command.status.code(),
 		String::from_utf8_lossy(&command.stderr).red(),
 		String::from_utf8_lossy(&command.stdout),
@@ -67,6 +65,10 @@ fn silently_run_panic_if_error(first_arg: &str, other_args: &[&str], directory: 
 
 fn git(dir: &Path) -> Command {
 	let mut command = Command::new("git");
+	command.env("GIT_CONFIG", "/dev/null"); // see `man git-config`
+	command.env("GIT_CONFIG_NOSYSTEM", "1"); // see `man git`
+	command.env("XDG_CONFIG_HOME", "/"); // see `man git`
+	command.env("HOME", "/"); // see `man git`
 	command.current_dir(dir);
 	command
 }

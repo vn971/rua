@@ -15,7 +15,7 @@ pub fn set_env_if_not_set(key: &str, value: &str) {
 
 /// Set and check environment applicable to all RUA commands
 pub fn prepare_environment(config: &CliArgs) {
-	env_logger::Builder::from_env(Env::default().filter_or("LOG_LEVEL", "info"))
+	env_logger::Builder::from_env(Env::default().filter_or("RUST_LOG", "info"))
 		.format(|buf, record| {
 			writeln!(
 				buf,

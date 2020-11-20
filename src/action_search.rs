@@ -1,4 +1,5 @@
 use crate::print_package_table;
+use raur::blocking::Raur;
 use raur::Package;
 use raur::SearchBy;
 
@@ -17,7 +18,8 @@ pub fn action_search(keywords: &[String]) {
 	let query = keywords
 		.first()
 		.expect("Zero search arguments, should be impossible in structopt");
-	let result = raur::search_by(query, SearchBy::NameDesc);
+	let raur_handle = raur::blocking::Handle::new();
+	let result = raur_handle.search_by(query, SearchBy::NameDesc);
 	match result {
 		Ok(mut result) => {
 			if result.is_empty() {

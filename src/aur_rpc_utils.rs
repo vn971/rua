@@ -5,8 +5,9 @@ use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::trace;
+use raur::blocking::Handle;
+use raur::blocking::Raur;
 use raur::Package;
-use raur::Raur;
 use regex::Regex;
 
 type RaurInfo = IndexMap<String, Package>;
@@ -20,7 +21,7 @@ pub fn recursive_info(
 	root_packages_to_process: &[String],
 	alpm: &Alpm,
 ) -> Result<RecursiveInfo, raur::Error> {
-	let raur_handle = raur::Handle::default();
+	let raur_handle = Handle::default();
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
 	for pkg in &queue {
@@ -80,9 +81,10 @@ pub fn recursive_info(
 pub fn info_map<S: AsRef<str>>(
 	packages_to_query: &[S],
 ) -> Result<IndexMap<String, Package>, raur::Error> {
+	let raur_handle = Handle::new();
 	let mut result = IndexMap::new();
 	for group in packages_to_query.chunks(BATCH_SIZE) {
-		let group_info = raur::info(group)?;
+		let group_info = raur_handle.info(group)?;
 		for pkg in group_info.into_iter() {
 			result.insert(pkg.name.to_string(), pkg);
 		}

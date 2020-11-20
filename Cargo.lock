@@ -1221,7 +1221,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.17.15"
+version = "0.17.16"
 dependencies = [
  "alpm",
  "chrono",

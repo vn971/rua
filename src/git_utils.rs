@@ -45,7 +45,16 @@ pub fn identical_to_upstream(dir: &Path) -> bool {
 }
 
 pub fn merge_upstream(dir: &Path) {
-	git(dir).args(&["merge", "upstream/master"]).status().ok();
+	let email = "rua@local";
+	let name = "RUA (automated merge with upstream/master)";
+	git(dir)
+		.args(&["merge", "upstream/master"])
+		.env("GIT_AUTHOR_NAME", name)
+		.env("GIT_AUTHOR_EMAIL", email)
+		.env("GIT_COMMITTER_NAME", name)
+		.env("GIT_COMMITTER_EMAIL", email)
+		.status()
+		.ok();
 }
 
 fn silently_run_panic_if_error(args: &[&str], dir: &Path) {

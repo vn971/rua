@@ -46,9 +46,11 @@ pub fn identical_to_upstream(dir: &Path) -> bool {
 
 pub fn merge_upstream(dir: &Path) {
 	let email = "rua@local";
-	let name = "RUA (automated merge with upstream/master)";
+	let name = "RUA";
 	git(dir)
 		.args(&["merge", "upstream/master"])
+		.args(&["-m", "Merge branch 'upstream/master' (automated by RUA)"])
+		.arg("--no-edit")
 		.env("GIT_AUTHOR_NAME", name)
 		.env("GIT_AUTHOR_EMAIL", email)
 		.env("GIT_COMMITTER_NAME", name)

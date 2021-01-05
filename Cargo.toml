@@ -53,5 +53,8 @@ users = "0.11.0"
 xz2 = "0.1.6"
 libc = "0.2.80"
 
+[dev-dependencies]
+mockall = "0.7.1"
+
 [profile.release]
 lto = true

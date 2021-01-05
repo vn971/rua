@@ -16,6 +16,7 @@ use std::path::PathBuf;
 use std::process::exit;
 use std::process::Command;
 
+#[derive(Debug)]
 /// All directories must exist upon `RuaPaths` creation.
 pub struct RuaPaths {
 	/// Subdirectory of ~/.cache/rua where packages are built after review

@@ -1,4 +1,6 @@
 use crate::aur_rpc_utils;
+use crate::folder_deleter::FolderDeleter;
+use crate::left_overs_deleter::LeftOversDeleter;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_paths::RuaPaths;
@@ -54,6 +56,10 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		is_offline,
 		asdeps,
 	);
+
+	let folder_deleter = Box::new(FolderDeleter::new());
+	let left_overs_deleter = LeftOversDeleter::new(folder_deleter);
+	left_overs_deleter.delete_folders(targets, rua_paths);
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {

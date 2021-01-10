@@ -1,6 +1,5 @@
 #[cfg(test)]
 use mockall::{automock, predicate::*};
-use rm_rf;
 use std::path::PathBuf;
 
 #[cfg_attr(test, automock)]

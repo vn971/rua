@@ -42,7 +42,7 @@ log = "0.4.11"
 prettytable-rs = "0.8.0"
 raur = { version = "4.0.1", default-features = false, features = ["blocking", "rustls"] }
 regex = "1.4.2"
-rm_rf = "0.6.0"
+rm_rf = "0.6.1"
 ruzstd = "0.2.2"
 srcinfo = "1.0.0"
 structopt = "0.3.20"

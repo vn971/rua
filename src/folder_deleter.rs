@@ -1,12 +1,11 @@
 #[cfg(test)]
 use mockall::{automock, predicate::*};
-use std::fs;
-use std::io;
+use rm_rf;
 use std::path::PathBuf;
 
 #[cfg_attr(test, automock)]
 pub trait IFolderDeleter {
-	fn delete_folder(&self, path: &PathBuf) -> io::Result<()>;
+	fn delete_folder(&self, path: &PathBuf) -> rm_rf::Result<()>;
 }
 
 pub struct FolderDeleter {}
@@ -18,7 +17,7 @@ impl FolderDeleter {
 }
 
 impl IFolderDeleter for FolderDeleter {
-	fn delete_folder(&self, path: &PathBuf) -> io::Result<()> {
-		fs::remove_dir_all(path)
+	fn delete_folder(&self, path: &PathBuf) -> rm_rf::Result<()> {
+		rm_rf::remove(path.as_path())
 	}
 }

@@ -7,10 +7,10 @@ RUA is a build tool for ArchLinux, AUR. Its features:
   * show upstream changes upon package upgrade
   * see code problems in PKGBUILD via `shellcheck`, taking care of special variables
   * warn if SUID files are present in an already built package, and show them
-  * show file list, executable list and INSTALL script in already built archives
+  * show file list, executable list and INSTALL script in already built packages
 - Minimize user distractions:
-  * verify all packages once, build without interruptions
-  * group built dependencies for batch review
+  * verify all build scripts once, build without interruptions
+  * group built packages for batch review
 - Uses a security namespace jail:
   * supports `--offline` builds
   * builds in isolated filesystem, see [safety](#Safety) section below

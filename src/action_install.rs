@@ -62,8 +62,6 @@ pub fn install(
 		asdeps,
 	);
 
-	// let folder_deleter = Box::new(FolderDeleter::new());
-	// let left_overs_deleter = LeftOversDeleter::new(folder_deleter);
 	let res = left_overs_deleter.delete_folders(targets, rua_paths);
 	match res {
 		Ok(()) => (),

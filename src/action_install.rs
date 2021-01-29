@@ -1,7 +1,5 @@
 use crate::aur_rpc_utils;
-use crate::folder_deleter::FolderDeleter;
 use crate::ileft_overs_deleter::ILeftOversDeleter;
-use crate::left_overs_deleter::LeftOversDeleter;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_paths::RuaPaths;
@@ -19,7 +17,13 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
+pub fn install(
+	targets: &[String],
+	rua_paths: &RuaPaths,
+	left_overs_deleter: Box<dyn ILeftOversDeleter>,
+	is_offline: bool,
+	asdeps: bool,
+) {
 	let alpm = pacman::create_alpm();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
@@ -58,8 +62,8 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		asdeps,
 	);
 
-	let folder_deleter = Box::new(FolderDeleter::new());
-	let left_overs_deleter = LeftOversDeleter::new(folder_deleter);
+	// let folder_deleter = Box::new(FolderDeleter::new());
+	// let left_overs_deleter = LeftOversDeleter::new(folder_deleter);
 	let res = left_overs_deleter.delete_folders(targets, rua_paths);
 	match res {
 		Ok(()) => (),

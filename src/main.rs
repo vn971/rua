@@ -23,6 +23,8 @@ mod tar_check;
 mod terminal_util;
 mod wrapped;
 
+use crate::folder_deleter::FolderDeleter;
+use crate::left_overs_deleter::LeftOversDeleter;
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
 use cli_args::Action;
@@ -32,6 +34,9 @@ use std::process::exit;
 use structopt::StructOpt;
 
 fn main() {
+	let folder_deleter = Box::new(FolderDeleter::new());
+	let left_overs_deleter = Box::new(LeftOversDeleter::new(folder_deleter));
+
 	let cli_args: CliArgs = CliArgs::from_args();
 	rua_environment::prepare_environment(&cli_args);
 	match &cli_args.action {
@@ -44,7 +49,7 @@ fn main() {
 			target,
 		} => {
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_install::install(&target, &paths, *offline, *asdeps);
+			action_install::install(&target, &paths, left_overs_deleter, *offline, *asdeps);
 		}
 		Action::Builddir {
 			offline,
@@ -84,7 +89,7 @@ fn main() {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, &paths, &ignored_set);
+				action_upgrade::upgrade_real(*devel, &paths, left_overs_deleter, &ignored_set);
 			}
 		}
 	};

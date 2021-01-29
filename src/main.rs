@@ -9,6 +9,7 @@ mod aur_rpc_utils;
 mod cli_args;
 mod folder_deleter;
 mod git_utils;
+mod ileft_overs_deleter;
 mod left_overs_deleter;
 mod pacman;
 mod print_format;

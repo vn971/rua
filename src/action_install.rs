@@ -1,5 +1,6 @@
 use crate::aur_rpc_utils;
 use crate::folder_deleter::FolderDeleter;
+use crate::ileft_overs_deleter::ILeftOversDeleter;
 use crate::left_overs_deleter::LeftOversDeleter;
 use crate::pacman;
 use crate::reviewing;

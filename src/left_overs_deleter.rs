@@ -1,4 +1,5 @@
 use crate::folder_deleter::IFolderDeleter;
+use crate::ileft_overs_deleter::ILeftOversDeleter;
 use crate::rua_paths::RuaPaths;
 use std::path::PathBuf;
 
@@ -12,8 +13,10 @@ impl LeftOversDeleter {
 			m_folder_deleter: folder_deleter,
 		}
 	}
+}
 
-	pub fn delete_folders(&self, targets: &[String], rua_paths: &RuaPaths) -> rm_rf::Result<()> {
+impl ILeftOversDeleter for LeftOversDeleter {
+	fn delete_folders(&self, targets: &[String], rua_paths: &RuaPaths) -> rm_rf::Result<()> {
 		let build_folder = &rua_paths
 			.global_build_dir
 			.as_path()

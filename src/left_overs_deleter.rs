@@ -42,6 +42,7 @@ impl ILeftOversDeleter for LeftOversDeleter {
 #[cfg(test)]
 mod tests {
 	use crate::folder_deleter::*;
+	use crate::ileft_overs_deleter::ILeftOversDeleter;
 	use crate::left_overs_deleter::LeftOversDeleter;
 	use crate::rua_paths::RuaPaths;
 	use std::path::PathBuf;
@@ -66,6 +67,10 @@ mod tests {
 		let targets = ["some_target".to_string()];
 		let rua_paths = RuaPaths::initialize_paths();
 
-		left_overs_deleter.delete_folders(&targets, &rua_paths);
+		let res = left_overs_deleter.delete_folders(&targets, &rua_paths);
+		match res {
+			Ok(()) => (),
+			Err(_error) => panic!(),
+		}
 	}
 }

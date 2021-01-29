@@ -55,6 +55,7 @@ libc = "0.2.80"
 
 [dev-dependencies]
 mockall = "0.7.1"
+dirs = "3.0.1"
 
 [profile.release]
 lto = true

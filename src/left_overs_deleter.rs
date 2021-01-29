@@ -54,9 +54,15 @@ mod tests {
 		mock_folder_deleter
 			.expect_delete_folder()
 			.withf(|x: &PathBuf| {
+				let home_folder_path = dirs::home_dir()
+					.unwrap()
+					.as_path()
+					.to_str()
+					.unwrap()
+					.to_owned();
 				assert_eq!(
 					x.as_path().to_str().unwrap(),
-					"/home/refaelsh/.cache/rua/build/some_target"
+					home_folder_path + "/.cache/rua/build/some_target"
 				);
 				true
 			})

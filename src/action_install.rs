@@ -59,7 +59,11 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 
 	let folder_deleter = Box::new(FolderDeleter::new());
 	let left_overs_deleter = LeftOversDeleter::new(folder_deleter);
-	left_overs_deleter.delete_folders(targets, rua_paths);
+	let res = left_overs_deleter.delete_folders(targets, rua_paths);
+	match res {
+		Ok(()) => (),
+		Err(error) => println!("WARNING: could not delete temp folder. Reason: {:?}", error),
+	}
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {

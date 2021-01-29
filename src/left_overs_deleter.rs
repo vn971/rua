@@ -13,7 +13,7 @@ impl LeftOversDeleter {
 		}
 	}
 
-	pub fn delete_folders(&self, targets: &[String], rua_paths: &RuaPaths) {
+	pub fn delete_folders(&self, targets: &[String], rua_paths: &RuaPaths) -> rm_rf::Result<()> {
 		let build_folder = &rua_paths
 			.global_build_dir
 			.as_path()
@@ -28,12 +28,11 @@ impl LeftOversDeleter {
 				.delete_folder(&PathBuf::from(&path_for_deletion));
 			match res {
 				Ok(()) => (),
-				Err(error) => println!(
-					"WARNING: could not delete temp folder ({}). Reason: {:?}",
-					path_for_deletion, error
-				),
+				Err(error) => return Err(error),
 			}
 		}
+
+		Ok(())
 	}
 }
 

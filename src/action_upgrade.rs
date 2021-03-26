@@ -50,6 +50,10 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			"{}",
 			"Good job! All AUR packages are up-to-date.".bright_green()
 		);
+	} else if outdated.is_empty() {
+		eprintln!("All AUR packages are up-to-date, but there are some packages installed locally that do not exist in pacman and AUR:");
+		eprintln!();
+		print_outdated(&outdated, &nonexistent);
 	} else {
 		print_outdated(&outdated, &nonexistent);
 		eprintln!();

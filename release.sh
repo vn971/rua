@@ -1,6 +1,6 @@
 #!/bin/bash -euET
 {
-# script to release RUA, probably has no use to anybody else except for reference.
+# script to release RUA, probably has no use to anybody except maintainers.
 
 set -o pipefail
 

@@ -109,7 +109,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	let has_install = !install_file.is_empty();
 	loop {
 		if suid_files.is_empty() {
-			eprint!("Package {} has no SUID files.\n", path_str);
+			eprintln!("Package {} has no SUID files.", path_str);
 		}
 		eprint!(
 			"[E]=list executable files, [L]=list all files, \

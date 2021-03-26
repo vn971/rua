@@ -1,4 +1,5 @@
 use crate::aur_rpc_utils;
+use crate::ileft_overs_deleter::ILeftOversDeleter;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_paths::RuaPaths;
@@ -16,7 +17,13 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
+pub fn install(
+	targets: &[String],
+	rua_paths: &RuaPaths,
+	left_overs_deleter: Box<dyn ILeftOversDeleter>,
+	is_offline: bool,
+	asdeps: bool,
+) {
 	let alpm = pacman::create_alpm();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
@@ -54,6 +61,12 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		is_offline,
 		asdeps,
 	);
+
+	let res = left_overs_deleter.delete_folders(targets, rua_paths);
+	match res {
+		Ok(()) => (),
+		Err(error) => println!("WARNING: could not delete temp folder. Reason: {:?}", error),
+	}
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {

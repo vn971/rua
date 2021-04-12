@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.17.18"
+version = "0.17.19"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -23,35 +23,35 @@ git = ["alpm/git"]
 generate = ["alpm/generate"]
 
 [build-dependencies]
-structopt = "0.3.20"
+structopt = "0.3.21"
 
 [dependencies]
-alpm = "1.1.3"
+alpm = "1.1.8"
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.1"
-env_logger = "0.8.2"
+env_logger = "0.8.3"
 failure = "0.1.8"
 fs2 = "0.4.3"
 fs_extra = "1.2.0"
-indexmap = "1.6.0"
-itertools = "0.9.0"
+indexmap = "1.6.2"
+itertools = "0.10.0"
 lazy_static = "1.4.0"
-libflate = "1.0.3"
-log = "0.4.11"
+libflate = "1.0.4"
+log = "0.4.14"
 prettytable-rs = "0.8.0"
-raur = { version = "4.0.1", default-features = false, features = ["blocking", "rustls"] }
-regex = "1.4.2"
-rm_rf = "0.6.0"
+raur = { version = "5.0.0", default-features = false, features = ["blocking", "rustls"] }
+regex = "1.4.5"
+rm_rf = "0.6.1"
 ruzstd = "0.2.2"
 srcinfo = "1.0.0"
-structopt = "0.3.20"
-tar = "0.4.30"
+structopt = "0.3.21"
+tar = "0.4.33"
 term_size = "0.3.2"
 uname = "0.1.1"
 users = "0.11.0"
 xz2 = "0.1.6"
-libc = "0.2.80"
+libc = "0.2.93"
 
 [profile.release]
 lto = true

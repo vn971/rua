@@ -73,6 +73,10 @@ If you use development version `pacman-git`, use `cargo install --features git r
 | `$GNUPGHOME/pubring.kbx` <br/> `$GNUPGHOME/pubring.gpg` | read-only access to these two files is granted when building, to allow signature verification |
 | All other files | All other files in `~` are not accessed by RUA and inaccessible by built packages (see Safety section below) |
 
+Note that directories above follow the XDG specification,
+so `XDG_CONFIG_HOME` environment variable would override `~/.config`,
+`XDG_CACHE_HOME` would override `~/.cache` and
+`XDG_DATA_HOME` would override `~/.local/share`.
 
 ## How it works / reviewing
 Knowing the underlying machinery is not required to work with RUA,

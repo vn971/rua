@@ -51,7 +51,9 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			"Good job! All AUR packages are up-to-date.".bright_green()
 		);
 	} else if outdated.is_empty() {
-		eprintln!("All AUR packages are up-to-date, but there are some packages installed locally that do not exist in pacman and AUR:");
+		eprintln!("All AUR packages are up-to-date, but there are some packages installed locally that do not exist in neither pacman nor AUR.");
+		eprintln!("These might be old dependencies from changed packages in pacman, or an AUR package that was removed from AUR.");
+		eprintln!("Consider removing these packages, or ignoring if it's a personal package:");
 		eprintln!();
 		print_outdated(&outdated, &nonexistent);
 	} else {
@@ -147,7 +149,11 @@ fn print_outdated(outdated: &[(&str, String, String)], nonexistent: &[(&str, Str
 		table.add_row(row![pkg.yellow(), local, remote.green(),]);
 	}
 	for (pkg, local) in nonexistent {
-		table.add_row(row![pkg.yellow(), local, "NOT FOUND, ignored".red(),]);
+		table.add_row(row![
+			pkg.dimmed(),
+			local,
+			"not found in neither pacman nor AUR, ignoring".red(),
+		]);
 	}
 	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();
 	table.set_format(fmt);

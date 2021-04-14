@@ -150,9 +150,9 @@ fn print_outdated(outdated: &[(&str, String, String)], nonexistent: &[(&str, Str
 	}
 	for (pkg, local) in nonexistent {
 		table.add_row(row![
-			pkg.dimmed(),
+			pkg.yellow(),
 			local,
-			"not found in neither pacman nor AUR, ignoring".red(),
+			"not found in neither pacman nor AUR, ignoring".dimmed(),
 		]);
 	}
 	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();

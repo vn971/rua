@@ -26,7 +26,7 @@ generate = ["alpm/generate"]
 structopt = "0.3.21"
 
 [dependencies]
-alpm = "1.1.12"
+alpm = { version = "1.1.12", default-features = false, features = [] }
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.2"
@@ -37,6 +37,7 @@ fs_extra = "1.2.0"
 indexmap = "1.6.2"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
+libc = "0.2.94"
 libflate = "1.1.0"
 log = "0.4.14"
 prettytable-rs = "0.8.0"
@@ -51,7 +52,6 @@ term_size = "0.3.2"
 uname = "0.1.1"
 users = "0.11.0"
 xz2 = "0.1.6"
-libc = "0.2.94"
 
 [profile.release]
 lto = true

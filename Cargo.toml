@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.17.19"
+version = "0.17.20"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -26,10 +26,10 @@ generate = ["alpm/generate"]
 structopt = "0.3.21"
 
 [dependencies]
-alpm = "1.1.8"
+alpm = "1.1.12"
 chrono = "0.4.19"
 colored = "2.0.0"
-directories = "3.0.1"
+directories = "3.0.2"
 env_logger = "0.8.3"
 failure = "0.1.8"
 fs2 = "0.4.3"
@@ -37,11 +37,11 @@ fs_extra = "1.2.0"
 indexmap = "1.6.2"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
-libflate = "1.0.4"
+libflate = "1.1.0"
 log = "0.4.14"
 prettytable-rs = "0.8.0"
-raur = { version = "5.0.0", default-features = false, features = ["blocking", "rustls"] }
-regex = "1.4.5"
+raur = { version = "5.0.1", default-features = false, features = ["blocking", "rustls"] }
+regex = "1.5.3"
 rm_rf = "0.6.1"
 ruzstd = "0.2.2"
 srcinfo = "1.0.0"
@@ -51,7 +51,7 @@ term_size = "0.3.2"
 uname = "0.1.1"
 users = "0.11.0"
 xz2 = "0.1.6"
-libc = "0.2.93"
+libc = "0.2.94"
 
 [profile.release]
 lto = true

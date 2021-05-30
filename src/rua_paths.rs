@@ -71,6 +71,10 @@ impl RuaPaths {
 			&dirs.config_dir().join(".system/seccomp-x86_64.bpf"),
 			SECCOMP_X86_64,
 		);
+		overwrite_file(
+			&dirs.config_dir().join(".system/seccomp-aarch64.bpf"),
+			SECCOMP_AARCH64,
+		);
 		let seccomp_path = format!(
 			".system/seccomp-{}.bpf",
 			uname::uname()
@@ -251,6 +255,7 @@ fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 pub const SHELLCHECK_WRAPPER: &str = include_str!("../res/shellcheck-wrapper");
 pub const SECCOMP_I686: &[u8] = include_bytes!("../res/seccomp-i686.bpf");
 pub const SECCOMP_X86_64: &[u8] = include_bytes!("../res/seccomp-x86_64.bpf");
+pub const SECCOMP_AARCH64: &[u8] = include_bytes!("../res/seccomp-aarch64.bpf");
 pub const WRAP_SH: &[u8] = include_bytes!("../res/wrap.sh");
 pub const WRAP_ARGS_EXAMPLE: &[u8] = include_bytes!("../res/wrap_args.sh.example");
 pub const CONFIG_LOADER: &[u8] = include_bytes!("../res/print_makepkg_config.sh");

@@ -158,7 +158,7 @@ This work was made possible by the excellent libraries of
 [srcinfo](https://github.com/Morganamilo/srcinfo.rs)
 and many others.
 
-IRC: #rua @freenode.net
+IRC: #rua @libera.chat
 
 Project is shared under GPLv3+.
 Unless you explicitly state otherwise, any contribution intentionally submitted

@@ -1,3 +1,4 @@
+use crate::alpm_wrapper::new_alpm_wrapper;
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::reviewing;
@@ -17,9 +18,9 @@ use std::fs::ReadDir;
 use std::path::PathBuf;
 
 pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
-	let alpm = pacman::create_alpm();
+	let alpm = new_alpm_wrapper();
 	let (split_to_raur, pacman_deps, split_to_depth) =
-		aur_rpc_utils::recursive_info(targets, &alpm).unwrap_or_else(|err| {
+		aur_rpc_utils::recursive_info(targets, &*alpm).unwrap_or_else(|err| {
 			panic!("Failed to fetch info from AUR, {}", err);
 		});
 	let split_to_pkgbase: IndexMap<String, String> = split_to_raur

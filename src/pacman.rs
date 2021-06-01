@@ -1,7 +1,6 @@
+use crate::alpm_wrapper::new_alpm_wrapper;
 use crate::rua_environment;
 use crate::terminal_util;
-use alpm::Alpm;
-use alpm::SigLevel;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -11,29 +10,6 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str;
 
-/// Checks if either this package is installed, or anything that provides the name
-pub fn is_installed(alpm: &Alpm, name: &str) -> bool {
-	alpm.localdb()
-		.pkgs()
-		.find_satisfier(name)
-		.map_or(false, |sat| sat.install_date().is_some())
-}
-
-/// Checks if either this package is installable, or anything that provides the name is
-pub fn is_installable(alpm: &Alpm, name: &str) -> bool {
-	alpm.syncdbs().find_satisfier(name).is_some()
-}
-
-fn get_repository_list() -> Vec<String> {
-	let command = Command::new("pacman-conf")
-		.arg("--repo-list")
-		.output()
-		.expect("cannot execute pacman-conf --repo-list");
-	let output = String::from_utf8(command.stdout)
-		.expect("Failed to parse output of `pacman-conf --repo-list`");
-	output.lines().map(ToOwned::to_owned).collect()
-}
-
 pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
 	let command = Command::new("pacman-conf")
 		.arg("IgnorePkg")
@@ -42,28 +18,6 @@ pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
 	let output = String::from_utf8(command.stdout)
 		.map_err(|err| format!("Failed to parse output of pacman-conf IgnorePkg, {}", err))?;
 	Ok(output.lines().map(ToOwned::to_owned).collect())
-}
-
-/// Create `Alpm` instance with no registered databases except local
-fn create_local_alpm() -> Alpm {
-	let alpm = Alpm::new("/", "/var/lib/pacman"); // default locations on arch linux
-	alpm.unwrap_or_else(|err| {
-		panic!(
-			"{}:{} Failed to initialize alpm library, {}",
-			file!(),
-			line!(),
-			err
-		)
-	})
-}
-
-pub fn create_alpm() -> Alpm {
-	let alpm = create_local_alpm();
-	for repo in get_repository_list() {
-		alpm.register_syncdb(&*repo, SigLevel::NONE)
-			.unwrap_or_else(|e| panic!("Failed to register {} in libalpm, {}", &repo, e));
-	}
-	alpm
 }
 
 fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
@@ -116,8 +70,12 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				break;
 			}
 		}
-		let alpm = create_local_alpm();
-		packages.retain(|(name, _)| !is_installed(&alpm, name));
+		let alpm = new_alpm_wrapper();
+		packages.retain(|(name, _)| {
+			!alpm
+				.is_installed(name)
+				.expect("Failed to check install status for a package")
+		});
 	}
 }
 
@@ -137,17 +95,6 @@ pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
 	}
 	ensure_packages_installed(map, &["-S", "--asdeps", "--needed"]);
 }
-
-// Some old functions that invoke shelling below.
-// Currently, using "libalpm" crate is preferred instead.
-// These functions might get back in use should RUA-s move away from using libalpm (I don't know that yet).
-
-//pub fn is_package_installable(package: &str) -> bool {
-//	Command::new("pacman").arg("-Sddp").arg(&package)
-//		.stdout(Stdio::null()).stderr(Stdio::null()).status()
-//		.expect(&format!("Failed to determine if package {} is installable", package))
-//		.success()
-//}
 
 // Architecture as defined in the local pacman configuration
 lazy_static! {

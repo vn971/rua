@@ -2,9 +2,8 @@ use crate::aur_rpc_utils::info_map;
 use crate::print_format::date;
 use crate::print_format::opt;
 use crate::print_format::print_indent;
-
+use anyhow::Error;
 use colored::*;
-use failure::Error;
 use term_size::dimensions_stdout;
 
 pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {

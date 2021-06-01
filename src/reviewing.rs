@@ -2,9 +2,9 @@ use crate::git_utils;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
 use crate::wrapped;
+use colored::Colorize;
 use log::debug;
 use std::path::Path;
-use colored::Colorize;
 
 pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
@@ -44,22 +44,44 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 		let is_upstream_merged = git_utils::is_upstream_merged(&dir);
 		let identical_to_upstream = is_upstream_merged && git_utils::identical_to_upstream(dir);
 		if is_upstream_merged {
-			eprint!("{}{}, ", "[S]".bold().green(), "=run shellcheck on PKGBUILD".green());
+			eprint!(
+				"{}{}, ",
+				"[S]".bold().green(),
+				"=run shellcheck on PKGBUILD".green()
+			);
 			if identical_to_upstream {
 				eprint!("{}, ", "[D]=(identical to upstream, empty diff)".dimmed());
 			} else {
 				eprint!("{}{}, ", "[D]".bold().green(), "=view your changes".green());
 			};
 		} else {
-			eprint!("{}{}, ", "[D]".bold().green(), "=view upstream changes since your last review".green());
-			eprint!("{}{}, ", "[M]".bold().yellow(), "=accept/merge upstream changes".yellow());
-			eprint!("{}, ", "[S]=(shellcheck not available until you merge)".dimmed());
+			eprint!(
+				"{}{}, ",
+				"[D]".bold().green(),
+				"=view upstream changes since your last review".green()
+			);
+			eprint!(
+				"{}{}, ",
+				"[M]".bold().yellow(),
+				"=accept/merge upstream changes".yellow()
+			);
+			eprint!(
+				"{}, ",
+				"[S]=(shellcheck not available until you merge)".dimmed()
+			);
 		}
-		eprint!("{}{}, ", "[T]".bold().cyan(), "=run shell to edit/inspect".cyan());
+		eprint!(
+			"{}{}, ",
+			"[T]".bold().cyan(),
+			"=run shell to edit/inspect".cyan()
+		);
 		if is_upstream_merged {
 			eprint!("{}{}. ", "[O]".bold().red(), "=ok, use package".red());
 		} else {
-			eprint!("{}", "[O]=(cannot use the package until you merge) ".dimmed());
+			eprint!(
+				"{}",
+				"[O]=(cannot use the package until you merge) ".dimmed()
+			);
 		}
 		let user_input = terminal_util::read_line_lowercase();
 

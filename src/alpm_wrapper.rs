@@ -134,7 +134,8 @@ impl AlpmWrapper for AlpmBinWrapper {
 		let mut command = Command::new("pacman");
 		command.args(&["-Q", "--foreign", "--color=never"]);
 		let output = command.output().context("failed to execute pacman")?;
-		let stdout = String::from_utf8(output.stdout).expect("failed to parse pacman output as utf8")?;
+		let stdout =
+			String::from_utf8(output.stdout).context("failed to parse pacman output as utf8")?;
 		let mut result = Vec::new();
 		for line in stdout.lines() {
 			let split: Vec<_> = line.split(' ').collect_vec();

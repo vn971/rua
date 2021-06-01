@@ -14,6 +14,7 @@ before_script:
 
 script:
   - cargo check --verbose --all
+  - cargo check --verbose --all --features=libalpm
   - cargo clippy --all-targets --features= -- -D warnings
   - cargo fmt --all -- --check
   - shellcheck -e SC1090 res/*.sh  # exclude non-constant sourcing that shellcheck cannot check

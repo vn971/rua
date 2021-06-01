@@ -128,7 +128,7 @@ RUA will thus interrupt you 3 times, not 7 as if it would be plainly recursive. 
 * Unless you explicitly enable it, builds do not share user home (~). This may result in maven/npm/cargo/whatever dependencies re-downloading with each build. See [safety](#safety) section below on how to whitelist certain directories.
 * Environment variables "PKGDEST" and "BUILDDIR" of makepkg.conf are not supported. Packages are built in isolation from each other, artifacts are stored in standard locations of this tool.
 * Due of safety restrictions, [X11 access might not work](./docs/x11access.md) during build.
-* Also due to safety restrictions, [ccache usage will fail](docs/ccache.md) during build.
+* Also due to safety restrictions, [ccache usage will fail](./docs/ccache.md) during build.
 * Due to a [bug in fakeroot](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=909727), creation of root-owned packages inside PKGBUILD-s `package()` does not work. This happens when archives are extracted in `package()` function. Doing it in `prepare()` or giving a key like `tar --no-same-owner` is the work-around.
 
 

@@ -1,8 +1,8 @@
 ## Context
 
-This is about using your user's `ccache` from inside a RUA sandbox.
+This document is about using your user's `ccache` from inside a RUA sandbox.
 If you configure `makepkg` to use `ccache` as described in [ArchWiki](https://wiki.archlinux.org/title/Ccache#Enable_ccache_for_makepkg),
-this will fail with error messages like:
+build will fail with error messages like:
 
 ```
 ccache: error: Failed to create temporary file for /run/user/1000/ccache-tmp/tmp.cpp_stdout.zdMorR: Read-only file system

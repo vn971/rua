@@ -19,19 +19,20 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-git = ["alpm/git"]
-generate = ["alpm/generate"]
+libalpm = ["alpm"]  # use library bindings to libalpm instead of shelling (calling `pacman` executable)
+libalpmgit = ["libalpm", "alpm/git"]
+libalpmgenerate = ["libalpm", "alpm/generate"]
 
 [build-dependencies]
 structopt = "0.3.21"
 
 [dependencies]
-alpm = { version = "2.0.0", default-features = false, features = [] }
+alpm = { version = "2.0.0", default-features = false, features = [], optional = true }
+anyhow = "1.0"
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.2"
 env_logger = "0.8.3"
-failure = "0.1.8"
 fs2 = "0.4.3"
 fs_extra = "1.2.0"
 indexmap = "1.6.2"

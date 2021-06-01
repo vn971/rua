@@ -1,5 +1,5 @@
-use crate::pacman;
-use alpm::Alpm;
+use crate::alpm_wrapper::AlpmWrapper;
+use anyhow::Result;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
@@ -19,8 +19,8 @@ const BATCH_SIZE: usize = 200;
 
 pub fn recursive_info(
 	root_packages_to_process: &[String],
-	alpm: &Alpm,
-) -> Result<RecursiveInfo, raur::Error> {
+	alpm: &dyn AlpmWrapper,
+) -> Result<RecursiveInfo> {
 	let raur_handle = Handle::default();
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
@@ -44,9 +44,9 @@ pub fn recursive_info(
 				.collect_vec();
 
 			for dependency in deps.into_iter() {
-				if pacman::is_installed(alpm, &dependency) {
+				if alpm.is_installed(&dependency)? {
 					// skip if already installed
-				} else if !pacman::is_installable(alpm, &dependency) {
+				} else if !alpm.is_installable(&dependency)? {
 					if !depth_map.contains_key(&dependency) {
 						eprintln!(
 							"Package {} depends on {}. Resolving...",
@@ -78,9 +78,7 @@ pub fn recursive_info(
 ///
 /// # Arguments
 /// * `packages_to_query` - A slice of package names to find in the AUR
-pub fn info_map<S: AsRef<str>>(
-	packages_to_query: &[S],
-) -> Result<IndexMap<String, Package>, raur::Error> {
+pub fn info_map<S: AsRef<str>>(packages_to_query: &[S]) -> Result<IndexMap<String, Package>> {
 	let raur_handle = Handle::new();
 	let mut result = IndexMap::new();
 	for group in packages_to_query.chunks(BATCH_SIZE) {

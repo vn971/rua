@@ -164,13 +164,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 		let asint = stdout
 			.parse::<i64>()
 			.with_context(|| format!("Failed to parse vercmp response as i64: {}", stdout))?;
-		if asint == 0 {
-			Ok(Ordering::Equal)
-		} else if asint < 0 {
-			Ok(Ordering::Less)
-		} else {
-			Ok(Ordering::Greater)
-		}
+		Ok(asint.cmp(&0i64))
 	}
 }
 

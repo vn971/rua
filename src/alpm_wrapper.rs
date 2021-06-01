@@ -133,8 +133,8 @@ impl AlpmWrapper for AlpmBinWrapper {
 	fn get_non_pacman_packages(&self) -> Result<Vec<(String, String)>> {
 		let mut command = Command::new("pacman");
 		command.args(&["-Q", "--foreign", "--color=never"]);
-		let output = command.output()?;
-		let stdout = String::from_utf8(output.stdout)?;
+		let output = command.output().context("failed to execute pacman")?;
+		let stdout = String::from_utf8(output.stdout).expect("failed to parse pacman output as utf8")?;
 		let mut result = Vec::new();
 		for line in stdout.lines() {
 			let split: Vec<_> = line.split(' ').collect_vec();
@@ -157,7 +157,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 	fn version_compare(&self, a: &str, b: &str) -> Result<Ordering> {
 		let mut command = Command::new("vercmp");
 		command.args(&[a, b]);
-		let output = command.output()?;
+		let output = command.output().context("Failed to execute vercmp")?;
 		let stdout =
 			String::from_utf8(output.stdout).context("Failed to parse vercmp response as utf8")?;
 		let stdout = stdout.trim();

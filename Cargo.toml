@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.17.21"
+version = "0.18.1"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
@@ -19,39 +19,40 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-git = ["alpm/git"]
-generate = ["alpm/generate"]
+libalpm = ["alpm"]  # use library bindings to libalpm instead of shelling (calling `pacman` executable)
+libalpmgit = ["libalpm", "alpm/git"]
+libalpmgenerate = ["libalpm", "alpm/generate"]
 
 [build-dependencies]
 structopt = "0.3.21"
 
 [dependencies]
-alpm = { version = "1.1.12", default-features = false, features = [] }
+alpm = { version = "2.0.1", default-features = false, features = [], optional = true }
+anyhow = "1.0.40"
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "3.0.2"
 env_logger = "0.8.3"
-failure = "0.1.8"
 fs2 = "0.4.3"
 fs_extra = "1.2.0"
 indexmap = "1.6.2"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
-libc = "0.2.94"
+libc = "0.2.95"
 libflate = "1.1.0"
 log = "0.4.14"
 prettytable-rs = "0.8.0"
 raur = { version = "5.0.1", default-features = false, features = ["blocking", "rustls"] }
-regex = "1.5.3"
+regex = "1.5.4"
 rm_rf = "0.6.1"
 ruzstd = "0.2.2"
 srcinfo = "1.0.0"
 structopt = "0.3.21"
-tar = "0.4.33"
+tar = "0.4.35"
 term_size = "0.3.2"
 uname = "0.1.1"
 users = "0.11.0"
-xz2 = "0.1.6"
+xz2 = "0.1.6"  # https://github.com/gendx/lzma-rs/issues/10
 
 [profile.release]
 lto = true

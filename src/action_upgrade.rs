@@ -1,9 +1,11 @@
 use crate::action_install;
+use crate::alpm_wrapper::new_alpm_wrapper;
+use crate::alpm_wrapper::AlpmWrapper;
 use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
-use alpm::Version;
+use anyhow::Result;
 use colored::*;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -12,6 +14,7 @@ use log::warn;
 use prettytable::format::*;
 use prettytable::*;
 use regex::Regex;
+use std::cmp::Ordering;
 use std::collections::HashSet;
 
 fn pkg_is_devel(name: &str) -> bool {
@@ -23,8 +26,9 @@ fn pkg_is_devel(name: &str) -> bool {
 }
 
 pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
-	let alpm = pacman::create_alpm();
-	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
+	let alpm = new_alpm_wrapper();
+	let (outdated, nonexistent) =
+		calculate_upgrade(&*alpm, devel, ignored).expect("Calculating upgrade failed");
 
 	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!(
@@ -42,8 +46,9 @@ pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 }
 
 pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) {
-	let alpm = pacman::create_alpm();
-	let (outdated, nonexistent) = calculate_upgrade(&alpm, devel, ignored);
+	let alpm = new_alpm_wrapper();
+	let (outdated, nonexistent) =
+		calculate_upgrade(&*alpm, devel, ignored).expect("calculating upgrade failed");
 
 	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!(
@@ -73,29 +78,24 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 	}
 }
 
-type OutdatedPkgs<'pkgs> = Vec<(&'pkgs str, String, String)>;
-type ForeignPkgs<'pkgs> = Vec<(&'pkgs str, String)>;
+type OutdatedPkgs = Vec<(String, String, String)>;
+type ForeignPkgs = Vec<(String, String)>;
 
-fn calculate_upgrade<'pkgs>(
-	alpm: &'pkgs alpm::Alpm,
+fn calculate_upgrade(
+	alpm: &dyn AlpmWrapper,
 	devel: bool,
 	locally_ignored_packages: &HashSet<&str>,
-) -> (OutdatedPkgs<'pkgs>, ForeignPkgs<'pkgs>) {
-	let pkg_cache = alpm.localdb().pkgs();
+) -> Result<(OutdatedPkgs, ForeignPkgs)> {
 	let system_ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
 		warn!("Could not get ignored packages, {}", err);
 		HashSet::new()
 	});
 
-	let aur_pkgs = pkg_cache
-		.iter()
-		.filter(|pkg| !pacman::is_installable(&alpm, pkg.name()))
-		.map(|pkg| (pkg.name(), pkg.version()))
-		.collect::<Vec<_>>();
+	let aur_pkgs = alpm.get_non_pacman_packages()?;
 
 	let aur_pkgs_string = aur_pkgs
 		.iter()
-		.map(|&(name, _version)| name)
+		.map(|(name, _version)| name.to_string())
 		.collect::<Vec<_>>()
 		.join(" ");
 	debug!("You have the following packages outside of main repos installed:");
@@ -106,21 +106,27 @@ fn calculate_upgrade<'pkgs>(
 	let mut nonexistent = Vec::new();
 	let mut ignored = Vec::new();
 
-	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| *p).collect_vec());
+	let info_map = aur_rpc_utils::info_map(&aur_pkgs.iter().map(|(p, _)| p).collect_vec());
 	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
 
 	for (pkg, local_ver) in aur_pkgs {
-		let raur_ver = info_map.get(pkg).map(|p| p.version.to_string());
+		let raur_ver: Option<String> = info_map.get(&pkg).map(|p| p.version.to_string());
 
 		if let Some(raur_ver) = raur_ver {
-			if local_ver < Version::new(&*raur_ver) || (devel && pkg_is_devel(pkg)) {
-				if locally_ignored_packages.contains(pkg) || system_ignored_packages.contains(pkg) {
+			if alpm.version_compare(&local_ver, &raur_ver)? == Ordering::Less
+				|| (devel && pkg_is_devel(&pkg))
+			{
+				if locally_ignored_packages.contains(pkg.as_str())
+					|| system_ignored_packages.contains(&pkg)
+				{
 					ignored.push(pkg.to_string());
 				} else {
 					outdated.push((pkg, local_ver.to_string(), raur_ver));
 				}
 			}
-		} else if locally_ignored_packages.contains(pkg) || system_ignored_packages.contains(pkg) {
+		} else if locally_ignored_packages.contains(pkg.as_str())
+			|| system_ignored_packages.contains(&pkg)
+		{
 			ignored.push(pkg.to_string());
 		} else {
 			nonexistent.push((pkg, local_ver.to_string()));
@@ -134,10 +140,10 @@ fn calculate_upgrade<'pkgs>(
 		);
 	};
 
-	(outdated, nonexistent)
+	Ok((outdated, nonexistent))
 }
 
-fn print_outdated(outdated: &[(&str, String, String)], nonexistent: &[(&str, String)]) {
+fn print_outdated(outdated: &[(String, String, String)], nonexistent: &[(String, String)]) {
 	let mut table = Table::new();
 	table.set_titles(row![
 		"Package".underline(),

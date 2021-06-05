@@ -111,20 +111,16 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		if suid_files.is_empty() {
 			eprintln!("Package {} has no SUID files.", path_str);
 		}
-		eprint!(
-			"{}{}, ",
-			"[E]".bold().green(),
-			"=list executable files".green()
-		);
-		eprint!("{}{}, ", "[L]".bold().green(), "=list all files".green());
-		eprint!(
-			"{}{}, ",
-			"[T]".bold().cyan(),
-			"=run shell to inspect".cyan()
-		);
+		eprint!("{}{}, ", "[E]".bold(), "=list executable files");
+		eprint!("{}{}, ", "[L]".bold(), "=list all files");
+		eprint!("{}{}, ", "[T]".bold(), "=run shell to inspect");
 
 		if has_install {
-			eprint!("{}, ", "[I]=show install file".bright_red().bold());
+			eprint!(
+				"{}=show {}, ",
+				"[I]".bold().red(),
+				"install file".bright_red().bold()
+			);
 		};
 		if !suid_files.is_empty() {
 			eprint!("{}, ", "!!! [S]=list SUID files!!!".bright_red().bold());

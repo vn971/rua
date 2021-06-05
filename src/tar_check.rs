@@ -111,19 +111,32 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		if suid_files.is_empty() {
 			eprintln!("Package {} has no SUID files.", path_str);
 		}
-		eprint!("{}{}, ", "[E]".bold(), "=list executable files");
-		eprint!("{}{}, ", "[L]".bold(), "=list all files");
-		eprint!("{}{}, ", "[T]".bold(), "=run shell to inspect");
+		eprint!(
+			"{}{}, ",
+			"[E]".bold().green(),
+			"=list executable files".green()
+		);
+		eprint!("{}{}, ", "[L]".bold().green(), "=list all files".green());
+		eprint!(
+			"{}{}, ",
+			"[T]".bold().cyan(),
+			"=run shell to inspect".cyan()
+		);
 
 		if has_install {
 			eprint!(
 				"{}=show {}, ",
-				"[I]".bold().red(),
-				"install file".bright_red().bold()
+				"[I]".yellow().bold(),
+				"install file".yellow()
 			);
 		};
 		if !suid_files.is_empty() {
-			eprint!("{}, ", "!!! [S]=list SUID files!!!".bright_red().bold());
+			eprint!(
+				"{}{}{}, ",
+				"!!! [S]=".yellow().bold(),
+				"list SUID files".yellow(),
+				"!!!".yellow().bold()
+			);
 		};
 		eprint!("{}{}. ", "[O]".bold().red(), "=ok, proceed".red());
 		let string = terminal_util::read_line_lowercase();

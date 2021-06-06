@@ -19,7 +19,7 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-libalpm = ["alpm"]  # use library bindings to libalpm instead of shelling (calling `pacman` executable)
+libalpm = ["alpm"]  # will use library bindings to libalpm instead of shelling (calling `pacman` executable)
 libalpmgit = ["libalpm", "alpm/git"]
 libalpmgenerate = ["libalpm", "alpm/generate"]
 

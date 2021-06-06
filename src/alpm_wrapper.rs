@@ -99,8 +99,7 @@ struct AlpmBinWrapper {}
 impl AlpmWrapper for AlpmBinWrapper {
 	fn is_installed(&self, package: &str) -> Result<bool> {
 		let result = Command::new("pacman")
-			.arg("-Qi")
-			.arg(package)
+			.args(&["-Qi", "--", package])
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()
@@ -116,8 +115,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 
 	fn is_installable(&self, package: &str) -> Result<bool> {
 		let result = Command::new("pacman")
-			.arg("-Sddp")
-			.arg(package)
+			.args(&["-Sddp", "--", package])
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()

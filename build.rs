@@ -26,30 +26,20 @@ mod shell_completions {
 }
 
 mod seccomp {
-	use core::panic;
 	use libscmp::{resolve_syscall_name, Action, Arch, Filter};
 	use std::{fs::File, path::Path};
 	use std::{os::unix::io::IntoRawFd, str::FromStr};
 
-	#[cfg(target_arch = "x86_64")]
-	const TARGET_ARCH: Arch = Arch::X86_64;
-	#[cfg(target_arch = "x86")]
-	const TARGET_ARCH: Arch = Arch::X86;
-	#[cfg(target_arch = "arm")]
-	const TARGET_ARCH: Arch = Arch::ARM;
-	#[cfg(target_arch = "aarch64")]
-	const TARGET_ARCH: Arch = Arch::AARCH64;
-
 	pub fn generate() {
 		let mut ctx = Filter::new(Action::Allow).unwrap();
 
-		let mut target_arch = TARGET_ARCH;
-		//Consider cross-compilation via cargo otherwise continue with the configured rustc target_arch
-		if let Ok(cargo_cfg_target_arch) = std::env::var("CARGO_CFG_TARGET_ARCH") {
-			target_arch = Arch::from_str(&cargo_cfg_target_arch)
-				.expect("CARGO_CFG_TARGET_ARCH is not a supported seccomp architecture!");
-		}
-		ctx.remove_arch(Arch::native()).unwrap();
+		//Get the target_arch configured in cargo to allow cross compiling
+		let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect(
+			"Compiling without cargo is not supported! Env CARGO_CFG_TARGET_ARCH not found.",
+		);
+		let target_arch = Arch::from_str(&target_arch)
+			.expect("CARGO_CFG_TARGET_ARCH is not a supported seccomp architecture!");
+		ctx.remove_arch(Arch::NATIVE).unwrap();
 		ctx.add_arch(target_arch).unwrap();
 
 		//Deny these syscalls
@@ -107,11 +97,11 @@ mod seccomp {
 			"uselib",
 			"vmsplice",
 		] {
-			//Resolve to syscall number on the compiling host (not for the TARGET_ARCH).
+			//Resolve the syscall number on the compiling host. (Not directly for the TARGET_ARCH, that mapping will be done automatically by libseccomp when the filter is exported.).
 			let syscall_num = resolve_syscall_name(syscall)
 				.unwrap_or_else(|| panic!("Syscall: {} could not be resolved!", syscall));
 
-			//Add rule to filter. The syscall number will now be translated for all enabled architectures in the filter.
+			//Add rule to filter. The syscall number will later be translated for all enabled architectures in the filter.
 			ctx.add_rule(Action::KillThread, syscall_num, &[])
 				.unwrap_or_else(|err| {
 					panic!(
@@ -121,7 +111,7 @@ mod seccomp {
 				});
 		}
 
-		//Write the pfc / bpf in the OUT_DIR of the build process
+		//Export the bpf and pfc file to OUT_DIR of the build process
 		let out_dir = std::env::var("OUT_DIR").expect("No compile-time OUT_DIR defined!");
 
 		let fd = File::create(Path::new(&out_dir).join("seccomp.bpf"))

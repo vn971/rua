@@ -59,7 +59,6 @@ RUSTUP_TOOLCHAIN=stable cargo install --force rua
 ```
 
 This does not include bash/zsh/fish completions, but everything else should work.
-If you use development version `pacman-git`, use `cargo install --features git rua` instead.
 
 
 ## How it works / directories

@@ -699,6 +699,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libscmp"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a1c217be3cb9cfffb8a28e699c93a2df0974a039612c6230c2a6e1cad63f50d"
+dependencies = [
+ "bitflags",
+ "libc",
+]
+
+[[package]]
 name = "log"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1094,6 +1104,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "libflate",
+ "libscmp",
  "log",
  "prettytable-rs",
  "raur",

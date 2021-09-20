@@ -1,8 +1,8 @@
 fn main() {
-	//create the shell completions
+	// create the shell completions
 	shell_completions::generate();
 
-	//create seccomp.bpf for target_arch
+	// create seccomp.bpf for target_arch
 	seccomp::generate();
 }
 
@@ -26,25 +26,29 @@ mod shell_completions {
 }
 
 mod seccomp {
-	use libscmp::{resolve_syscall_name, Action, Arch, Filter};
-	use std::{fs::File, path::Path};
-	use std::{os::unix::io::IntoRawFd, str::FromStr};
+	use libscmp::resolve_syscall_name;
+	use libscmp::Action;
+	use libscmp::Arch;
+	use libscmp::Filter;
+	use std::fs::File;
+	use std::os::unix::io::IntoRawFd;
+	use std::path::Path;
+	use std::str::FromStr;
 
 	pub fn generate() {
 		let mut ctx = Filter::new(Action::Allow).unwrap();
 
-		//Get the target_arch configured in cargo to allow cross compiling
+		// Get the target_arch configured in cargo to allow cross compiling
 		let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect(
-			"Compiling without cargo is not supported! Env CARGO_CFG_TARGET_ARCH not found.",
+			"Failed to compile seccomp filter, environment CARGO_CFG_TARGET_ARCH not found. This env is normally set by cargo.",
 		);
 		let target_arch = Arch::from_str(&target_arch)
-			.expect("CARGO_CFG_TARGET_ARCH is not a supported seccomp architecture!");
+			.expect("Failed to compile seccomp filter, CARGO_CFG_TARGET_ARCH is not supported by crate libscmp.");
 		ctx.remove_arch(Arch::NATIVE).unwrap();
 		ctx.add_arch(target_arch).unwrap();
 
-		//Deny these syscalls
+		// Deny these syscalls
 		for syscall in &[
-			"add_key",
 			"_sysctl",
 			"acct",
 			"add_key",
@@ -72,12 +76,12 @@ mod seccomp {
 			"keyctl",
 			"lookup_dcookie",
 			"mbind",
-			"nfsservctl",
 			"migrate_pages",
 			"modify_ldt",
 			"mount",
 			"move_pages",
 			"name_to_handle_at",
+			"nfsservctl",
 			"open_by_handle_at",
 			"perf_event_open",
 			"pivot_root",
@@ -97,31 +101,36 @@ mod seccomp {
 			"uselib",
 			"vmsplice",
 		] {
-			//Resolve the syscall number on the compiling host. (Not directly for the TARGET_ARCH, that mapping will be done automatically by libseccomp when the filter is exported.).
-			let syscall_num = resolve_syscall_name(syscall)
-				.unwrap_or_else(|| panic!("Syscall: {} could not be resolved!", syscall));
+			// Resolve the syscall number on the compiling host. (Not directly for the TARGET_ARCH, that mapping will be done automatically by libseccomp when the filter is exported.).
+			let syscall_num = resolve_syscall_name(syscall).unwrap_or_else(|| {
+				panic!(
+					"Failed to compile seccomp filter, syscall {} could not be resolved.",
+					syscall
+				)
+			});
 
-			//Add rule to filter. The syscall number will later be translated for all enabled architectures in the filter.
+			// Add rule to filter. The syscall number will later be translated for all enabled architectures in the filter.
 			ctx.add_rule(Action::KillThread, syscall_num, &[])
 				.unwrap_or_else(|err| {
 					panic!(
-						"Failed to add rule for syscall {}({}). Error: {}",
+						"Failed to compile seccomp filter, failed to add rule for syscall {}({}). Error: {}",
 						syscall, syscall_num, err
 					);
 				});
 		}
 
-		//Export the bpf and pfc file to OUT_DIR of the build process
-		let out_dir = std::env::var("OUT_DIR").expect("No compile-time OUT_DIR defined!");
+		// Export the bpf and pfc file to OUT_DIR of the build process
+		let out_dir = std::env::var("OUT_DIR")
+			.expect("Failed to save generated seccomp filter, no compile-time OUT_DIR defined.");
 
 		let fd = File::create(Path::new(&out_dir).join("seccomp.bpf"))
-			.expect("Cannot create file seccomp.bpf in OUT_DIR!");
+			.expect("Cannot create file seccomp.bpf in OUT_DIR.");
 		ctx.export_bpf(fd.into_raw_fd())
-			.expect("Failed to export seccomp.bpf!");
+			.expect("Failed to export seccomp.bpf.");
 
 		let fd = File::create(Path::new(&out_dir).join("seccomp.pfc"))
-			.expect("Cannot create file seccomp.pfc in OUT_DIR!");
+			.expect("Cannot create file seccomp.pfc in OUT_DIR.");
 		ctx.export_pfc(fd.into_raw_fd())
-			.expect("Failed to export seccomp.pfc!");
+			.expect("Failed to export seccomp.pfc.");
 	}
 }

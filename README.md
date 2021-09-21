@@ -40,7 +40,7 @@ RUA is a build tool for ArchLinux, AUR. Its features:
 
 ## Install dependencies
 ```sh
-sudo pacman -S --needed git base-devel bubblewrap-suid xz shellcheck cargo
+sudo pacman -S --needed --asdeps git base-devel bubblewrap-suid libseccomp xz shellcheck cargo
 ```
 
 
@@ -58,7 +58,7 @@ In the web interface, package is [rua](https://aur.archlinux.org/packages/rua/).
 RUSTUP_TOOLCHAIN=stable cargo install --force rua
 ```
 
-This does not include bash/zsh/fish completions, but everything else should work.
+This will not include bash/zsh/fish completions, but everything else should work.
 
 
 ## How it works / directories

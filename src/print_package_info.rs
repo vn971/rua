@@ -7,7 +7,7 @@ use colored::*;
 use term_size::dimensions_stdout;
 
 pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
-	let pkg_map = info_map(&pkgs)?;
+	let pkg_map = info_map(pkgs)?;
 
 	let mut all_pkgs = Vec::with_capacity(pkg_map.len());
 

@@ -45,7 +45,7 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
 			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
 		});
-		reviewing::review_repo(&dir, pkgbase, &rua_paths);
+		reviewing::review_repo(&dir, pkgbase, rua_paths);
 	}
 	pacman::ensure_pacman_packages_installed(pacman_deps);
 	install_all(
@@ -145,8 +145,8 @@ fn install_all(
 					.unwrap_or_else(|err| panic!("Failed to remove {:?}, {}", dir_to_remove, err));
 			}
 			wrapped::build_directory(
-				&build_dir.to_str().expect("Non-UTF8 directory name"),
-				&rua_paths,
+				build_dir.to_str().expect("Non-UTF8 directory name"),
+				rua_paths,
 				offline,
 				false,
 			);
@@ -160,7 +160,7 @@ fn install_all(
 		// and we only use this relation for this purpose. Feel free to improve, if you want...
 		let mut files_to_install: Vec<(String, PathBuf)> = Vec::new();
 		for (pkgbase, _depth, split) in &packages {
-			let checked_tars = rua_paths.checked_tars_dir(&pkgbase);
+			let checked_tars = rua_paths.checked_tars_dir(pkgbase);
 			let read_dir_iterator = fs::read_dir(checked_tars).unwrap_or_else(|e| {
 				panic!(
 					"Failed to read 'checked_tars' directory for {}, {}",
@@ -203,8 +203,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 		.iter()
 		.map(|(_, name)| name.as_str())
 		.collect_vec();
-	let common_suffix_length =
-		tar_check::common_suffix_length(&dir_items_names, &archive_whitelist);
+	let common_suffix_length = tar_check::common_suffix_length(&dir_items_names, archive_whitelist);
 	dir_items
 		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
 	trace!("Files filtered for tar checking: {:?}", &dir_items);

@@ -1,8 +1,8 @@
 fn main() {
-	// create the shell completions
+	// generate the shell completions
 	shell_completions::generate();
 
-	// create seccomp.bpf for target_arch
+	// generate seccomp.bpf for the target architecture
 	seccomp::generate();
 }
 
@@ -119,15 +119,16 @@ mod seccomp {
 				});
 		}
 
-		// Export the bpf and pfc file to OUT_DIR of the build process
 		let out_dir = std::env::var("OUT_DIR")
 			.expect("Failed to save generated seccomp filter, no compile-time OUT_DIR defined.");
 
+		// Export the bpf file that will be "inlined" at RUA build time
 		let fd = File::create(Path::new(&out_dir).join("seccomp.bpf"))
 			.expect("Cannot create file seccomp.bpf in OUT_DIR.");
 		ctx.export_bpf(fd.into_raw_fd())
 			.expect("Failed to export seccomp.bpf.");
 
+		// Export the pfc file for debugging (not used for the actual build)
 		let fd = File::create(Path::new(&out_dir).join("seccomp.pfc"))
 			.expect("Cannot create file seccomp.pfc in OUT_DIR.");
 		ctx.export_pfc(fd.into_raw_fd())

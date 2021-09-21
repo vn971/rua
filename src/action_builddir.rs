@@ -12,7 +12,7 @@ use std::process::Command;
 pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.
 	let dir = match dir {
-		Some(path) => &path,
+		Some(path) => path,
 		None => Path::new("."),
 	};
 	let dir = dir
@@ -21,9 +21,9 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 	let dir_str = dir
 		.to_str()
 		.unwrap_or_else(|| panic!("{}:{} Cannot parse CLI target directory", file!(), line!()));
-	wrapped::build_directory(dir_str, &rua_paths, offline, force);
+	wrapped::build_directory(dir_str, rua_paths, offline, force);
 
-	let srcinfo = wrapped::generate_srcinfo(dir_str, &rua_paths).expect("Failed to obtain SRCINFO");
+	let srcinfo = wrapped::generate_srcinfo(dir_str, rua_paths).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
 	let archive_names = srcinfo.pkgs.iter().map(|package| {
 		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {

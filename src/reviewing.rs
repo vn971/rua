@@ -17,14 +17,14 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 	});
 	if dir_contents.next().is_none() {
 		debug!("Directory {:?} is empty, using git clone", &dir);
-		git_utils::init_repo(pkgbase, &dir);
+		git_utils::init_repo(pkgbase, dir);
 	} else {
 		debug!("Directory {:?} is not empty, fetching new version", &dir);
-		git_utils::fetch(&dir);
+		git_utils::fetch(dir);
 	}
 
 	let build_dir = rua_paths.build_dir(pkgbase);
-	if build_dir.exists() && git_utils::is_upstream_merged(&dir) {
+	if build_dir.exists() && git_utils::is_upstream_merged(dir) {
 		eprintln!("WARNING: your AUR repo is up-to-date.");
 		eprintln!(
 			"If you continue, the build directory will be removed and the build will be re-run."
@@ -41,7 +41,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 
 	loop {
 		eprintln!("\nReviewing {:?}. ", dir);
-		let is_upstream_merged = git_utils::is_upstream_merged(&dir);
+		let is_upstream_merged = git_utils::is_upstream_merged(dir);
 		let identical_to_upstream = is_upstream_merged && git_utils::identical_to_upstream(dir);
 		if is_upstream_merged {
 			eprint!(
@@ -88,7 +88,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 		if &user_input == "t" {
 			eprintln!("Changes that you make will be merged with upstream updates in future.");
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
-			terminal_util::run_env_command(&dir, "SHELL", "bash", &[]);
+			terminal_util::run_env_command(dir, "SHELL", "bash", &[]);
 		} else if &user_input == "s" && is_upstream_merged {
 			if let Err(err) = wrapped::shellcheck(&Some(dir.join("PKGBUILD"))) {
 				eprintln!("{}", err);

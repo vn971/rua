@@ -93,7 +93,7 @@ impl RuaPaths {
 				global_build_dir, err
 			)
 		});
-		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
+		show_legacy_dir_warnings(dirs, global_checked_tars_dir.as_path());
 		std::fs::create_dir_all(&global_checked_tars_dir)
 			.expect("Failed to create global checked_tars directory");
 		std::fs::create_dir_all(&global_review_dir)

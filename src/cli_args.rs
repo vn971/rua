@@ -104,7 +104,7 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 		devel: bool,
 		#[structopt(
 			long = "printonly",
-			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts)."
+			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts). Exits with code 7 if no upgrades are available."
 		)]
 		printonly: bool,
 		#[structopt(

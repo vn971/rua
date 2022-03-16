@@ -1,13 +1,9 @@
 use crate::pacman;
-use crate::rua_environment;
 use crate::rua_paths::RuaPaths;
 use crate::tar_check;
-use crate::terminal_util;
 use crate::wrapped;
-use itertools::Itertools;
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 
 pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.

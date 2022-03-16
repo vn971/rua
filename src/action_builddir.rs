@@ -48,5 +48,6 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 		package.pkgname.clone()
 	});
 
+	eprintln!("Package built and checked.");
 	pacman::ensure_aur_packages_installed(package_names.zip(archive_paths).collect::<Vec<_>>(), false);
 }

@@ -55,6 +55,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			"{}",
 			"Good job! All AUR packages are up-to-date.".bright_green()
 		);
+		std::process::exit(7);
 	} else if outdated.is_empty() {
 		eprintln!("All AUR packages are up-to-date, but there are some packages installed locally that do not exist in neither pacman nor AUR.");
 		eprintln!("These might be old dependencies from changed packages in pacman, or an AUR package that was removed from AUR.");

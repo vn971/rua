@@ -104,7 +104,7 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 		devel: bool,
 		#[structopt(
 			long = "printonly",
-			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts)."
+			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts). Exits with code 7 if no upgrades are available."
 		)]
 		printonly: bool,
 		#[structopt(
@@ -117,4 +117,5 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 
 /// environment variable that we expect the user might fill
 // !WARNING! If you change this, make sure the value the same as documented in CliArgs above.
+#[allow(dead_code)] // unused from inside build.rs
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";

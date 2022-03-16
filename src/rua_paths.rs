@@ -63,24 +63,11 @@ impl RuaPaths {
 			.expect("Failed to create project config directory");
 		std::fs::create_dir_all(dirs.config_dir().join("wrap_args.d"))
 			.expect("Failed to create project config directory");
-		overwrite_file(
-			&dirs.config_dir().join(".system/seccomp-i686.bpf"),
-			SECCOMP_I686,
-		);
-		overwrite_file(
-			&dirs.config_dir().join(".system/seccomp-x86_64.bpf"),
-			SECCOMP_X86_64,
-		);
-		let seccomp_path = format!(
-			".system/seccomp-{}.bpf",
-			uname::uname()
-				.expect("Failed to get system architecture via uname")
-				.machine
-		);
-		rua_environment::set_env_if_not_set(
-			"RUA_SECCOMP_FILE",
-			dirs.config_dir().join(seccomp_path).to_str().unwrap(),
-		);
+
+		let seccomp_path = &dirs.config_dir().join(SECCOMP_PATH);
+		overwrite_file(seccomp_path, SECCOMP_BPF);
+		rua_environment::set_env_if_not_set("RUA_SECCOMP_FILE", seccomp_path.to_str().unwrap());
+
 		overwrite_script(&dirs.config_dir().join(WRAP_SCRIPT_PATH), WRAP_SH);
 		overwrite_script(
 			&dirs.config_dir().join(MAKEPKG_CONFIG_LOADER_PATH),
@@ -106,7 +93,7 @@ impl RuaPaths {
 				global_build_dir, err
 			)
 		});
-		show_legacy_dir_warnings(&dirs, global_checked_tars_dir.as_path());
+		show_legacy_dir_warnings(dirs, global_checked_tars_dir.as_path());
 		std::fs::create_dir_all(&global_checked_tars_dir)
 			.expect("Failed to create global checked_tars directory");
 		std::fs::create_dir_all(&global_review_dir)
@@ -249,11 +236,11 @@ fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 }
 
 pub const SHELLCHECK_WRAPPER: &str = include_str!("../res/shellcheck-wrapper");
-pub const SECCOMP_I686: &[u8] = include_bytes!("../res/seccomp-i686.bpf");
-pub const SECCOMP_X86_64: &[u8] = include_bytes!("../res/seccomp-x86_64.bpf");
+pub const SECCOMP_BPF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/seccomp.bpf"));
 pub const WRAP_SH: &[u8] = include_bytes!("../res/wrap.sh");
 pub const WRAP_ARGS_EXAMPLE: &[u8] = include_bytes!("../res/wrap_args.sh.example");
 pub const CONFIG_LOADER: &[u8] = include_bytes!("../res/print_makepkg_config.sh");
 
 pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
 pub const MAKEPKG_CONFIG_LOADER_PATH: &str = ".system/print_makepkg_config.sh";
+pub const SECCOMP_PATH: &str = ".system/seccomp.bpf";

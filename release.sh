@@ -7,7 +7,7 @@ set -o pipefail
 rustup update
 cargo upgrade
 cargo update
-cargo fmt --all --
+cargo fmt --all -- --check
 if ! test -z "$(git status --porcelain)"; then
   >&2 printf '%s\n' "error: uncommitted changes"
   exit 1

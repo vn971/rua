@@ -69,6 +69,8 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 			} else if &string == "m" {
 			} else if &string == "x" {
 				break;
+			} else {
+				continue;
 			}
 		}
 		let alpm = new_alpm_wrapper();

@@ -73,7 +73,7 @@ pub fn recursive_info(
 	Ok((info_map, pacman_deps, depth_map))
 }
 
-/// Queries the AUR for the provided given package names and returns a map all packages
+/// Queries the AUR for the provided given package names and returns a map of all packages
 /// that match.
 ///
 /// # Arguments

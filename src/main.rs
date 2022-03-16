@@ -43,7 +43,7 @@ fn main() {
 			target,
 		} => {
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_install::install(&target, &paths, *offline, *asdeps);
+			action_install::install(target, &paths, *offline, *asdeps);
 		}
 		Action::Builddir {
 			offline,
@@ -65,7 +65,7 @@ fn main() {
 		}
 		Action::Tarcheck { target } => {
 			tar_check::tar_check_unwrap(
-				&target,
+				target,
 				target.to_str().expect("target is not valid UTF-8"),
 			);
 			eprintln!("Finished checking package: {:?}", target);

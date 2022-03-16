@@ -44,42 +44,13 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 		tar_check::tar_check(&file, file_str).ok();
 	}
 
-	let archive_escaped = archive_names
-		.iter()
-		.map(|archive| {
-			let canon = dir.join(archive).canonicalize();
-			let canon = canon.unwrap_or_else(|err| {
-				panic!(
-					"Failed to canonicalize path for archive {} in directory {:?}, {}",
-					archive, dir, err
-				)
-			});
-			let canon = canon.to_str().expect("Builddir target has unvalid UTF-8");
-			terminal_util::escape_bash_arg(canon) // this is only printing. rua does not use bash to install packages
-		})
-		.collect_vec()
-		.join(" ");
+	let archive_paths = archive_names.iter().map(|aname| {
+		dir.join(aname)
+	});
 
-	eprintln!("Package built and checked. Do you want to install?");
-	eprintln!("    pacman -U -- {}", archive_escaped);
-	loop {
-		eprint!(
-			"[S]={} install, [X]=skip installation. ",
-			rua_environment::sudo_command()
-		);
-		let user_input = terminal_util::read_line_lowercase();
-		if &user_input == "s" {
-			let exit_status = Command::new(rua_environment::sudo_command())
-				.args(&["pacman", "-U", "--"])
-				.args(&archive_names)
-				.status();
-			if exit_status.map(|c| c.success()).unwrap_or(false) {
-				break;
-			} else {
-				eprintln!("Pacman installation command failed")
-			}
-		} else if &user_input == "x" {
-			break;
-		}
-	}
+	let package_names = srcinfo.pkgs.iter().map(|package| {
+		package.pkgname.clone()
+	});
+
+	pacman::ensure_aur_packages_installed(package_names.zip(archive_paths).collect::<Vec<_>>(), false);
 }

@@ -3,6 +3,7 @@ static GLOBAL: std::alloc::System = std::alloc::System;
 
 mod action_builddir;
 mod action_install;
+mod action_list;
 mod action_search;
 mod action_upgrade;
 mod alpm_wrapper;
@@ -53,6 +54,7 @@ fn main() {
 			let paths = rua_paths::RuaPaths::initialize_paths();
 			action_builddir::action_builddir(target, &paths, *offline, *force);
 		}
+		Action::List {} => action_list::list_aur_packages(),
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
 			let result = shellcheck(target);

@@ -70,7 +70,13 @@ Sources are downloaded using .SRCINFO only"
 		#[structopt(help = "Target package", multiple = true, required = true)]
 		target: Vec<String>,
 	},
-	#[structopt(about = "Opens AUR web search page")]
+	#[structopt(about = "List all packages not managed by pacman, including those not from AUR")]
+	List {
+		// really nothing to do here
+	},
+	#[structopt(
+		about = "Search for packages by name or description. If multiple keywords are used, all of them must match."
+	)]
 	Search {
 		#[structopt(help = "Target to search for", multiple = true, required = true)]
 		target: Vec<String>,

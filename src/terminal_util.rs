@@ -47,6 +47,6 @@ pub fn run_env_command(
 /// > within the quotes. A single quote may not occur between single quotes,
 /// > even when preceded by a backslash.
 pub fn escape_bash_arg(str: &str) -> String {
-	let result = str.replace("'", "'\\''"); // end quoting, append the literal, start quoting
+	let result = str.replace('\'', "'\\''"); // end quoting, append the literal, start quoting
 	format!("'{}'", result)
 }

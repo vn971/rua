@@ -142,7 +142,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			let dir = PathBuf::from(path_str);
 			let dir = dir.parent().unwrap_or_else(|| Path::new("."));
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
-			terminal_util::run_env_command(&dir.to_path_buf(), "SHELL", "bash", &[]);
+			terminal_util::run_env_command(dir, "SHELL", "bash", &[]);
 		} else if &string == "o" {
 			break;
 		} else if &string == "q" {

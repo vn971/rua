@@ -28,22 +28,20 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 		} else {
 			"any".to_string()
 		};
-		format!(
+		let file = format!(
 			"{}-{}-{}{}",
 			package.pkgname, ver, arch, rua_paths.makepkg_pkgext
-		)
+		);
+		let file = dir.join(file);
+		(package.pkgname.clone(), file)
 	});
-	let packages: Vec<PathBuf> = packages.map(|package| dir.join(package)).collect();
+	let packages: Vec<(String, PathBuf)> = packages.collect();
 
-	for file in &packages {
+	for (_, file) in &packages {
 		let file_str = file.to_str().expect("Builddir target has unvalid UTF-8");
 		tar_check::tar_check(file, file_str).ok();
 	}
 	eprintln!("Package built and checked.");
 
-	// We need to make sure that the new package _file_ is installed,
-	// not just the package by its name.
-	// Therefore, we use "_" as the package name, which we assume is never installed.
-	let packages = packages.into_iter().map(|p| ("_".to_string(), p)).collect();
 	pacman::ensure_aur_packages_installed(packages, false);
 }

@@ -18,7 +18,9 @@ use std::process::Command;
 
 /// All directories must exist upon `RuaPaths` creation.
 pub struct RuaPaths {
-	/// Subdirectory of ~/.cache/rua where packages are built after review
+	/// Subdirectory of ~/.cache/rua where packages are built after review.
+	/// Note: if you need to access a particular package's directory,
+	/// use `build_dir(pkgbase: &str)` instead
 	pub global_build_dir: PathBuf,
 	/// Subdirectory of ~/.config/rua where the package is reviewed by user, and changes are kept
 	global_review_dir: PathBuf,

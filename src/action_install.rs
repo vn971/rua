@@ -55,6 +55,17 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		is_offline,
 		asdeps,
 	);
+	for target in targets {
+		// Delete temp directories after successful build+install
+		if let Err(err) = rm_rf::remove(rua_paths.build_dir(target)) {
+			eprintln!(
+				"Failed to clean/delete temporary build directory {:?}, {}",
+				rua_paths.build_dir(target),
+				err
+			);
+			std::process::exit(1)
+		}
+	}
 }
 
 fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {

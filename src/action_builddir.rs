@@ -5,6 +5,7 @@ use crate::wrapped;
 use std::path::Path;
 use std::path::PathBuf;
 
+/// Build and install a package, see `crate::cli_args::Action::Builddir` for details
 pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	// Set `.` as default dir in case no build directory is provided.
 	let dir = match dir {
@@ -21,7 +22,7 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 
 	let srcinfo = wrapped::generate_srcinfo(dir_str, rua_paths).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
-	let archive_names = srcinfo.pkgs.iter().map(|package| {
+	let packages = srcinfo.pkgs.iter().map(|package| {
 		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {
 			pacman::PACMAN_ARCH.to_string()
 		} else {
@@ -32,22 +33,17 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 			package.pkgname, ver, arch, rua_paths.makepkg_pkgext
 		)
 	});
-	let archive_names = archive_names.collect::<Vec<_>>();
+	let packages: Vec<PathBuf> = packages.map(|package| dir.join(package)).collect();
 
-	for archive_name in &archive_names {
-		let file = dir.join(archive_name);
+	for file in &packages {
 		let file_str = file.to_str().expect("Builddir target has unvalid UTF-8");
-		tar_check::tar_check(&file, file_str).ok();
+		tar_check::tar_check(file, file_str).ok();
 	}
-
-	let archive_paths = archive_names.iter().map(|aname| {
-		dir.join(aname)
-	});
-
-	let package_names = srcinfo.pkgs.iter().map(|package| {
-		package.pkgname.clone()
-	});
-
 	eprintln!("Package built and checked.");
-	pacman::ensure_aur_packages_installed(package_names.zip(archive_paths).collect::<Vec<_>>(), false);
+
+	// We need to make sure that the new package _file_ is installed,
+	// not just the package by its name.
+	// Therefore, we use "_" as the package name, which we assume is never installed.
+	let packages = packages.into_iter().map(|p| ("_".to_string(), p)).collect();
+	pacman::ensure_aur_packages_installed(packages, false);
 }

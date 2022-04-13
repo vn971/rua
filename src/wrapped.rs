@@ -131,9 +131,12 @@ fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	if force {
 		command.arg("--force");
 	}
-	let command = command
-		.status()
-		.unwrap_or_else(|e| panic!("Failed to execute ~/.config/rua/.system/wrap.sh, {}", e));
+	let command = command.status().unwrap_or_else(|e| {
+		panic!(
+			"Failed to execute ~/.config/rua/.system/security-wrapper.sh, {}",
+			e
+		)
+	});
 	if !command.success() {
 		eprintln!(
 			"Build failed with exit code {} in {}",

@@ -13,7 +13,7 @@ if ! test -z "$(git status --porcelain)"; then
   exit 1
 fi
 
-shellcheck -e SC1090 res/wrap.sh
+shellcheck -e SC1090 res/wrapper/security-wrapper.sh
 cargo test
 cargo clippy --all-targets --features= -- -D warnings
 cargo publish

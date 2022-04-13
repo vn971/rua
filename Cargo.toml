@@ -3,13 +3,8 @@ name = "rua"
 version = "0.18.2"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
-  "Vasili Novikov <n1dr+cm3513git@yandex.ru>",
-  "Stefano Probst <senden9@gmail.com>",
-  "morganamilo <morganamilo@gmail.com>",
-  "nolik <Novik030692!>",
-  "Aaron Cunningham <aa.cunningham@outlook.com>",
-  "VukoDrakkeinen <sneyk8+git@gmail.com>",
-  "Markus Richter <8398165+mqus@users.noreply.github.com>",
+  "Vasili Novikov (maintainer) <vasya.novikov+cm3513git@gmail.com>",
+  "The many great contributors, see github and gitlab <users@git>",
 ]
 license="GPL-3.0-or-later"
 edition="2021"

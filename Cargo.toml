@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.18.2"
+version = "0.19.0"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov (maintainer) <vasya.novikov+cm3513git@gmail.com>",
@@ -29,22 +29,22 @@ libscmp = "0.2.0"
 
 [dependencies]
 alpm = { version = "2.2.1", default-features = false, features = [], optional = true }
-anyhow = "1.0.53"
+anyhow = "1.0.56"
 chrono = "0.4.19"
 colored = "2.0.0"
 directories = "4.0.1"
 env_logger = "0.9.0"
 fs2 = "0.4.3"
 fs_extra = "1.2.0"
-indexmap = "1.8.0"
+indexmap = "1.8.1"
 itertools = "0.10.3"
 lazy_static = "1.4.0"
-libc = "0.2.118"
-libflate = "1.1.2"
-log = "0.4.14"
+libc = "0.2.123"
+libflate = "1.2.0"
+log = "0.4.16"
 prettytable-rs = "0.8.0"
 raur = { version = "6.0.0", default-features = false, features = ["blocking", "rustls-tls"] }
-regex = "1.5.4"
+regex = "1.5.5"
 rm_rf = "0.6.1"
 ruzstd = "0.2.4"
 srcinfo = "1.0.0"

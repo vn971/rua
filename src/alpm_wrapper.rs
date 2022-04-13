@@ -168,6 +168,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 }
 
 #[cfg(test)]
+#[cfg(feature = "testpacman")]
 mod tests {
 	use crate::alpm_wrapper::AlpmBinWrapper;
 	use crate::alpm_wrapper::AlpmWrapper;
@@ -177,6 +178,5 @@ mod tests {
 		let alpm_bin = AlpmBinWrapper {};
 		let packages = alpm_bin.get_non_pacman_packages().unwrap();
 		assert!(packages.iter().all(|(pkg, _ver)| pkg != "pacman"));
-		// assert!(packages.iter().any(|(pkg, _ver)| pkg == "rua"));
 	}
 }

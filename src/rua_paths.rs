@@ -237,10 +237,10 @@ fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 
 pub const SHELLCHECK_WRAPPER: &str = include_str!("../res/shellcheck-wrapper");
 pub const SECCOMP_BPF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/seccomp.bpf"));
-pub const WRAP_SH: &[u8] = include_bytes!("../res/wrap.sh");
-pub const WRAP_ARGS_EXAMPLE: &[u8] = include_bytes!("../res/wrap_args.sh.example");
+pub const WRAP_SH: &[u8] = include_bytes!("../res/wrapper/security-wrapper.sh");
+pub const WRAP_ARGS_EXAMPLE: &[u8] = include_bytes!("../res/wrapper/wrap_args.sh.example");
 pub const CONFIG_LOADER: &[u8] = include_bytes!("../res/print_makepkg_config.sh");
 
-pub const WRAP_SCRIPT_PATH: &str = ".system/wrap.sh";
+pub const WRAP_SCRIPT_PATH: &str = ".system/security-wrapper.sh";
 pub const MAKEPKG_CONFIG_LOADER_PATH: &str = ".system/print_makepkg_config.sh";
 pub const SECCOMP_PATH: &str = ".system/seccomp.bpf";

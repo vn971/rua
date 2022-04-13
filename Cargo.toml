@@ -19,9 +19,14 @@ repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-libalpm = ["alpm"]  # will use library bindings to libalpm instead of shelling (calling `pacman` executable)
+default=["testpacman"]
+# Use library bindings to libalpm instead of shelling (calling `pacman` executable).
+# Note that this breaks the tool upon major pacman upgrades.
+libalpm = ["alpm"]
+# Use library bindings to the "git" version of libalpm, see also above.
 libalpmgit = ["libalpm", "alpm/git"]
 libalpmgenerate = ["libalpm", "alpm/generate"]
+testpacman = []  # whether to perform libalpm/pacman checks on tests
 
 [build-dependencies]
 structopt = "0.3.26"

@@ -3,8 +3,8 @@ use raur::blocking::Raur;
 use raur::Package;
 use raur::SearchBy;
 
-fn is_package_ok(pkg: &Package, filter: &str) -> bool {
-	let filter = filter.to_lowercase();
+fn contains_keyword(pkg: &Package, keyword: &str) -> bool {
+	let filter = keyword.to_lowercase();
 	pkg.name.to_lowercase().contains(filter.as_str())
 		|| pkg
 			.description
@@ -25,8 +25,8 @@ pub fn action_search(keywords: &[String]) {
 			if result.is_empty() {
 				std::process::exit(1)
 			};
-			for filter in &keywords[1..] {
-				result.retain(|p| is_package_ok(p, filter));
+			for keyword in &keywords[1..] {
+				result.retain(|pkg| contains_keyword(pkg, keyword));
 			}
 			print_package_table::print_package_table(result, &keywords)
 		}

@@ -22,7 +22,7 @@ ver=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')
 export ver
 git tag -m "release" "v$ver"
 
-git push hub
+git push
 git push lab
 
 # prepare and test AUR package

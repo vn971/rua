@@ -1,4 +1,4 @@
-## RUA  [![Build Status](https://travis-ci.org/vn971/rua.svg?branch=master)](https://travis-ci.org/vn971/rua)  [![crates.io](https://img.shields.io/crates/v/rua.svg)](https://crates.io/crates/rua)
+## RUA  [![Rust](https://github.com/vn971/rua/workflows/Rust/badge.svg)](https://github.com/vn971/rua/actions)  [![ShellCheck](https://github.com/vn971/rua/workflows/ShellCheck/badge.svg)](https://github.com/vn971/rua/actions)  [![crates.io](https://img.shields.io/crates/v/rua.svg)](https://crates.io/crates/rua)
 
 RUA is a build tool for ArchLinux, AUR. Its features:
 

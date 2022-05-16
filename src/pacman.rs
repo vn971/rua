@@ -59,10 +59,8 @@ fn ensure_packages_installed(
 				);
 				eprint!("or install manually and enter M when done. ");
 			}
-			attempt += 1;
-
 			let string = if autobuild {
-				if attempt == 1 {
+				if attempt == 0 {
 					eprintln!("\n{} {}", "Autobuild:".italic(), "[S]".italic());
 					"s".to_string()
 				} else {
@@ -76,6 +74,7 @@ fn ensure_packages_installed(
 			} else {
 				terminal_util::read_line_lowercase()
 			};
+			attempt += 1;
 			if string == "s" {
 				let exit_status = Command::new(rua_environment::sudo_command())
 					.arg("pacman")

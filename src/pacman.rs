@@ -1,6 +1,7 @@
 use crate::alpm_wrapper::new_alpm_wrapper;
 use crate::rua_environment;
 use crate::terminal_util;
+use colored::Colorize;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -20,7 +21,11 @@ pub fn get_ignored_packages() -> Result<HashSet<String>, String> {
 	Ok(output.lines().map(ToOwned::to_owned).collect())
 }
 
-fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[&str]) {
+fn ensure_packages_installed(
+	mut packages: Vec<(String, PathBuf)>,
+	base_args: &[&str],
+	autobuild: bool,
+) {
 	let mut attempt = 0;
 	while !packages.is_empty() {
 		{
@@ -55,7 +60,22 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 				eprint!("or install manually and enter M when done. ");
 			}
 			attempt += 1;
-			let string = terminal_util::read_line_lowercase();
+
+			let string = if autobuild {
+				if attempt == 1 {
+					eprintln!("\n{} {}", "Autobuild:".italic(), "[S]".italic());
+					"s".to_string()
+				} else {
+					eprintln!(
+						"\n{} {}",
+						"Autobuild: install attempt failed, skipping installation...".italic(),
+						"[X]".italic()
+					);
+					"x".to_string()
+				}
+			} else {
+				terminal_util::read_line_lowercase()
+			};
 			if string == "s" {
 				let exit_status = Command::new(rua_environment::sudo_command())
 					.arg("pacman")
@@ -82,21 +102,25 @@ fn ensure_packages_installed(mut packages: Vec<(String, PathBuf)>, base_args: &[
 	}
 }
 
-pub fn ensure_aur_packages_installed(packages: Vec<(String, PathBuf)>, is_dependency: bool) {
+pub fn ensure_aur_packages_installed(
+	packages: Vec<(String, PathBuf)>,
+	is_dependency: bool,
+	autobuild: bool,
+) {
 	if is_dependency {
-		ensure_packages_installed(packages, &["-U", "--asdeps"]);
+		ensure_packages_installed(packages, &["-U", "--asdeps"], autobuild);
 	} else {
-		ensure_packages_installed(packages, &["-U"]);
+		ensure_packages_installed(packages, &["-U"], autobuild);
 	}
 }
 
-pub fn ensure_pacman_packages_installed(packages: IndexSet<String>) {
+pub fn ensure_pacman_packages_installed(packages: IndexSet<String>, autobuild: bool) {
 	let mut map: Vec<(String, PathBuf)> = Vec::new();
 	for package in packages {
 		let path = Path::new(&package).to_path_buf();
 		map.push((package, path));
 	}
-	ensure_packages_installed(map, &["-S", "--asdeps", "--needed"]);
+	ensure_packages_installed(map, &["-S", "--asdeps", "--needed"], autobuild);
 }
 
 // Architecture as defined in the local pacman configuration

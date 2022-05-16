@@ -6,7 +6,7 @@ use colored::Colorize;
 use log::debug;
 use std::path::Path;
 
-pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
+pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths, autobuild: bool) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to read directory for reviewing, {}",
@@ -83,8 +83,18 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 				"[O]=(cannot use the package until you merge) ".dimmed()
 			);
 		}
-		let user_input = terminal_util::read_line_lowercase();
 
+		let user_input = if autobuild {
+			if is_upstream_merged {
+				eprintln!("\n{} {}", "Autobuild:".italic(), "[O]".italic().red());
+				"o".to_string()
+			} else {
+				eprintln!("\n{} {}", "Autobuild:".italic(), "[M]".italic().yellow());
+				"m".to_string()
+			}
+		} else {
+			terminal_util::read_line_lowercase()
+		};
 		if &user_input == "t" {
 			eprintln!("Changes that you make will be merged with upstream updates in future.");
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");

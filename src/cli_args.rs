@@ -69,7 +69,10 @@ Sources are downloaded using .SRCINFO only"
 		offline: bool,
 		#[structopt(help = "Target package", multiple = true, required = true)]
 		target: Vec<String>,
-                #[structopt(help = "Exclude package(s). Can take multiple values seperated by `,`.")]
+                #[structopt(
+                    help = "Exclude package(s) from dependency check. Can take multiple values seperated by `,`.",
+                    long = "assume-installed"
+                )]
                 exclude: Option<String>,
 	},
 	#[structopt(
@@ -116,7 +119,10 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 			help = "Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`."
 		)]
 		ignored: Option<String>,
-                #[structopt(help = "Exclude package(s). Can take multiple values seperated by `,`.")]
+                #[structopt(
+                    help = "Exclude package(s) from dependency check. Can take multiple values seperated by `,`.",
+                    long = "assume-installed"
+                )]
                 exclude: Option<String>,
 	},
 }

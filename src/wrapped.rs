@@ -125,15 +125,15 @@ fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool, no_d
 	let mut command = jail_for_makepkg(rua_paths, dir, dir);
 	if offline {
 		command.arg("--unshare-net");
-	}
-        if no_deps {
-            command.arg("-d");
-        }
+	} 
 	command.args(&["--bind", dir, dir]).arg("makepkg");
 	command.env("FAKEROOTDONTTRYCHOWN", "true");
 	if force {
 		command.arg("--force");
 	}
+        if no_deps {
+            command.arg("-d");
+        }
 	let command = command.status().unwrap_or_else(|e| {
 		panic!(
 			"Failed to execute ~/.config/rua/.system/security-wrapper.sh, {}",

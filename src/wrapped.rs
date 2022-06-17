@@ -120,12 +120,15 @@ pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, Stri
 	Ok(srcinfo)
 }
 
-fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
+fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool, no_deps: bool) {
 	debug!("{}:{} Building directory {}", file!(), line!(), dir);
 	let mut command = jail_for_makepkg(rua_paths, dir, dir);
 	if offline {
 		command.arg("--unshare-net");
 	}
+        if no_deps {
+            command.arg("-d");
+        }
 	command.args(&["--bind", dir, dir]).arg("makepkg");
 	command.env("FAKEROOTDONTTRYCHOWN", "true");
 	if force {
@@ -149,11 +152,11 @@ fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	}
 }
 
-pub fn build_directory(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
+pub fn build_directory(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool, no_deps: bool) {
 	if offline {
 		download_srcinfo_sources(dir, rua_paths);
 	}
-	build_local(dir, rua_paths, offline, force);
+	build_local(dir, rua_paths, offline, force, no_deps);
 }
 
 /// Perform a shellcheck check of a PKGBUILD, taking care of special variables
@@ -177,7 +180,7 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 	command.args(&[
 		"shellcheck",
 		"--norc",
-		// "--exclude", "SC2128"  // this would avoid warning for split packages, where $pkgname looks like an array to shellcheck, but it isn't an array later with `makepkg`
+		// "--no_deps", "SC2128"  // this would avoid warning for split packages, where $pkgname looks like an array to shellcheck, but it isn't an array later with `makepkg`
 		"/dev/stdin",
 	]);
 	command.stdin(Stdio::piped());

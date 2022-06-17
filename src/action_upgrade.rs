@@ -45,7 +45,7 @@ pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 	}
 }
 
-pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) {
+pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>, exclude: &Vec<&str>) {
 	let alpm = new_alpm_wrapper();
 	let (outdated, nonexistent) =
 		calculate_upgrade(&*alpm, devel, ignored).expect("calculating upgrade failed");
@@ -70,7 +70,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			let user_input = terminal_util::read_line_lowercase();
 			if &user_input == "o" {
 				let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-				action_install::install(&outdated, rua_paths, false, true);
+				action_install::install(&outdated, rua_paths, false, true, exclude);
 				break;
 			} else if &user_input == "x" {
 				break;

@@ -1,4 +1,11 @@
 fn main() {
+	// Check that a single TLS feature has been used
+	#[cfg(all(feature = "rustls-tls", feature = "native-tls"))]
+	compile_error!("You must select either the `rustls-tls` or the `native-tls` feature.");
+	
+	#[cfg(not(any(feature = "rustls-tls", feature = "native-tls")))]
+	compile_error!("You must select either the `rustls-tls` or the `native-tls` feature.");
+
 	// generate the shell completions
 	shell_completions::generate();
 

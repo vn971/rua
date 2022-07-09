@@ -59,18 +59,10 @@ fn ensure_packages_installed(
 				);
 				eprint!("or install manually and enter M when done. ");
 			}
-			let string = if autobuild {
-				if attempt == 0 {
-					eprintln!("\n{} {}", "Autobuild:".italic(), "[S]".italic());
-					"s".to_string()
-				} else {
-					eprintln!(
-						"\n{} {}",
-						"Autobuild: install attempt failed, skipping installation...".italic(),
-						"[X]".italic()
-					);
-					"x".to_string()
-				}
+			let string = if autobuild && attempt == 0 {
+				// autobuild: require user input if first installation attempt fails
+				eprintln!("\n{} {}", "Autobuild:".italic(), "[S]".italic());
+				"s".to_string()
 			} else {
 				terminal_util::read_line_lowercase()
 			};

@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.19.0"
+version = "0.19.1"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov (maintainer) <vasya.novikov+cm3513git@gmail.com>",

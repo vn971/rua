@@ -17,9 +17,9 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
+pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool, exclude: &Vec<&str>) {
 	let alpm = new_alpm_wrapper();
-	let (split_to_raur, pacman_deps, split_to_depth) =
+	let (split_to_raur, mut pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &*alpm).unwrap_or_else(|err| {
 			panic!("Failed to fetch info from AUR, {}", err);
 		});
@@ -38,7 +38,12 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		);
 		std::process::exit(1)
 	}
-
+        let no_deps = if exclude.is_empty() {
+            false
+        } else {
+            pacman_deps.retain(|i| !exclude.contains(&i.as_str()));
+            true
+        }; 
 	show_install_summary(&pacman_deps, &split_to_depth);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = rua_paths.review_dir(pkgbase);
@@ -54,6 +59,7 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		split_to_pkgbase,
 		is_offline,
 		asdeps,
+                no_deps,
 	);
 	for target in targets {
 		// Delete temp directories after successful build+install
@@ -104,6 +110,7 @@ fn install_all(
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
+        no_deps: bool,
 ) {
 	let archive_whitelist = split_to_depth
 		.iter()
@@ -160,6 +167,7 @@ fn install_all(
 				rua_paths,
 				offline,
 				false,
+                                no_deps,
 			);
 		}
 		for (pkgbase, _depth, _split) in &packages {

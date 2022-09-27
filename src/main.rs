@@ -41,9 +41,13 @@ fn main() {
 			asdeps,
 			offline,
 			target,
+                        exclude,
 		} => {
+                        let exclude = exclude.iter()
+                            .flat_map(|i| i.split(','))
+                            .collect::<Vec<&str>>();
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_install::install(target, &paths, *offline, *asdeps);
+			action_install::install(target, &paths, *offline, *asdeps, &exclude);
 		}
 		Action::Builddir {
 			offline,
@@ -51,7 +55,7 @@ fn main() {
 			target,
 		} => {
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_builddir::action_builddir(target, &paths, *offline, *force);
+			action_builddir::action_builddir(target, &paths, *offline, *force, false);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
@@ -74,16 +78,20 @@ fn main() {
 			devel,
 			printonly,
 			ignored,
+                        exclude,
 		} => {
 			let ignored_set = ignored
 				.iter()
 				.flat_map(|i| i.split(','))
 				.collect::<HashSet<&str>>();
+                        let exclude = exclude.iter()
+                            .flat_map(|i| i.split(','))
+                            .collect::<Vec<&str>>();
 			if *printonly {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, &paths, &ignored_set);
+				action_upgrade::upgrade_real(*devel, &paths, &ignored_set, &exclude);
 			}
 		}
 	};

@@ -1,8 +1,8 @@
-#!/bin/bash -euET
+#!/bin/bash
 {
 # script to release RUA, probably has no use to anybody except maintainers.
 
-set -o pipefail
+set -x -euETo pipefail
 
 rustup update
 cargo upgrade

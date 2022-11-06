@@ -8,14 +8,14 @@ rustup update
 cargo upgrade
 cargo update
 cargo fmt --all -- --check
+shellcheck -e SC1090 res/wrapper/security-wrapper.sh
+cargo test
+cargo clippy --all-targets --features= -- -D warnings
 if ! test -z "$(git status --porcelain)"; then
   >&2 printf '%s\n' "error: uncommitted changes"
   exit 1
 fi
 
-shellcheck -e SC1090 res/wrapper/security-wrapper.sh
-cargo test
-cargo clippy --all-targets --features= -- -D warnings
 cargo publish
 
 ver=$(cat Cargo.toml | grep -m1 version | sed 's/.*"\(.*\)"/\1/')

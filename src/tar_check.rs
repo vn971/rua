@@ -22,7 +22,7 @@ pub fn tar_check_unwrap(tar_file: &Path, file_name: &str) {
 }
 
 pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
-	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
+	let archive = File::open(tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	debug!("Checking file {}", tar_str);
 	if tar_str.ends_with(".tar") {
 		tar_check_archive(Archive::new(archive), tar_str);

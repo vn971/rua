@@ -99,7 +99,7 @@ struct AlpmBinWrapper {}
 impl AlpmWrapper for AlpmBinWrapper {
 	fn is_installed(&self, package: &str) -> Result<bool> {
 		let result = Command::new("pacman")
-			.args(&["-Qi", "--", package])
+			.args(["-Qi", "--", package])
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()
@@ -115,7 +115,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 
 	fn is_installable(&self, package: &str) -> Result<bool> {
 		let result = Command::new("pacman")
-			.args(&["-Sddp", "--", package])
+			.args(["-Sddp", "--", package])
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()
@@ -130,7 +130,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 
 	fn get_non_pacman_packages(&self) -> Result<Vec<(String, String)>> {
 		let mut command = Command::new("pacman");
-		command.args(&["-Q", "--foreign", "--color=never"]);
+		command.args(["-Q", "--foreign", "--color=never"]);
 		let output = command.output().context("failed to execute pacman")?;
 		let stdout =
 			String::from_utf8(output.stdout).context("failed to parse pacman output as utf8")?;
@@ -155,7 +155,7 @@ impl AlpmWrapper for AlpmBinWrapper {
 
 	fn version_compare(&self, a: &str, b: &str) -> Result<Ordering> {
 		let mut command = Command::new("vercmp");
-		command.args(&[a, b]);
+		command.args([a, b]);
 		let output = command.output().context("Failed to execute vercmp")?;
 		let stdout =
 			String::from_utf8(output.stdout).context("Failed to parse vercmp response as utf8")?;

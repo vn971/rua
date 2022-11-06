@@ -24,7 +24,7 @@ static BUBBLEWRAP_IS_RUNNABLE: Once = Once::new();
 pub fn check_bubblewrap_runnable() {
 	BUBBLEWRAP_IS_RUNNABLE.call_once(|| {
 		let command = Command::new("bwrap")
-			.args(&["--ro-bind", "/", "/", "true"])
+			.args(["--ro-bind", "/", "/", "true"])
 			.status();
 		let command = command.unwrap_or_else(|err| {
 			error!(
@@ -71,9 +71,9 @@ fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
 		.expect("cannot write to PKGBUILD.static");
 	info!("Downloading sources using .SRCINFO...");
 	let command = jail_for_makepkg(rua_paths, dir, dir)
-		.args(&["--bind", dir, dir])
-		.args(&["makepkg", "-f", "--verifysource"])
-		.args(&["-p", "PKGBUILD.static"])
+		.args(["--bind", dir, dir])
+		.args(["makepkg", "-f", "--verifysource"])
+		.args(["-p", "PKGBUILD.static"])
 		.status()
 		.unwrap_or_else(|e| panic!("Failed to fetch dependencies in directory {}, {}", dir, e));
 	assert!(command.success(), "Failed to download PKGBUILD sources");
@@ -85,7 +85,7 @@ pub fn generate_srcinfo(dir: &str, rua_paths: &RuaPaths) -> Result<Srcinfo, Stri
 	debug!("Getting srcinfo in directory {}", dir);
 	let mut command = jail_for_makepkg(rua_paths, dir, "/tmp");
 	command.arg("--unshare-net");
-	command.args(&["--ro-bind", dir, dir]);
+	command.args(["--ro-bind", dir, dir]);
 	command
 		.arg("makepkg")
 		.arg("--holdver")
@@ -126,7 +126,7 @@ fn build_local(dir: &str, rua_paths: &RuaPaths, offline: bool, force: bool) {
 	if offline {
 		command.arg("--unshare-net");
 	}
-	command.args(&["--bind", dir, dir]).arg("makepkg");
+	command.args(["--bind", dir, dir]).arg("makepkg");
 	command.env("FAKEROOTDONTTRYCHOWN", "true");
 	if force {
 		command.arg("--force");
@@ -171,10 +171,10 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 	};
 	check_bubblewrap_runnable();
 	let mut command = Command::new("bwrap");
-	command.args(&["--ro-bind", "/", "/"]);
-	command.args(&["--proc", "/proc", "--dev", "/dev"]);
-	command.args(&["--unshare-all"]);
-	command.args(&[
+	command.args(["--ro-bind", "/", "/"]);
+	command.args(["--proc", "/proc", "--dev", "/dev"]);
+	command.args(["--unshare-all"]);
+	command.args([
 		"shellcheck",
 		"--norc",
 		// "--exclude", "SC2128"  // this would avoid warning for split packages, where $pkgname looks like an array to shellcheck, but it isn't an array later with `makepkg`

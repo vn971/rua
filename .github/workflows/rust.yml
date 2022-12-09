@@ -81,5 +81,4 @@ jobs:
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
-          command: clippy
-          args: --features= -- -D warnings
+          command: ci-clippy

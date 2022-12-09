@@ -10,7 +10,7 @@ cargo update
 cargo fmt --all -- --check
 shellcheck -e SC1090 res/wrapper/security-wrapper.sh
 cargo test
-cargo clippy --all-targets --features= -- -D warnings
+cargo ci-clippy
 if ! test -z "$(git status --porcelain)"; then
   >&2 printf '%s\n' "error: uncommitted changes"
   exit 1

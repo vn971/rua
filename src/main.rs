@@ -8,7 +8,6 @@ mod action_upgrade;
 mod alpm_wrapper;
 mod aur_rpc_utils;
 mod cli_args;
-mod error;
 mod git_utils;
 mod pacman;
 mod print_format;

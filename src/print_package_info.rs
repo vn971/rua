@@ -2,6 +2,7 @@ use crate::aur_rpc_utils::info_map;
 use crate::print_format::date;
 use crate::print_format::opt;
 use crate::print_format::print_indent;
+use anyhow::Context;
 use anyhow::Error;
 use colored::*;
 use term_size::dimensions_stdout;
@@ -40,12 +41,20 @@ pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
 		print("Maintainer", opt(&pkg.maintainer));
 		print("Votes", &pkg.num_votes.to_string());
 		print("Popularity", &pkg.popularity.to_string());
-		print("First Submitted", &date(pkg.first_submitted));
-		print("Last Modified", &date(pkg.last_modified));
+		print(
+			"First Submitted",
+			&date(pkg.first_submitted).context("Couldn't parse First Submitted field")?,
+		);
+		print(
+			"Last Modified",
+			&date(pkg.last_modified).context("Couldn't parse Last Modified field")?,
+		);
 		print(
 			"Out Of Date",
 			pkg.out_of_date
 				.map(date)
+				.transpose()
+				.context("Couldn't parse Out Of Date field")?
 				.as_ref()
 				.map(String::as_ref)
 				.unwrap_or("No"),

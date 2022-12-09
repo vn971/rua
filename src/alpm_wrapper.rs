@@ -1,4 +1,4 @@
-use crate::error::RuaError;
+use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use itertools::Itertools;
@@ -103,11 +103,12 @@ impl AlpmWrapper for AlpmBinWrapper {
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()
-			.map_err(|err| RuaError {
-				msg: format!(
+			.map_err(|err| {
+				anyhow!(
 					"Failed to determine if package {} is installed, {}",
-					package, err
-				),
+					package,
+					err
+				)
 			})?
 			.success();
 		Ok(result)
@@ -119,11 +120,12 @@ impl AlpmWrapper for AlpmBinWrapper {
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.status()
-			.map_err(|err| RuaError {
-				msg: format!(
+			.map_err(|err| {
+				anyhow!(
 					"Failed to determine if package {} is installable, {}",
-					package, err
-				),
+					package,
+					err
+				)
 			})?;
 		Ok(result.success())
 	}
@@ -140,13 +142,10 @@ impl AlpmWrapper for AlpmBinWrapper {
 			match split[..] {
 				[package, version] => result.push((package.to_string(), version.to_string())),
 				_ => {
-					return Err(RuaError {
-						msg: format!(
-							"Failed to parse (package,version) from pacman line {}",
-							line
-						),
-					}
-					.into())
+					return Err(anyhow!(
+						"Failed to parse (package,version) from pacman line {}",
+						line
+					))
 				}
 			}
 		}

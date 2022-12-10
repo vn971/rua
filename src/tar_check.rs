@@ -121,7 +121,6 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			"=run shell to inspect".cyan()
 		);
 
-
 		if has_install {
 			eprint!(
 				"{}=show {}, ",

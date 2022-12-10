@@ -113,6 +113,8 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		}
 		eprint!("{}=list executable files, ", "[E]".bold());
 		eprint!("{}=list all files, ", "[L]".bold());
+		eprint!("{}=list new files, ", "[F]".bold());
+
 		eprint!(
 			"{}{}, ",
 			"[T]".bold().cyan(),
@@ -144,6 +146,12 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		} else if &string == "e" {
 			for path in &executable_files {
 				eprintln!("{}", path);
+			}
+		} else if &string == "f" {
+			for path in &all_files {
+				if !Path::exists(Path::new(&format!("/{}", &path))) {
+					eprintln!("{}", path);
+				}
 			}
 		} else if &string == "l" {
 			for path in &all_files {

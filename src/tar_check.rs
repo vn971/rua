@@ -113,7 +113,7 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 		}
 		eprint!("{}=list executable files, ", "[E]".bold());
 		eprint!("{}=list all files, ", "[L]".bold());
-		eprint!("{}=list new files, ", "[F]".bold());
+		eprint!("{}=list files not existing on filesystem, ", "[F]".bold());
 
 		eprint!(
 			"{}{}, ",

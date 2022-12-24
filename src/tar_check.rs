@@ -22,7 +22,7 @@ pub fn tar_check_unwrap(tar_file: &Path, file_name: &str, autobuild: bool) {
 }
 
 pub fn tar_check(tar_file: &Path, tar_str: &str, autobuild: bool) -> Result<(), String> {
-	let archive = File::open(&tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
+	let archive = File::open(tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	debug!("Checking file {}", tar_str);
 	if tar_str.ends_with(".tar") {
 		tar_check_archive(Archive::new(archive), tar_str, autobuild);
@@ -113,6 +113,8 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str, autobuild
 		}
 		eprint!("{}=list executable files, ", "[E]".bold());
 		eprint!("{}=list all files, ", "[L]".bold());
+		eprint!("{}=list files not existing on filesystem, ", "[F]".bold());
+
 		eprint!(
 			"{}{}, ",
 			"[T]".bold().cyan(),
@@ -149,6 +151,12 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str, autobuild
 		} else if &string == "e" {
 			for path in &executable_files {
 				eprintln!("{}", path);
+			}
+		} else if &string == "f" {
+			for path in &all_files {
+				if !Path::exists(Path::new(&format!("/{}", &path))) {
+					eprintln!("{}", path);
+				}
 			}
 		} else if &string == "l" {
 			for path in &all_files {

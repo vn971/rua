@@ -1,5 +1,6 @@
-use chrono::offset::TimeZone;
-use chrono::Utc;
+use anyhow::anyhow;
+use anyhow::Result;
+use chrono::NaiveDateTime;
 use colored::*;
 
 const DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S UTC";
@@ -8,8 +9,14 @@ pub fn opt(opt: &Option<String>) -> &str {
 	opt.as_ref().map(String::as_ref).unwrap_or("None")
 }
 
-pub fn date(date: i64) -> String {
-	Utc.timestamp(date, 0).format(DATE_FORMAT).to_string()
+pub fn date(timestamp: i64) -> Result<String> {
+	match NaiveDateTime::from_timestamp_opt(timestamp, 0) {
+		Some(dt) => Ok(dt.format(DATE_FORMAT).to_string()),
+		None => Err(anyhow!(
+			"Cannot convert timestamp {} to date/time",
+			timestamp
+		)),
+	}
 }
 
 pub fn print_indent<'a>(

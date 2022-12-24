@@ -153,7 +153,6 @@ If asked from CLI, builds can be run in offline mode.
 The RUA name is an inversion of "AUR".
 
 This work was made possible by the excellent libraries of
-[libalpm](https://github.com/jameslzhu/alpm),
 [raur](https://gitlab.com/davidbittner/raur),
 [srcinfo](https://github.com/Morganamilo/srcinfo.rs)
 and many others.

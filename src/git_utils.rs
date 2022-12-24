@@ -20,7 +20,7 @@ pub fn fetch(dir: &Path) {
 
 pub fn is_upstream_merged(dir: &Path) -> bool {
 	git(dir)
-		.args(&["merge-base", "--is-ancestor", "upstream/master", "HEAD"])
+		.args(["merge-base", "--is-ancestor", "upstream/master", "HEAD"])
 		.stderr(Stdio::null())
 		.status()
 		.expect("failed to run git")
@@ -38,7 +38,7 @@ pub fn show_upstream_diff(dir: &Path, reverse: bool) {
 
 pub fn identical_to_upstream(dir: &Path) -> bool {
 	git(dir)
-		.args(&["diff", "--quiet", "upstream/master"])
+		.args(["diff", "--quiet", "upstream/master"])
 		.status()
 		.map(|t| t.success())
 		.unwrap_or(false)
@@ -48,8 +48,8 @@ pub fn merge_upstream(dir: &Path) {
 	let email = "rua@local";
 	let name = "RUA";
 	git(dir)
-		.args(&["merge", "upstream/master"])
-		.args(&["-m", "Merge branch 'upstream/master' (automated by RUA)"])
+		.args(["merge", "upstream/master"])
+		.args(["-m", "Merge branch 'upstream/master' (automated by RUA)"])
 		.arg("--no-edit")
 		.env("GIT_AUTHOR_NAME", name)
 		.env("GIT_AUTHOR_EMAIL", email)

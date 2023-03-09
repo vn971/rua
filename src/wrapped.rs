@@ -61,7 +61,7 @@ fn jail_for_makepkg(rua_paths: &RuaPaths, cur_dir: &str, makepkg_dir: &str) -> C
 
 fn download_srcinfo_sources(dir: &str, rua_paths: &RuaPaths) {
 	let dir_path = PathBuf::from(dir).join("PKGBUILD.static");
-	let mut file = File::create(&dir_path)
+	let mut file = File::create(dir_path)
 		.unwrap_or_else(|err| panic!("Cannot create {}/PKGBUILD.static, {}", dir, err));
 	let srcinfo_path = PathBuf::from(dir)
 		.join(".SRCINFO")

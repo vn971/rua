@@ -1208,7 +1208,7 @@ dependencies = [
 
 [[package]]
 name = "rua"
-version = "0.19.5"
+version = "0.19.6"
 dependencies = [
  "alpm",
  "anyhow",
@@ -1233,7 +1233,7 @@ dependencies = [
  "srcinfo",
  "structopt",
  "tar",
- "term_size",
+ "termize",
  "uname",
  "xz2",
 ]
@@ -1527,22 +1527,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "term_size"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e4129646ca0ed8f45d09b929036bafad5377103edd06e50bf574b353d2b08d9"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "termcolor"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be55cf8942feac5c765c2c993422806843c9a9a45d4d5c407ad6dd2ea95eb9b6"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "termize"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1706be6b564323ce7092f5f7e6b118a14c8ef7ed0e69c8c5329c914a9f101295"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]

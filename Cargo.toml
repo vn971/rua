@@ -1,6 +1,6 @@
 [package]
 name = "rua"
-version = "0.19.5"
+version = "0.19.6"
 rust-version = "1.62"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
@@ -47,7 +47,7 @@ ruzstd = "0.3.1"
 srcinfo = "1.1.0"
 structopt = "0.3.26"
 tar = { version = "0.4.38",       default-features = false }
-term_size = "0.3.2"
+termize = "0.1.1"
 uname = "0.1.1"
 xz2 = "0.1.7"
 

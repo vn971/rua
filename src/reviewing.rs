@@ -17,14 +17,14 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 	});
 	if dir_contents.next().is_none() {
 		debug!("Directory {:?} is empty, using git clone", &dir);
-		git_utils::init_repo(pkgbase, dir);
+		git_utils::init_repo(pkgbase, dir, rua_paths);
 	} else {
 		debug!("Directory {:?} is not empty, fetching new version", &dir);
-		git_utils::fetch(dir);
+		git_utils::fetch(dir, rua_paths);
 	}
 
 	let build_dir = rua_paths.build_dir(pkgbase);
-	if build_dir.exists() && git_utils::is_upstream_merged(dir) {
+	if build_dir.exists() && git_utils::is_upstream_merged(dir, rua_paths) {
 		eprintln!("WARNING: your AUR repo is up-to-date.");
 		eprintln!(
 			"If you continue, the build directory will be removed and the build will be re-run."
@@ -41,8 +41,9 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 
 	loop {
 		eprintln!("\nReviewing {:?}. ", dir);
-		let is_upstream_merged = git_utils::is_upstream_merged(dir);
-		let identical_to_upstream = is_upstream_merged && git_utils::identical_to_upstream(dir);
+		let is_upstream_merged = git_utils::is_upstream_merged(dir, rua_paths);
+		let identical_to_upstream =
+			is_upstream_merged && git_utils::identical_to_upstream(dir, rua_paths);
 		if is_upstream_merged {
 			eprint!(
 				"{}{}, ",
@@ -94,11 +95,11 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 				eprintln!("{}", err);
 			};
 		} else if &user_input == "d" && is_upstream_merged {
-			git_utils::show_upstream_diff(dir, false);
+			git_utils::show_upstream_diff(dir, false, rua_paths);
 		} else if &user_input == "d" && !is_upstream_merged {
-			git_utils::show_upstream_diff(dir, true);
+			git_utils::show_upstream_diff(dir, true, rua_paths);
 		} else if &user_input == "m" && !is_upstream_merged {
-			git_utils::merge_upstream(dir);
+			git_utils::merge_upstream(dir, rua_paths);
 		} else if &user_input == "o" && is_upstream_merged {
 			break;
 		}

@@ -1,12 +1,19 @@
+pub use cli_color_type_mod::CLIColorType;
 use std::path::PathBuf;
-use structopt::clap::arg_enum;
 use structopt::StructOpt;
 
-arg_enum! {
-	#[allow(non_camel_case_types)]
-	#[derive(Debug)]
-	pub enum CLIColorType {
-		auto, never, always
+// A work-around to allow a clippy warning for a particular macro expansion.
+// This work-around will not be needed after changing the dependency "structopt" to "clap".
+pub mod cli_color_type_mod {
+	#![allow(clippy::useless_vec)]
+	use structopt::clap::arg_enum;
+
+	arg_enum! {
+		#[allow(non_camel_case_types)]
+		#[derive(Debug)]
+		pub enum CLIColorType {
+			auto, never, always
+		}
 	}
 }
 

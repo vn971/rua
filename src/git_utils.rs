@@ -77,11 +77,12 @@ fn silently_run_panic_if_error(args: &[&str], dir: &Path, rua_paths: &RuaPaths) 
 
 fn git(dir: &Path, rua_paths: &RuaPaths) -> Command {
 	let mut command = Command::new(&rua_paths.wrapper_bwrap_script);
+	command.arg("--bind");
+	command.arg(dir);
+	command.arg(dir);
 	command.arg("git");
 	command.env("GIT_CONFIG", "/dev/null"); // see `man git-config`
 	command.env("GIT_CONFIG_NOSYSTEM", "1"); // see `man git`
-	command.env("XDG_CONFIG_HOME", "/dev/null"); // see `man git`
-	command.env("HOME", "/dev/null"); // see `man git`
 	command.current_dir(dir);
 	command
 }

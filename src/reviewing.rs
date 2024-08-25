@@ -1,12 +1,20 @@
+use crate::alpm_wrapper::AlpmWrapper;
 use crate::git_utils;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
+use crate::to_install::ToInstall;
 use crate::wrapped;
 use colored::Colorize;
 use log::debug;
 use std::path::Path;
 
-pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
+pub fn review_repo(
+	dir: &Path,
+	pkgbase: &str,
+	rua_paths: &RuaPaths,
+	to_install: &mut ToInstall,
+	alpm: &dyn AlpmWrapper,
+) {
 	let mut dir_contents = dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"{}:{} Failed to read directory for reviewing, {}",
@@ -101,6 +109,7 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 		} else if &user_input == "m" && !is_upstream_merged {
 			git_utils::merge_upstream(dir, rua_paths);
 		} else if &user_input == "o" && is_upstream_merged {
+			to_install.update(dir, rua_paths, alpm);
 			break;
 		}
 	}

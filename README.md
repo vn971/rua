@@ -46,7 +46,7 @@ sudo pacman -S --needed --asdeps git base-devel bubblewrap-suid libseccomp xz sh
 
 ## Install (the AUR way)
 ```sh
-sudo pacman -S base-devel git
+sudo pacman -S --needed base-devel git
 git clone https://aur.archlinux.org/rua.git
 cd rua
 makepkg -si

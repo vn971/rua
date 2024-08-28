@@ -1,3 +1,4 @@
+
 fn main() {
 	// Check that a single TLS feature has been used
 	#[cfg(all(feature = "rustls-tls", feature = "native-tls"))]
@@ -14,6 +15,7 @@ fn main() {
 }
 
 mod shell_completions {
+	#![allow(dead_code)]  // Ignore unused warnings caused by including cli_args below.
 	extern crate structopt;
 
 	use structopt::clap::Shell;

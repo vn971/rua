@@ -83,6 +83,7 @@ fn git(dir: &Path, rua_paths: &RuaPaths) -> Command {
 	command.arg("git");
 	command.env("GIT_CONFIG", "/dev/null"); // see `man git-config`
 	command.env("GIT_CONFIG_NOSYSTEM", "1"); // see `man git`
+	command.env("GIT_PAGER", "less -R"); // see `man git-var`
 	command.current_dir(dir);
 	command
 }

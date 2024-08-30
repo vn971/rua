@@ -5,6 +5,8 @@ use crate::reviewing;
 use crate::rua_paths::RuaPaths;
 use crate::tar_check;
 use crate::terminal_util;
+use crate::to_install::DepthMap;
+use crate::to_install::ToInstall;
 use crate::wrapped;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
@@ -19,42 +21,37 @@ use std::path::PathBuf;
 
 pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
 	let alpm = new_alpm_wrapper();
-	let (split_to_raur, pacman_deps, split_to_depth) =
-		aur_rpc_utils::recursive_info(targets, &*alpm).unwrap_or_else(|err| {
+	let mut to_install =
+		aur_rpc_utils::get_packages_to_install(targets, &*alpm).unwrap_or_else(|err| {
 			panic!("Failed to fetch info from AUR, {}", err);
 		});
-	let split_to_pkgbase: IndexMap<String, String> = split_to_raur
+	let split_to_pkgbase: IndexMap<String, String> = to_install
+		.infos()
 		.iter()
-		.map(|(split, raur)| (split.to_string(), raur.package_base.to_string()))
+		.map(|(split, info)| (split.to_string(), info.pkg_base().to_string()))
 		.collect();
-	let not_found = split_to_depth
-		.keys()
-		.filter(|pkg| !split_to_raur.contains_key(*pkg))
-		.collect_vec();
-	if !not_found.is_empty() {
+	let nf = to_install.not_found();
+	if !nf.is_empty() {
 		eprintln!(
 			"Need to install packages: {:?}, but they are not found on AUR.",
-			not_found
+			nf
 		);
 		std::process::exit(1)
 	}
 
-	show_install_summary(&pacman_deps, &split_to_depth);
+	show_install_summary(&to_install);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = rua_paths.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
 			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
 		});
-		reviewing::review_repo(&dir, pkgbase, rua_paths);
+		reviewing::review_repo(&dir, pkgbase, rua_paths, &mut to_install, &*alpm);
 	}
+	show_install_summary(&to_install);
+
+	let (_, pacman_deps, depths) = to_install.into_inner();
 	pacman::ensure_pacman_packages_installed(pacman_deps);
-	install_all(
-		rua_paths,
-		split_to_depth,
-		split_to_pkgbase,
-		is_offline,
-		asdeps,
-	);
+	install_all(rua_paths, depths, split_to_pkgbase, is_offline, asdeps);
 	for target in targets {
 		// Delete temp directories after successful build+install
 		if let Err(err) = rm_rf::remove(rua_paths.build_dir(target)) {
@@ -68,7 +65,9 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 	}
 }
 
-fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
+fn show_install_summary(to_install: &ToInstall) {
+	let pacman_deps = to_install.pacman_deps();
+	let aur_packages = to_install.depths();
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
@@ -81,7 +80,7 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	};
 	eprintln!("\nAnd the following AUR packages will need to be built and installed:");
 	let mut aur_packages = aur_packages.iter().collect::<Vec<_>>();
-	aur_packages.sort_by_key(|pair| -*pair.1);
+	aur_packages.sort_by_key(|(_, depth)| -(**depth as isize));
 	for (aur, dep) in &aur_packages {
 		debug!("depth {}: {}", dep, aur);
 	}
@@ -100,7 +99,7 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 
 fn install_all(
 	rua_paths: &RuaPaths,
-	split_to_depth: IndexMap<String, i32>,
+	split_to_depth: DepthMap,
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
@@ -118,18 +117,18 @@ fn install_all(
 		(pkgbase.to_string(), *depth, split.to_string())
 	});
 	// sort pairs in descending depth order
-	let packages = packages.sorted_by_key(|(_pkgbase, depth, _split)| -depth);
+	let packages = packages.sorted_by_key(|(_pkgbase, depth, _split)| -(*depth as isize));
 	// Note that a pkgbase can appear at multiple depths because
 	// multiple split pkgnames can be at multiple depths.
 	// In this case, we only take the first occurrence of pkgbase,
 	// which would be the maximum depth because of sort order.
 	// We only take one occurrence because we want the package to only be built once.
-	let packages: Vec<(String, i32, String)> = packages
+	let packages = packages
 		.unique_by(|(pkgbase, _depth, _split)| pkgbase.to_string())
 		.collect::<Vec<_>>();
 	// once we have a collection of pkgname-s and their depth, proceed straightforwardly.
 	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
-		let packages = packages.collect::<Vec<&(String, i32, String)>>();
+		let packages = packages.collect::<Vec<_>>();
 		for (pkgbase, _depth, _split) in &packages {
 			let review_dir = rua_paths.review_dir(pkgbase);
 			let build_dir = rua_paths.build_dir(pkgbase);

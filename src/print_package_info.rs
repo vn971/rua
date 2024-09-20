@@ -5,7 +5,7 @@ use crate::print_format::print_indent;
 use anyhow::Context;
 use anyhow::Error;
 use colored::*;
-use term_size::dimensions_stdout;
+use termize::dimensions_stdout;
 
 pub fn info(pkgs: &[String], verbose: bool) -> Result<(), Error> {
 	let pkg_map = info_map(pkgs)?;

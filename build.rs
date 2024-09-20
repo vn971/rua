@@ -14,6 +14,7 @@ fn main() {
 }
 
 mod shell_completions {
+	#![allow(dead_code)] // Ignore unused warnings caused by including cli_args below.
 	extern crate structopt;
 
 	use structopt::clap::Shell;
@@ -21,6 +22,7 @@ mod shell_completions {
 	include!("src/cli_args.rs");
 
 	pub fn generate() {
+		println!("cargo:rerun-if-env-changed=COMPLETIONS_DIR");
 		let directory = match std::env::var_os("COMPLETIONS_DIR") {
 			None => return,
 			Some(out_dir) => out_dir,
@@ -45,6 +47,7 @@ mod seccomp {
 	pub fn generate() {
 		let mut ctx = Filter::new(Action::Allow).unwrap();
 
+		println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_ARCH");
 		// Get the target_arch configured in cargo to allow cross compiling
 		let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect(
 			"Failed to compile seccomp filter, environment CARGO_CFG_TARGET_ARCH not found. This env is normally set by cargo.",
@@ -126,6 +129,7 @@ mod seccomp {
 				});
 		}
 
+		println!("cargo:rerun-if-env-changed=OUT_DIR");
 		let out_dir = std::env::var("OUT_DIR")
 			.expect("Failed to save generated seccomp filter, no compile-time OUT_DIR defined.");
 

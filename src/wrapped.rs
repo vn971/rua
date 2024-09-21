@@ -188,7 +188,7 @@ pub fn shellcheck(target: &Option<PathBuf>) -> Result<(), String> {
 	let stdin: &mut std::process::ChildStdin = child
 		.stdin
 		.as_mut()
-		.map_or(Err("Failed to open stdin for shellcheck"), Ok)?;
+		.ok_or("Failed to open stdin for shellcheck")?;
 	let bytes = rua_paths::SHELLCHECK_WRAPPER.replace("%PKGBUILD%", &target_contents);
 	stdin.write_all(bytes.as_bytes()).map_err(|err| {
 		format!(

@@ -1,6 +1,3 @@
-#[global_allocator]
-static GLOBAL: std::alloc::System = std::alloc::System;
-
 mod action_builddir;
 mod action_install;
 mod action_search;

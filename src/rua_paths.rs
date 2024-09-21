@@ -205,6 +205,7 @@ fn ensure_script(path: &Path, content: &[u8]) {
 	if !path.exists() {
 		let mut file = OpenOptions::new()
 			.create(true)
+			.truncate(true)
 			.write(true)
 			.open(path)
 			.unwrap_or_else(|e| panic!("Failed to overwrite (initialize) file {:?}, {}", path, e));

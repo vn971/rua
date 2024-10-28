@@ -57,6 +57,8 @@ Sources are downloaded using .SRCINFO only"
 			help = "Target directory. Defaults to current directory '.' if not specified."
 		)]
 		target: Option<PathBuf>,
+		#[structopt(short = "b", long = "auto-build", help = "Automate build promps")]
+		autobuild: bool,
 	},
 	#[structopt(about = "Show package information")]
 	Info {
@@ -76,6 +78,12 @@ Sources are downloaded using .SRCINFO only"
 		offline: bool,
 		#[structopt(help = "Target package", multiple = true, required = true)]
 		target: Vec<String>,
+		#[structopt(
+			short = "b",
+			long = "auto-build",
+			help = "Automate build promps (doesn't apply --noconfirm to pacman commands)"
+		)]
+		autobuild: bool,
 	},
 	#[structopt(
 		about = "Search for packages by name or description. If multiple keywords are used, all of them must match."
@@ -121,6 +129,12 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 			help = "Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`."
 		)]
 		ignored: Option<String>,
+		#[structopt(
+			short = "b",
+			long = "auto-build",
+			help = "Automate build promps (doesn't apply --noconfirm to pacman commands)"
+		)]
+		autobuild: bool,
 	},
 }
 

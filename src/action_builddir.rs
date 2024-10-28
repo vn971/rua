@@ -6,7 +6,13 @@ use std::path::Path;
 use std::path::PathBuf;
 
 /// Build and install a package, see `crate::cli_args::Action::Builddir` for details
-pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: bool, force: bool) {
+pub fn action_builddir(
+	dir: &Option<PathBuf>,
+	rua_paths: &RuaPaths,
+	offline: bool,
+	force: bool,
+	autobuild: bool,
+) {
 	// Set `.` as default dir in case no build directory is provided.
 	let dir = match dir {
 		Some(path) => path,
@@ -39,9 +45,9 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 
 	for (_, file) in &packages {
 		let file_str = file.to_str().expect("Builddir target has unvalid UTF-8");
-		tar_check::tar_check(file, file_str).ok();
+		tar_check::tar_check(file, file_str, false).ok();
 	}
 	eprintln!("Package built and checked.");
 
-	pacman::ensure_aur_packages_installed(packages, false);
+	pacman::ensure_aur_packages_installed(packages, false, autobuild);
 }

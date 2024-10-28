@@ -13,27 +13,27 @@ use std::path::PathBuf;
 use tar::*;
 use xz2::read::XzDecoder;
 
-pub fn tar_check_unwrap(tar_file: &Path, file_name: &str) {
-	let result = tar_check(tar_file, file_name);
+pub fn tar_check_unwrap(tar_file: &Path, file_name: &str, autobuild: bool) {
+	let result = tar_check(tar_file, file_name, autobuild);
 	result.unwrap_or_else(|err| {
 		eprintln!("{}", err);
 		std::process::exit(1)
 	})
 }
 
-pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
+pub fn tar_check(tar_file: &Path, tar_str: &str, autobuild: bool) -> Result<(), String> {
 	let archive = File::open(tar_file).unwrap_or_else(|_| panic!("cannot open file {}", tar_str));
 	debug!("Checking file {}", tar_str);
 	if tar_str.ends_with(".tar") {
-		tar_check_archive(Archive::new(archive), tar_str);
+		tar_check_archive(Archive::new(archive), tar_str, autobuild);
 		Ok(())
 	} else if tar_str.ends_with(".tar.xz") || tar_str.ends_with(".tar.lzma") {
-		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str);
+		tar_check_archive(Archive::new(XzDecoder::new(archive)), tar_str, autobuild);
 		Ok(())
 	} else if tar_str.ends_with(".tar.gz") || tar_str.ends_with(".tar.gzip") {
 		match Decoder::new(archive) {
 			Ok(decoded) => {
-				tar_check_archive(Archive::new(decoded), tar_str);
+				tar_check_archive(Archive::new(decoded), tar_str, autobuild);
 				Ok(())
 			},
 			Err(err) => {
@@ -44,7 +44,7 @@ pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 		let mut archive = archive;
 		match StreamingDecoder::new(&mut archive) {
 			Ok(decoder) => {
-				tar_check_archive(Archive::new(decoder), tar_str);
+				tar_check_archive(Archive::new(decoder), tar_str, autobuild);
 				Ok(())
 			},
 			Err(err) => {
@@ -59,7 +59,7 @@ pub fn tar_check(tar_file: &Path, tar_str: &str) -> Result<(), String> {
 	}
 }
 
-fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
+fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str, autobuild: bool) {
 	let mut install_file = String::new();
 	let mut all_files = Vec::new();
 	let mut executable_files = Vec::new();
@@ -137,7 +137,12 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			);
 		};
 		eprint!("{}=ok, proceed. ", "[O]".bold());
-		let string = terminal_util::read_line_lowercase();
+		let string = if autobuild {
+			eprintln!("\n{} {}", "Autobuild:".italic(), "[O]".italic());
+			"o".to_string()
+		} else {
+			terminal_util::read_line_lowercase()
+		};
 		eprintln!();
 		if &string == "s" && !suid_files.is_empty() {
 			for path in &suid_files {

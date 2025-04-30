@@ -16,6 +16,7 @@ mod rua_paths;
 mod srcinfo_to_pkgbuild;
 mod tar_check;
 mod terminal_util;
+mod to_install;
 mod wrapped;
 
 use crate::print_package_info::info;

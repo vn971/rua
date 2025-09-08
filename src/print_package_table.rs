@@ -23,7 +23,7 @@ pub fn print_package_table(mut packages: Vec<Package>, keywords: &[String]) {
 	]);
 
 	for package in packages {
-		let name = highlight(package.name, keywords).yellow();
+		let name = try_hyperlink(highlight(package.name.clone(), keywords), &package.name).yellow();
 		let version = highlight(trunc(&package.version, 14), keywords).green();
 		let description = package.description.unwrap_or_else(|| String::from(""));
 		let description = highlight(description, keywords);
@@ -51,5 +51,14 @@ fn highlight(mut text: String, keywords: &[String]) -> String {
 			text = text_new;
 		}
 	}
+	text
+}
+
+fn try_hyperlink(mut text: String, package_name: &str) -> String {
+	if !supports_hyperlinks::supports_hyperlinks() {
+		return text;
+	}
+	let url = format_args!("https://aur.archlinux.org/packages/{}", package_name);
+	text = format!("\x1B]8;;{}\x1B\\{}\x1B]8;;\x1B\\", url, text);
 	text
 }

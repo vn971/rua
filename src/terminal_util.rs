@@ -50,3 +50,17 @@ pub fn escape_bash_arg(str: &str) -> String {
 	let result = str.replace('\'', "'\\''"); // end quoting, append the literal, start quoting
 	format!("'{}'", result)
 }
+
+/// For terminals that support OSC 8 hyperlinks (like iTerm2, Windows Terminal, etc),
+/// this will turn the given text into a clickable hyperlink to the given URL.
+/// If the terminal does not support hyperlinks, the text is returned unchanged.
+///
+/// The text could be of any content, the url is constructed from `package_name`, not `text`.
+pub fn try_hyperlink_package_name(mut text: String, package_name: &str) -> String {
+	if !supports_hyperlinks::supports_hyperlinks() {
+		return text;
+	}
+	let url = format_args!("https://aur.archlinux.org/packages/{}", package_name);
+	text = format!("\x1B]8;;{}\x1B\\{}\x1B]8;;\x1B\\", url, text);
+	text
+}

@@ -5,6 +5,8 @@ use cli_table::{
 use colored::*;
 use raur::Package;
 
+use crate::terminal_util::try_hyperlink_package_name;
+
 pub fn trunc(s: &str, max_chars: usize) -> String {
 	match s.char_indices().nth(max_chars.max(2)) {
 		None => s.to_owned(),
@@ -24,7 +26,9 @@ pub fn print_package_table(mut packages: Vec<Package>, keywords: &[String]) {
 	]];
 
 	for package in packages {
-		let name = try_hyperlink(highlight(package.name.clone(), keywords), &package.name).yellow();
+		let name = highlight(package.name.clone(), keywords);
+		let name = try_hyperlink_package_name(name, &package.name);
+		let name = name.yellow();
 		let version = highlight(trunc(&package.version, 14), keywords).green();
 		let description = package.description.unwrap_or_else(|| String::from(""));
 		let description = highlight(description, keywords);
@@ -54,14 +58,5 @@ fn highlight(mut text: String, keywords: &[String]) -> String {
 			text = text_new;
 		}
 	}
-	text
-}
-
-fn try_hyperlink(mut text: String, package_name: &str) -> String {
-	if !supports_hyperlinks::supports_hyperlinks() {
-		return text;
-	}
-	let url = format_args!("https://aur.archlinux.org/packages/{}", package_name);
-	text = format!("\x1B]8;;{}\x1B\\{}\x1B]8;;\x1B\\", url, text);
 	text
 }

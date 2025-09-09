@@ -5,6 +5,7 @@ use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
+use crate::terminal_util::try_hyperlink_package_name;
 use anyhow::Result;
 use cli_table::format::Border;
 use cli_table::format::Separator;
@@ -157,7 +158,7 @@ fn print_outdated(outdated: &[(String, String, String)], nonexistent: &[(String,
 	}
 	for (pkg, local) in nonexistent {
 		table.push(vec![
-			pkg.yellow(),
+			try_hyperlink_package_name(pkg.to_owned(), pkg).yellow(),
 			local.to_owned().into(),
 			"not found in neither pacman nor AUR, ignoring".dimmed(),
 		]);

@@ -5,14 +5,16 @@ use crate::aur_rpc_utils;
 use crate::pacman;
 use crate::rua_paths::RuaPaths;
 use crate::terminal_util;
+use crate::terminal_util::try_hyperlink_package_name;
 use anyhow::Result;
+use cli_table::format::Border;
+use cli_table::format::Separator;
+use cli_table::Table;
 use colored::*;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::debug;
 use log::warn;
-use prettytable::format::*;
-use prettytable::*;
 use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -145,24 +147,26 @@ fn calculate_upgrade(
 }
 
 fn print_outdated(outdated: &[(String, String, String)], nonexistent: &[(String, String)]) {
-	let mut table = Table::new();
-	table.set_titles(row![
+	let mut table = vec![vec![
 		"Package".underline(),
 		"Current".underline(),
-		"Latest".underline()
-	]);
+		"Latest".underline(),
+	]];
 
 	for (pkg, local, remote) in outdated {
-		table.add_row(row![pkg.yellow(), local, remote.green(),]);
+		table.push(vec![pkg.yellow(), local.to_owned().into(), remote.green()]);
 	}
 	for (pkg, local) in nonexistent {
-		table.add_row(row![
-			pkg.yellow(),
-			local,
+		table.push(vec![
+			try_hyperlink_package_name(pkg.to_owned(), pkg).yellow(),
+			local.to_owned().into(),
 			"not found in neither pacman nor AUR, ignoring".dimmed(),
 		]);
 	}
-	let fmt: TableFormat = FormatBuilder::new().padding(0, 1).build();
-	table.set_format(fmt);
-	table.printstd();
+
+	let table = table
+		.table()
+		.border(Border::builder().build())
+		.separator(Separator::builder().build());
+	cli_table::print_stdout(table).unwrap();
 }

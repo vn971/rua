@@ -100,6 +100,8 @@ Sources are downloaded using .SRCINFO only"
 		#[structopt(help = "Archive to check", required = true)]
 		target: PathBuf,
 	},
+	#[structopt(about = "List packages installed with rua")]
+	List,
 	#[structopt(
 		about = "Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf"
 	)]

@@ -22,8 +22,8 @@ pub fn action_builddir(dir: &Option<PathBuf>, rua_paths: &RuaPaths, offline: boo
 
 	let srcinfo = wrapped::generate_srcinfo(dir_str, rua_paths).expect("Failed to obtain SRCINFO");
 	let ver = srcinfo.version();
-	let packages = srcinfo.pkgs.iter().map(|package| {
-		let arch = if package.arch.contains(&*pacman::PACMAN_ARCH) {
+	let packages = srcinfo.pkgs().iter().map(|package| {
+		let arch = if package.arch().contains(&*pacman::PACMAN_ARCH) {
 			pacman::PACMAN_ARCH.to_string()
 		} else {
 			"any".to_string()

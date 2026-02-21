@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use anyhow::Result;
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use colored::*;
 
 const DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S UTC";
@@ -10,7 +10,7 @@ pub fn opt(opt: &Option<String>) -> &str {
 }
 
 pub fn date(timestamp: i64) -> Result<String> {
-	match NaiveDateTime::from_timestamp_opt(timestamp, 0) {
+	match DateTime::from_timestamp(timestamp, 0) {
 		Some(dt) => Ok(dt.format(DATE_FORMAT).to_string()),
 		None => Err(anyhow!(
 			"Cannot convert timestamp {} to date/time",

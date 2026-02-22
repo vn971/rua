@@ -74,7 +74,8 @@ pub enum Action {
 		/// Archive to check
 		target: PathBuf,
 	},
-	/// Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf
+	/// Upgrade AUR packages by name, or all packages if package names are not provided.
+	/// To ignore packages, add them to IgnorePkg in /etc/pacman.conf
 	Upgrade {
 		/// Also rebuild development packages.
 		/// Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only.
@@ -88,6 +89,10 @@ pub enum Action {
 		/// Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`.
 		#[arg(long)]
 		ignore: Option<String>,
+
+		/// Package names to upgrade. If no packages are given, all AUR packages will be upgraded
+		#[arg(num_args = 0..)]
+		packages: Vec<String>,
 	},
 }
 

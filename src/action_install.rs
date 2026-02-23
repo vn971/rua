@@ -1,21 +1,31 @@
 use crate::alpm_wrapper::new_alpm_wrapper;
 use crate::aur_rpc_utils;
+use crate::git_utils;
 use crate::pacman;
 use crate::reviewing;
 use crate::rua_paths::RuaPaths;
 use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
+use colored::Colorize;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use log::debug;
 use log::trace;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
+use std::fs::File;
 use std::fs::ReadDir;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+#[derive(Serialize, Deserialize)]
+struct CheckedTarMetadata {
+	#[serde(skip_serializing_if = "Option::is_none")]
+	revision: Option<String>,
+}
 
 pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
 	let alpm = new_alpm_wrapper();
@@ -98,6 +108,23 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	}
 }
 
+fn has_valid_cached_build(pkgbase: &str, rua_paths: &RuaPaths, current_rev: Option<&str>) -> bool {
+	current_rev
+		.and_then(|current_rev| {
+			let f = File::open(rua_paths.checked_tars_dir(pkgbase).join("metadata.json")).ok()?;
+			let meta: CheckedTarMetadata = serde_json::from_reader(f).ok()?;
+			Some(meta.revision.as_deref() == Some(current_rev))
+		})
+		.unwrap_or(false)
+}
+
+fn write_metadata(path: &Path, meta: &CheckedTarMetadata) {
+	let failed = File::create(path).map_or(true, |f| serde_json::to_writer(f, meta).is_err());
+	if failed {
+		debug!("Failed to write metadata to {:?}", path);
+	}
+}
+
 fn install_all(
 	rua_paths: &RuaPaths,
 	split_to_depth: IndexMap<String, i32>,
@@ -130,7 +157,36 @@ fn install_all(
 	// once we have a collection of pkgname-s and their depth, proceed straightforwardly.
 	for (depth, packages) in &packages.iter().group_by(|(_pkgbase, depth, _split)| *depth) {
 		let packages = packages.collect::<Vec<&(String, i32, String)>>();
+		let mut to_rebuild: HashSet<&str> = HashSet::new();
 		for (pkgbase, _depth, _split) in &packages {
+			let review_dir = rua_paths.review_dir(pkgbase);
+			let current_rev = git_utils::rev_parse_head(review_dir.as_path(), rua_paths);
+			if has_valid_cached_build(pkgbase, rua_paths, current_rev.as_deref()) {
+				loop {
+					eprint!(
+						"Use cached build for {}? {}{}, {}{}. ",
+						pkgbase,
+						"[C]".bold().blue(),
+						"=use cache".blue(),
+						"[R]".bold().green(),
+						"=rebuild".green(),
+					);
+					let input = terminal_util::read_line_lowercase();
+					if input == "c" {
+						break;
+					} else if input == "r" {
+						to_rebuild.insert(pkgbase);
+						break;
+					}
+				}
+			} else {
+				to_rebuild.insert(pkgbase);
+			}
+		}
+		for (pkgbase, _depth, _split) in &packages {
+			if !to_rebuild.contains(pkgbase.as_str()) {
+				continue;
+			}
 			let review_dir = rua_paths.review_dir(pkgbase);
 			let build_dir = rua_paths.build_dir(pkgbase);
 			rm_rf::ensure_removed(&build_dir).unwrap_or_else(|err| {
@@ -163,6 +219,9 @@ fn install_all(
 			);
 		}
 		for (pkgbase, _depth, _split) in &packages {
+			if !to_rebuild.contains(pkgbase.as_str()) {
+				continue;
+			}
 			check_tars_and_move(pkgbase, rua_paths, &archive_whitelist);
 		}
 		// This relation between split_name and the archive file is not actually correct here.
@@ -180,10 +239,14 @@ fn install_all(
 			});
 
 			for file in read_dir_iterator {
-				files_to_install.push((
-					split.to_string(),
-					file.expect("Failed to access checked_tars dir").path(),
-				));
+				let path = file.expect("Failed to access checked_tars dir").path();
+				let is_pkg = path
+					.file_name()
+					.and_then(|n| n.to_str())
+					.map_or(false, |n| n.ends_with(&rua_paths.makepkg_pkgext));
+				if is_pkg {
+					files_to_install.push((split.to_string(), path));
+				}
 			}
 		}
 		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0);
@@ -271,4 +334,8 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 				)
 			});
 	}
+	let review_dir = rua_paths.review_dir(name);
+	let revision = git_utils::rev_parse_head(review_dir.as_path(), rua_paths);
+	let meta = CheckedTarMetadata { revision };
+	write_metadata(&checked_tars_dir.join("metadata.json"), &meta);
 }

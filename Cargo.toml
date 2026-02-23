@@ -7,46 +7,60 @@ authors = [
   "Vasili Novikov (maintainer) <vasya.novikov+cm3513git@gmail.com>",
   "The many great contributors, see github and gitlab <users@git>",
 ]
-license="GPL-3.0-or-later"
-edition="2021"
+license = "GPL-3.0-or-later"
+edition = "2021"
 keywords = ["archlinux", "aur", "build", "jail", "bubblewrap"]
 readme = "README.md"
 repository = "https://github.com/vn971/rua"
 build = "build.rs"
 
 [features]
-default=["testpacman", "rustls-tls"]
-testpacman = []  # whether to perform pacman checks on tests
-native-tls = ["raur/native-tls"] # build with support for OS native TLS
-rustls-tls = ["raur/rustls-tls"] # build with rustls TLS 
+default = ["testpacman", "rustls-tls"]
+testpacman = []                        # whether to perform pacman checks on tests
+native-tls = ["raur/native-tls"]       # build with support for OS native TLS
+rustls-tls = ["raur/rustls-tls"]       # build with rustls TLS 
 
 [build-dependencies]
 structopt = "0.3.26"
 libscmp = "0.2.0"
 
 [dependencies]
-alpm = { version = "2.2.3",       default-features = false, features = [], optional = true }
-anyhow = { version = "1.0.79",    default-features = false, features = ["std", "backtrace"] }
-chrono = { version = "0.4.31",    default-features = false, features = ["std", "clock"] }
+alpm = { version = "2.2.3", default-features = false, features = [
+], optional = true }
+anyhow = { version = "1.0.79", default-features = false, features = [
+  "std",
+  "backtrace",
+] }
+chrono = { version = "0.4.31", default-features = false, features = [
+  "std",
+  "clock",
+] }
 colored = "2.0.2"
 directories = "5.0.1"
 env_logger = "0.10.1"
 fs2 = "0.4.3"
 fs_extra = "1.3.0"
-indexmap = { version = "1.9.3",   default-features = false }
-itertools = { version = "0.11.0", default-features = false, features = ["use_std"] }
+indexmap = { version = "1.9.3", default-features = false }
+itertools = { version = "0.11.0", default-features = false, features = [
+  "use_std",
+] }
 lazy_static = "1.4.0"
-libc = { version = "0.2.151",     default-features = false }
+libc = { version = "0.2.151", default-features = false }
 libflate = "2.0.0"
-log = { version = "0.4.20",       default-features = false }
+log = { version = "0.4.20", default-features = false }
 prettytable-rs = "0.10.0"
-raur = { version = "7.0.0",       default-features = false, features = ["blocking", "rustls-tls"] }
-regex = { version = "1.9.6",      default-features = false, features = ["perf"] }
+raur = { version = "7.0.0", default-features = false, features = [
+  "blocking",
+  "rustls-tls",
+] }
+regex = { version = "1.9.6", default-features = false, features = ["perf"] }
 rm_rf = "0.6.2"
 ruzstd = "0.4.0"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = "1.0"
 srcinfo = "1.1.0"
 structopt = "0.3.26"
-tar = { version = "0.4.40",       default-features = false }
+tar = { version = "0.4.40", default-features = false }
 termize = "0.1.1"
 uname = "0.1.1"
 xz2 = "0.1.7"

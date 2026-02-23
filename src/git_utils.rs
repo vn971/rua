@@ -45,6 +45,18 @@ pub fn identical_to_upstream(dir: &Path, rua_paths: &RuaPaths) -> bool {
 		.unwrap_or(false)
 }
 
+pub fn rev_parse_head(dir: &Path, rua_paths: &RuaPaths) -> Option<String> {
+	let output = git(dir, rua_paths)
+		.args(["rev-parse", "HEAD"])
+		.output()
+		.ok()?;
+	if !output.status.success() {
+		return None;
+	}
+	let rev = String::from_utf8(output.stdout).ok()?;
+	Some(rev.trim().to_string())
+}
+
 pub fn merge_upstream(dir: &Path, rua_paths: &RuaPaths) {
 	let email = "rua@local";
 	let name = "RUA";

@@ -5,7 +5,7 @@ use colored::*;
 use indexmap::IndexSet;
 use libflate::gzip::Decoder;
 use log::debug;
-use ruzstd::StreamingDecoder;
+use ruzstd::decoding::StreamingDecoder;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;

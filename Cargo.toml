@@ -26,7 +26,7 @@ libscmp = "0.2.0"
 
 [dependencies]
 alpm = { version = "2.2.3",       default-features = false, features = [], optional = true }
-anyhow = { version = "1.0.79",    default-features = false, features = ["std", "backtrace"] }
+anyhow = { version = "1.0.100",    default-features = false, features = ["std", "backtrace"] }
 chrono = { version = "0.4.31",    default-features = false, features = ["std", "clock"] }
 colored = "2.0.2"
 directories = "5.0.1"

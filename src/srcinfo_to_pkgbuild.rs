@@ -19,17 +19,17 @@ fn push_array(pkgbuild: &mut String, key: &str, values: &[String]) {
 
 fn push_arrays(pkgbuild: &mut String, key: &str, arch_values: &[ArchVec]) {
 	for values in arch_values {
-		if let Some(ref arch) = values.arch {
+		if let Some(ref arch) = values.arch() {
 			let key = &format!("{}_{}", key, arch);
-			push_array(pkgbuild, key, &values.vec);
+			push_array(pkgbuild, key, values.values());
 		} else {
-			push_array(pkgbuild, key, &values.vec);
+			push_array(pkgbuild, key, values.values());
 		};
 	}
 }
 
 pub fn static_pkgbuild(path: &Path) -> String {
-	let srcinfo = Srcinfo::parse_file(path)
+	let srcinfo = Srcinfo::from_path(path)
 		.unwrap_or_else(|e| panic!("{}:{} Failed to parse {:?}, {}", file!(), line!(), path, e));
 	let mut pkgbuild = String::new();
 

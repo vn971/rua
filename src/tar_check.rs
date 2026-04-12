@@ -107,10 +107,12 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	}
 
 	let has_install = !install_file.is_empty();
+	let display_name = path_str.strip_suffix(".pkg.tar.zst").unwrap_or(path_str);
+	if suid_files.is_empty() {
+		eprintln!("Package {} has no SUID files.", display_name);
+	}
 	loop {
-		if suid_files.is_empty() {
-			eprintln!("Package {} has no SUID files.", path_str);
-		}
+		eprintln!("\nReviewing {}. ", display_name);
 		eprint!("{}=list executable files, ", "[E]".bold());
 		eprint!("{}=list all files, ", "[L]".bold());
 		eprint!("{}=list files not existing on filesystem, ", "[F]".bold());

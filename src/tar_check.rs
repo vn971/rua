@@ -107,10 +107,16 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 	}
 
 	let has_install = !install_file.is_empty();
+	let basename = Path::new(path_str)
+		.file_name()
+		.and_then(|p| p.to_str())
+		.unwrap_or(path_str);
+	let display_name = basename.strip_suffix(".pkg.tar.zst").unwrap_or(basename);
+	if suid_files.is_empty() {
+		eprintln!("Package {} has no SUID files.", display_name);
+	}
 	loop {
-		if suid_files.is_empty() {
-			eprintln!("Package {} has no SUID files.", path_str);
-		}
+		eprintln!("\nReviewing {}. ", display_name);
 		eprint!("{}=list executable files, ", "[E]".bold());
 		eprint!("{}=list all files, ", "[L]".bold());
 		eprint!("{}=list files not existing on filesystem, ", "[F]".bold());
@@ -161,7 +167,10 @@ fn tar_check_archive<R: Read>(mut archive: Archive<R>, path_str: &str) {
 			eprintln!("{}", &install_file);
 		} else if &string == "t" {
 			let dir = PathBuf::from(path_str);
-			let dir = dir.parent().unwrap_or_else(|| Path::new("."));
+			let dir = dir
+				.parent()
+				.filter(|p| !p.as_os_str().is_empty())
+				.unwrap_or_else(|| Path::new("."));
 			eprintln!("Exit the shell with `logout` or Ctrl-D...");
 			terminal_util::run_env_command(dir, "SHELL", "bash", &[]);
 		} else if &string == "o" {

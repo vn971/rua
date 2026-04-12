@@ -218,8 +218,12 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 	dir_items
 		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
 	trace!("Files filtered for tar checking: {:?}", &dir_items);
-	for (file, file_name) in dir_items.iter() {
-		tar_check::tar_check_unwrap(&file.path(), file_name);
+	for (file, _file_name) in dir_items.iter() {
+		let path = file.path();
+		tar_check::tar_check_unwrap(
+			&path,
+			path.to_str().expect("Non-UTF8 characters in build path"),
+		);
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_paths.checked_tars_dir(name);

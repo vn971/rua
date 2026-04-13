@@ -70,16 +70,22 @@ fn main() {
 			devel,
 			printonly,
 			ignored,
+			packages,
 		} => {
 			let ignored_set = ignored
 				.iter()
 				.flat_map(|i| i.split(','))
 				.collect::<HashSet<&str>>();
-			if *printonly {
-				action_upgrade::upgrade_printonly(*devel, &ignored_set);
+			let only_packages: HashSet<&str> = packages.iter().map(String::as_str).collect();
+			let result = if *printonly {
+				action_upgrade::upgrade_printonly(*devel, &ignored_set, &only_packages)
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, &paths, &ignored_set);
+				action_upgrade::upgrade_real(*devel, &paths, &ignored_set, &only_packages)
+			};
+			if let Err(e) = result {
+				eprintln!("{}", e);
+				exit(1);
 			}
 		}
 	};

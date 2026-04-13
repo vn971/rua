@@ -101,7 +101,7 @@ Sources are downloaded using .SRCINFO only"
 		target: PathBuf,
 	},
 	#[structopt(
-		about = "Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf"
+		about = "Upgrade AUR packages by name, or all packages if package names are not provide"
 	)]
 	Upgrade {
 		#[structopt(
@@ -121,6 +121,11 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 			help = "Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`."
 		)]
 		ignored: Option<String>,
+		#[structopt(
+			help = "Package names to upgrade. If no packages are given, all AUR packages will be upgraded",
+			multiple = true
+		)]
+		packages: Vec<String>,
 	},
 }
 

@@ -37,17 +37,19 @@ fn main() {
 			asdeps,
 			offline,
 			target,
+			autobuild,
 		} => {
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_install::install(target, &paths, *offline, *asdeps);
+			action_install::install(target, &paths, *offline, *asdeps, *autobuild);
 		}
 		Action::Builddir {
 			offline,
 			force,
 			target,
+			autobuild,
 		} => {
 			let paths = rua_paths::RuaPaths::initialize_paths();
-			action_builddir::action_builddir(target, &paths, *offline, *force);
+			action_builddir::action_builddir(target, &paths, *offline, *force, *autobuild);
 		}
 		Action::Search { target } => action_search::action_search(target),
 		Action::Shellcheck { target } => {
@@ -63,6 +65,7 @@ fn main() {
 			tar_check::tar_check_unwrap(
 				target,
 				target.to_str().expect("target is not valid UTF-8"),
+				false,
 			);
 			eprintln!("Finished checking package: {:?}", target);
 		}
@@ -70,6 +73,7 @@ fn main() {
 			devel,
 			printonly,
 			ignored,
+			autobuild,
 		} => {
 			let ignored_set = ignored
 				.iter()
@@ -79,7 +83,7 @@ fn main() {
 				action_upgrade::upgrade_printonly(*devel, &ignored_set);
 			} else {
 				let paths = rua_paths::RuaPaths::initialize_paths();
-				action_upgrade::upgrade_real(*devel, &paths, &ignored_set);
+				action_upgrade::upgrade_real(*devel, &paths, &ignored_set, *autobuild);
 			}
 		}
 	};

@@ -6,6 +6,7 @@ use crate::rua_paths::RuaPaths;
 use crate::tar_check;
 use crate::terminal_util;
 use crate::wrapped;
+use colored::Colorize;
 use fs_extra::dir::CopyOptions;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
@@ -17,7 +18,13 @@ use std::fs;
 use std::fs::ReadDir;
 use std::path::PathBuf;
 
-pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdeps: bool) {
+pub fn install(
+	targets: &[String],
+	rua_paths: &RuaPaths,
+	is_offline: bool,
+	asdeps: bool,
+	autobuild: bool,
+) {
 	let alpm = new_alpm_wrapper();
 	let (split_to_raur, pacman_deps, split_to_depth) =
 		aur_rpc_utils::recursive_info(targets, &*alpm).unwrap_or_else(|err| {
@@ -39,21 +46,22 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 		std::process::exit(1)
 	}
 
-	show_install_summary(&pacman_deps, &split_to_depth);
+	show_install_summary(&pacman_deps, &split_to_depth, autobuild);
 	for pkgbase in split_to_pkgbase.values().collect::<HashSet<_>>() {
 		let dir = rua_paths.review_dir(pkgbase);
 		fs::create_dir_all(&dir).unwrap_or_else(|err| {
 			panic!("Failed to create repository dir for {}, {}", pkgbase, err)
 		});
-		reviewing::review_repo(&dir, pkgbase, rua_paths);
+		reviewing::review_repo(&dir, pkgbase, rua_paths, autobuild);
 	}
-	pacman::ensure_pacman_packages_installed(pacman_deps);
+	pacman::ensure_pacman_packages_installed(pacman_deps, autobuild);
 	install_all(
 		rua_paths,
 		split_to_depth,
 		split_to_pkgbase,
 		is_offline,
 		asdeps,
+		autobuild,
 	);
 	for target in targets {
 		// Delete temp directories after successful build+install
@@ -68,7 +76,11 @@ pub fn install(targets: &[String], rua_paths: &RuaPaths, is_offline: bool, asdep
 	}
 }
 
-fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<String, i32>) {
+fn show_install_summary(
+	pacman_deps: &IndexSet<String>,
+	aur_packages: &IndexMap<String, i32>,
+	autobuild: bool,
+) {
 	if pacman_deps.len() + aur_packages.len() == 1 {
 		return;
 	}
@@ -91,7 +103,12 @@ fn show_install_summary(pacman_deps: &IndexSet<String>, aur_packages: &IndexMap<
 	);
 	loop {
 		eprint!("Proceed? [O]=ok, Ctrl-C=abort. ");
-		let string = terminal_util::read_line_lowercase();
+		let string = if autobuild {
+			eprintln!("\n{} {}", "Autobuild:".italic(), "[O]".italic());
+			"o".to_string()
+		} else {
+			terminal_util::read_line_lowercase()
+		};
 		if &string == "o" {
 			break;
 		}
@@ -104,6 +121,7 @@ fn install_all(
 	split_to_pkgbase: IndexMap<String, String>,
 	offline: bool,
 	asdeps: bool,
+	autobuild: bool,
 ) {
 	let archive_whitelist = split_to_depth
 		.iter()
@@ -163,7 +181,7 @@ fn install_all(
 			);
 		}
 		for (pkgbase, _depth, _split) in &packages {
-			check_tars_and_move(pkgbase, rua_paths, &archive_whitelist);
+			check_tars_and_move(pkgbase, rua_paths, &archive_whitelist, autobuild);
 		}
 		// This relation between split_name and the archive file is not actually correct here.
 		// Instead, all archive files of some group will be bound to one split name only here.
@@ -186,11 +204,16 @@ fn install_all(
 				));
 			}
 		}
-		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0);
+		pacman::ensure_aur_packages_installed(files_to_install, asdeps || depth > 0, autobuild);
 	}
 }
 
-pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: &IndexSet<&str>) {
+pub fn check_tars_and_move(
+	name: &str,
+	rua_paths: &RuaPaths,
+	archive_whitelist: &IndexSet<&str>,
+	autobuild: bool,
+) {
 	debug!("checking tars and moving for package {}", name);
 	let build_dir = rua_paths.build_dir(name);
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
@@ -219,7 +242,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
 	trace!("Files filtered for tar checking: {:?}", &dir_items);
 	for (file, file_name) in dir_items.iter() {
-		tar_check::tar_check_unwrap(&file.path(), file_name);
+		tar_check::tar_check_unwrap(&file.path(), file_name, autobuild);
 	}
 	debug!("all package (tar) files checked, moving them");
 	let checked_tars_dir = rua_paths.checked_tars_dir(name);

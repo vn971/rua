@@ -1,5 +1,6 @@
 mod action_builddir;
 mod action_install;
+mod action_list;
 mod action_search;
 mod action_upgrade;
 mod alpm_wrapper;
@@ -65,6 +66,9 @@ fn main() {
 				target.to_str().expect("target is not valid UTF-8"),
 			);
 			eprintln!("Finished checking package: {:?}", target);
+		}
+		Action::List => {
+			action_list::list_real();
 		}
 		Action::Upgrade {
 			devel,

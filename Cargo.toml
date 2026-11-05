@@ -17,8 +17,8 @@ build = "build.rs"
 [features]
 default=["testpacman", "rustls-tls"]
 testpacman = []  # whether to perform pacman checks on tests
-rustls-tls = ["raur/rusttls-tls"] # build with rustls TLS
-native-tls = ["raur/native-tls"] # build with support for OS native TLS
+rustls-tls = ["raur/rusttls-tls", "reqwest/default"] # build with rustls TLS
+native-tls = ["raur/native-tls", "reqwest/native-tls"] # build with support for OS native TLS
 
 [build-dependencies]
 structopt = "0.3.26"
@@ -42,6 +42,7 @@ log = { version = "0.4.28",       default-features = false }
 prettytable-rs = "0.10.0"
 raur = { version = "8.0.0",       default-features = false, features = ["blocking", "rusttls-tls"] }
 regex = { version = "1.9.6",      default-features = false, features = ["perf"] }
+reqwest = { version = "0.13.1",   default-features = false, features = ["blocking"] }
 rm_rf = "0.6.2"
 ruzstd = "0.8.2"
 srcinfo = "2.1.0"

@@ -17,11 +17,18 @@ type RecursiveInfo = (RaurInfo, PacmanDependencies, DepthMap);
 
 const BATCH_SIZE: usize = 200;
 
+pub fn raur_handle() -> Result<Handle> {
+	let client = reqwest::blocking::Client::builder()
+		.user_agent(concat!("rua/", env!("CARGO_PKG_VERSION")))
+		.build()?;
+	Ok(Handle::new_with_client(client))
+}
+
 pub fn recursive_info(
 	root_packages_to_process: &[String],
 	alpm: &dyn AlpmWrapper,
 ) -> Result<RecursiveInfo> {
-	let raur_handle = Handle::default();
+	let raur_handle = raur_handle()?;
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
 	for pkg in &queue {
@@ -79,7 +86,7 @@ pub fn recursive_info(
 /// # Arguments
 /// * `packages_to_query` - A slice of package names to find in the AUR
 pub fn info_map<S: AsRef<str>>(packages_to_query: &[S]) -> Result<IndexMap<String, Package>> {
-	let raur_handle = Handle::new();
+	let raur_handle = raur_handle()?;
 	let mut result = IndexMap::new();
 	for group in packages_to_query.chunks(BATCH_SIZE) {
 		let group_info = raur_handle.info(group)?;
@@ -153,5 +160,11 @@ mod tests {
 		assert_eq!(clean_package_name("test<=0"), Some("test".to_string()));
 		assert_eq!(clean_package_name("test=0"), Some("test".to_string()));
 		assert_eq!(clean_package_name("test==0"), Some("test".to_string()));
+	}
+
+	#[test]
+	fn test_raur_handle_creation() {
+		let handle = raur_handle();
+		assert!(handle.is_ok());
 	}
 }

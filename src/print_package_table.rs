@@ -1,7 +1,7 @@
+use crate::aur_rpc::Package;
 use colored::*;
 use prettytable::format::*;
 use prettytable::*;
-use raur::Package;
 
 pub fn trunc(s: &str, max_chars: usize) -> String {
 	match s.char_indices().nth(max_chars.max(2)) {

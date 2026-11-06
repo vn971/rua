@@ -1,19 +1,18 @@
 use crate::alpm_wrapper::AlpmWrapper;
+use crate::aur_rpc::Handle;
+use crate::aur_rpc::Package;
 use anyhow::Result;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use log::trace;
-use raur::blocking::Handle;
-use raur::blocking::Raur;
-use raur::Package;
 use regex::Regex;
 
-type RaurInfo = IndexMap<String, Package>;
+type AurInfo = IndexMap<String, Package>;
 type PacmanDependencies = IndexSet<String>;
 type DepthMap = IndexMap<String, i32>;
-type RecursiveInfo = (RaurInfo, PacmanDependencies, DepthMap);
+type RecursiveInfo = (AurInfo, PacmanDependencies, DepthMap);
 
 const BATCH_SIZE: usize = 200;
 
@@ -21,7 +20,7 @@ pub fn recursive_info(
 	root_packages_to_process: &[String],
 	alpm: &dyn AlpmWrapper,
 ) -> Result<RecursiveInfo> {
-	let raur_handle = Handle::default();
+	let aur_handle = Handle::new()?;
 	let mut queue: Vec<String> = Vec::from(root_packages_to_process);
 	let mut depth_map = IndexMap::new();
 	for pkg in &queue {
@@ -33,7 +32,7 @@ pub fn recursive_info(
 		let split_at = queue.len().max(BATCH_SIZE) - BATCH_SIZE;
 		let to_process = queue.split_off(split_at);
 		trace!("to_process: {:?}", to_process);
-		for info in raur_handle.info(&to_process)? {
+		for info in aur_handle.info(&to_process)? {
 			let make_deps = info.make_depends.iter();
 			let check_deps = info.check_depends.iter();
 			let flat_deps = info.depends.iter();
@@ -79,10 +78,10 @@ pub fn recursive_info(
 /// # Arguments
 /// * `packages_to_query` - A slice of package names to find in the AUR
 pub fn info_map<S: AsRef<str>>(packages_to_query: &[S]) -> Result<IndexMap<String, Package>> {
-	let raur_handle = Handle::new();
+	let aur_handle = Handle::new()?;
 	let mut result = IndexMap::new();
 	for group in packages_to_query.chunks(BATCH_SIZE) {
-		let group_info = raur_handle.info(group)?;
+		let group_info = aur_handle.info(group)?;
 		for pkg in group_info.into_iter() {
 			result.insert(pkg.name.to_string(), pkg);
 		}

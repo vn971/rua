@@ -1,7 +1,6 @@
+use crate::aur_rpc::Handle;
+use crate::aur_rpc::Package;
 use crate::print_package_table;
-use raur::blocking::Raur;
-use raur::Package;
-use raur::SearchBy;
 
 fn contains_keyword(pkg: &Package, keyword: &str) -> bool {
 	let filter = keyword.to_lowercase();
@@ -18,8 +17,11 @@ pub fn action_search(keywords: &[String]) {
 	let query = keywords
 		.first()
 		.expect("Zero search arguments, should be impossible in structopt");
-	let raur_handle = raur::blocking::Handle::new();
-	let result = raur_handle.search_by(query, SearchBy::NameDesc);
+	let aur_handle = Handle::new().unwrap_or_else(|err| {
+		eprintln!("Failed to initialize AUR client: {}", err);
+		std::process::exit(1);
+	});
+	let result = aur_handle.search(query);
 	match result {
 		Ok(mut result) => {
 			if result.is_empty() {

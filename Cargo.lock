@@ -1347,18 +1347,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "raur"
-version = "8.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb4cd4ad5a2a09f5ad0b45a7e986ab1468058c5006a9c92145725daac4859652"
-dependencies = [
- "reqwest",
- "serde",
- "serde_derive",
- "serde_urlencoded",
-]
-
-[[package]]
 name = "redox_syscall"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1513,10 +1501,12 @@ dependencies = [
  "libscmp",
  "log",
  "prettytable-rs",
- "raur",
  "regex",
+ "reqwest",
  "rm_rf",
  "ruzstd",
+ "serde",
+ "serde_json",
  "srcinfo",
  "structopt",
  "tar",

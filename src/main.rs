@@ -3,6 +3,7 @@ mod action_install;
 mod action_search;
 mod action_upgrade;
 mod alpm_wrapper;
+mod aur_rpc;
 mod aur_rpc_utils;
 mod cli_args;
 mod git_utils;

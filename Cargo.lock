@@ -1515,6 +1515,7 @@ dependencies = [
  "prettytable-rs",
  "raur",
  "regex",
+ "reqwest",
  "rm_rf",
  "ruzstd",
  "srcinfo",

@@ -1,3 +1,4 @@
+use crate::aur_rpc_utils::get_raur_handle;
 use crate::print_package_table;
 use raur::blocking::Raur;
 use raur::Package;
@@ -18,7 +19,7 @@ pub fn action_search(keywords: &[String]) {
 	let query = keywords
 		.first()
 		.expect("Zero search arguments, should be impossible in structopt");
-	let raur_handle = raur::blocking::Handle::new();
+	let raur_handle = get_raur_handle();
 	let result = raur_handle.search_by(query, SearchBy::NameDesc);
 	match result {
 		Ok(mut result) => {

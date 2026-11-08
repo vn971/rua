@@ -26,7 +26,7 @@ pub fn get_raur_handle() -> Handle {
 	let client = reqwest::blocking::Client::builder()
 		.user_agent(APP_USER_AGENT)
 		.build()
-		.unwrap();
+		.expect("Failed to build reqwest client for AUR");
 	Handle::new_with_client(client)
 }
 

@@ -1,6 +1,6 @@
 use crate::cli_args;
 use crate::cli_args::CLIColorType;
-use crate::cli_args::CliArgs;
+use crate::cli_args::Cli;
 use chrono::Utc;
 use env_logger::Env;
 use log::debug;
@@ -14,7 +14,7 @@ pub fn set_env_if_not_set(key: &str, value: &str) {
 }
 
 /// Set and check environment applicable to all RUA commands
-pub fn prepare_environment(config: &CliArgs) {
+pub fn prepare_environment(config: &Cli) {
 	env_logger::Builder::from_env(Env::default().filter_or("RUST_LOG", "info"))
 		.format(|buf, record| {
 			writeln!(
@@ -28,17 +28,17 @@ pub fn prepare_environment(config: &CliArgs) {
 		.init();
 	match config.color {
 		// see "colored" crate and referenced specs
-		CLIColorType::auto => {
+		CLIColorType::Auto => {
 			env::remove_var("NOCOLOR");
 			env::remove_var("CLICOLOR_FORCE");
 			env::remove_var("CLICOLOR");
 		}
-		CLIColorType::never => {
+		CLIColorType::Never => {
 			env::set_var("NOCOLOR", "1");
 			env::remove_var("CLICOLOR_FORCE");
 			env::set_var("CLICOLOR", "0");
 		}
-		CLIColorType::always => {
+		CLIColorType::Always => {
 			env::remove_var("NOCOLOR");
 			env::set_var("CLICOLOR_FORCE", "1");
 			env::remove_var("CLICOLOR");

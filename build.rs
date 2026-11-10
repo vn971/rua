@@ -14,10 +14,10 @@ fn main() {
 }
 
 mod shell_completions {
-	#![allow(dead_code)] // Ignore unused warnings caused by including cli_args below.
-	extern crate structopt;
+	use std::env;
 
-	use structopt::clap::Shell;
+	use clap::CommandFactory;
+	use clap_complete::aot::{generate_to, Shell};
 
 	include!("src/cli_args.rs");
 
@@ -27,10 +27,11 @@ mod shell_completions {
 			None => return,
 			Some(out_dir) => out_dir,
 		};
-		let mut app = CliArgs::clap();
-		app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, &directory);
-		app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Fish, &directory);
-		app.gen_completions(env!("CARGO_PKG_NAME"), Shell::Zsh, &directory);
+		let mut cmd = Cli::command();
+		for shell in [Shell::Bash, Shell::Fish, Shell::Zsh] {
+			generate_to(shell, &mut cmd, env!("CARGO_PKG_NAME"), &directory)
+				.expect("Failed to generate shell completions");
+		}
 	}
 }
 

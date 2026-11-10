@@ -21,13 +21,15 @@ rustls-tls = ["raur/rusttls-tls"] # build with rustls TLS
 native-tls = ["raur/native-tls"] # build with support for OS native TLS
 
 [build-dependencies]
-structopt = "0.3.26"
+clap = { version = "4.0.32", features = ["derive"] }
+clap_complete = "4.0.7"
 libscmp = "0.2.0"
 
 [dependencies]
 alpm = { version = "5.0.2",       default-features = false, features = [], optional = true }
 anyhow = { version = "1.0.100",   default-features = false, features = ["std", "backtrace"] }
 chrono = { version = "0.4.44",    default-features = false, features = ["std", "clock"] }
+clap = { version = "4.0.32", features = ["derive"] }
 colored = "2.0.2"
 directories = "6.0.0"
 env_logger = "0.10.2"
@@ -45,7 +47,6 @@ regex = { version = "1.9.6",      default-features = false, features = ["perf"] 
 rm_rf = "0.6.2"
 ruzstd = "0.8.2"
 srcinfo = "2.1.0"
-structopt = "0.3.26"
 tar = { version = "0.4.44",       default-features = false }
 termize = "0.1.1"
 uname = "0.1.1"

@@ -20,14 +20,15 @@ mod wrapped;
 
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
-use cli_args::Action;
-use cli_args::CliArgs;
+use cli_args::{CliArgs, Action};
 use std::collections::HashSet;
 use std::process::exit;
-use structopt::StructOpt;
+
+use clap::Parser;
+
 
 fn main() {
-	let cli_args: CliArgs = CliArgs::from_args();
+	let cli_args = CliArgs::parse();
 	rua_environment::prepare_environment(&cli_args);
 	match &cli_args.action {
 		Action::Info { ref target } => {
@@ -69,9 +70,9 @@ fn main() {
 		Action::Upgrade {
 			devel,
 			printonly,
-			ignored,
+			ignore,
 		} => {
-			let ignored_set = ignored
+			let ignored_set = ignore
 				.iter()
 				.flat_map(|i| i.split(','))
 				.collect::<HashSet<&str>>();

@@ -1,126 +1,92 @@
-pub use cli_color_type_mod::CLIColorType;
 use std::path::PathBuf;
-use structopt::StructOpt;
+use clap::{Parser, Subcommand, ValueEnum};
 
-// A work-around to allow a clippy warning for a particular macro expansion.
-// This work-around will not be needed after changing the dependency "structopt" to "clap".
-pub mod cli_color_type_mod {
-	#![allow(clippy::useless_vec)]
-	use structopt::clap::arg_enum;
 
-	arg_enum! {
-		#[allow(non_camel_case_types)]
-		#[derive(Debug)]
-		pub enum CLIColorType {
-			auto, never, always
-		}
-	}
+#[derive(Clone, ValueEnum)]
+pub enum CLIColorType {
+	Auto,
+	Never,
+	Always,
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(
-	rename_all = "kebab-case",
-	after_help = "ENVIRONMENT:\n    RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc."
-)]
+#[derive(Parser)]
+#[command(version, about, long_about = None, after_help = after_help())]
 pub struct CliArgs {
-	#[structopt(
-		possible_values = &CLIColorType::variants(),
-		case_insensitive = true,
-		default_value = "auto",
-		long = "color",
-		help = "Set colors. Respects NO_COLOR environment and CLICOLOR specification", // the rest of the description is filled in by structopt
-	)]
+	/// Set colors. Respects NO_COLOR environment and CLICOLOR specification
+	#[arg(long, value_enum, default_value_t = CLIColorType::Auto, ignore_case = true)]
 	pub color: CLIColorType,
-	#[structopt(subcommand)]
+
+	#[command(subcommand)]
 	pub action: Action,
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(rename_all = "kebab-case")]
+#[derive(Subcommand)]
 pub enum Action {
-	#[structopt(about = "Build package in specified directory, in jail")]
+	/// Build package in specified directory, in jail
 	Builddir {
-		#[structopt(
-			short = "o",
-			long = "offline",
-			help = "Forbid internet access while building packages.
-Sources are downloaded using .SRCINFO only"
-		)]
+		/// Forbid internet access while building packages.
+		/// Sources are downloaded using .SRCINFO only
+		#[arg(short, long)]
 		offline: bool,
-		#[structopt(
-			short = "f",
-			long = "force",
-			help = "Use --force option with makepkg, see makepkg(8)"
-		)]
+
+		/// Use --force option with makepkg, see makepkg(8)
+		#[arg(short, long)]
 		force: bool,
-		#[structopt(
-			help = "Target directory. Defaults to current directory '.' if not specified."
-		)]
+
+		/// Target directory. Defaults to current directory '.' if not specified.
 		target: Option<PathBuf>,
 	},
-	#[structopt(about = "Show package information")]
+	/// Show package information
 	Info {
-		#[structopt(help = "Target to show for", multiple = true, required = true)]
+		/// Target to show for
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
-	#[structopt(about = "Download a package by name and build it in jail")]
+	/// Download a package by name and build it in jail
 	Install {
-		#[structopt(long = "asdeps", help = "Install package as dependency")]
+		/// Install package as dependency
+		#[arg(long)]
 		asdeps: bool,
-		#[structopt(
-			short = "o",
-			long = "offline",
-			help = "Forbid internet access while building packages.
-Sources are downloaded using .SRCINFO only"
-		)]
+
+		/// Forbid internet access while building packages.
+		/// Sources are downloaded using .SRCINFO only
+		#[arg(short, long)]
 		offline: bool,
-		#[structopt(help = "Target package", multiple = true, required = true)]
+
+		/// Target package(s)
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
-	#[structopt(
-		about = "Search for packages by name or description. If multiple keywords are used, all of them must match."
-	)]
+	/// Search for packages by name or description. If multiple keywords are used, all of them must match.
 	Search {
-		#[structopt(help = "Target to search for", multiple = true, required = true)]
+		/// Target to search for
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
-	#[structopt(
-		about = "Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables"
-	)]
+	/// Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables
 	Shellcheck {
-		#[structopt(
-			help = "PKGBUILD or directory to check. Defaults to /dev/stdin if not specified. Appends ./PKGBUILD for directories"
-		)]
+		/// PKGBUILD or directory to check. Defaults to /dev/stdin if not specified. Appends ./PKGBUILD for directories
 		target: Option<PathBuf>,
 	},
-	#[structopt(
-		about = "Check *.pkg.tar or *.pkg.tar.xz  or *.pkg.tar.gz or *.pkg.tar.zst archive"
-	)]
+	/// Check *.pkg.tar or *.pkg.tar.xz  or *.pkg.tar.gz or *.pkg.tar.zst archive
 	Tarcheck {
-		#[structopt(help = "Archive to check", required = true)]
+		/// Archive to check
 		target: PathBuf,
 	},
-	#[structopt(
-		about = "Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf"
-	)]
+	/// Upgrade AUR packages. To ignore packages, add them to IgnorePkg in /etc/pacman.conf
 	Upgrade {
-		#[structopt(
-			long = "devel",
-			short = "d",
-			help = "Also rebuild development packages.
-Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
-		)]
+		/// Also rebuild development packages.
+		/// Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only.
+		#[arg(short, long)]
 		devel: bool,
-		#[structopt(
-			long = "printonly",
-			help = "Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts). Exits with code 7 if no upgrades are available."
-		)]
+
+		/// Print the list of outdated packages to stdout, delimited by newline. Don't upgrade anything, don't ask questions (for use in scripts). Exits with code 7 if no upgrades are available.
+		#[arg(long)]
 		printonly: bool,
-		#[structopt(
-			long = "ignore",
-			help = "Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`."
-		)]
-		ignored: Option<String>,
+
+		/// Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`.
+		#[arg(long)]
+		ignore: Option<String>,
 	},
 }
 
@@ -128,3 +94,8 @@ Supports: git, hg, bzr, svn, cvs, darcs. Currently by suffix only."
 // !WARNING! If you change this, make sure the value the same as documented in CliArgs above.
 #[allow(dead_code)] // unused from inside build.rs
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";
+
+
+fn after_help() -> String {
+	return "Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string()
+}

@@ -1,6 +1,6 @@
 use crate::cli_args;
 use crate::cli_args::CLIColorType;
-use crate::cli_args::Cli;
+use crate::cli_args::CliArgs;
 use chrono::Utc;
 use env_logger::Env;
 use log::debug;
@@ -14,7 +14,7 @@ pub fn set_env_if_not_set(key: &str, value: &str) {
 }
 
 /// Set and check environment applicable to all RUA commands
-pub fn prepare_environment(config: &Cli) {
+pub fn prepare_environment(config: &CliArgs) {
 	env_logger::Builder::from_env(Env::default().filter_or("RUST_LOG", "info"))
 		.format(|buf, record| {
 			writeln!(

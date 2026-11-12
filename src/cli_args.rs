@@ -10,8 +10,8 @@ pub enum CLIColorType {
 }
 
 #[derive(Parser)]
-#[command(version, about, long_about = None, after_help = "ENVIRONMENT:\n    RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.")]
-pub struct Cli {
+#[command(version, about, long_about = None, after_help = after_help())]
+pub struct CliArgs {
 	/// Set colors. Respects NO_COLOR environment and CLICOLOR specification
 	#[arg(long, value_enum, default_value_t = CLIColorType::Auto, ignore_case = true)]
 	pub color: CLIColorType,
@@ -39,6 +39,7 @@ pub enum Action {
 	/// Show package information
 	Info {
 		/// Target to show for
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
 	/// Download a package by name and build it in jail
@@ -53,11 +54,13 @@ pub enum Action {
 		offline: bool,
 
 		/// Target package(s)
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
 	/// Search for packages by name or description. If multiple keywords are used, all of them must match.
 	Search {
 		/// Target to search for
+		#[arg(required = true, num_args = 1..)]
 		target: Vec<String>,
 	},
 	/// Run shellcheck on a PKGBUILD, taking care of PKGBUILD-specific variables
@@ -83,11 +86,16 @@ pub enum Action {
 
 		/// Don't upgrade the specified package(s). Accepts multiple arguments separated by `,`.
 		#[arg(long)]
-		ignored: Option<String>,
+		ignore: Option<String>,
 	},
 }
 
 /// environment variable that we expect the user might fill
-// !WARNING! If you change this, make sure the value the same as documented in Cli above.
+// !WARNING! If you change this, make sure the value the same as documented in CliArgs above.
 #[allow(dead_code)] // unused from inside build.rs
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";
+
+
+fn after_help() -> String {
+	return "Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string()
+}

@@ -27,7 +27,7 @@ mod shell_completions {
 			None => return,
 			Some(out_dir) => out_dir,
 		};
-		let mut cmd = Cli::command();
+		let mut cmd = CliArgs::command();
 		for shell in [Shell::Bash, Shell::Fish, Shell::Zsh] {
 			generate_to(shell, &mut cmd, env!("CARGO_PKG_NAME"), &directory)
 				.expect("Failed to generate shell completions");

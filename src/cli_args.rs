@@ -1,6 +1,7 @@
+use clap::Parser;
+use clap::Subcommand;
+use clap::ValueEnum;
 use std::path::PathBuf;
-use clap::{Parser, Subcommand, ValueEnum};
-
 
 #[derive(Clone, ValueEnum)]
 pub enum CLIColorType {
@@ -95,7 +96,6 @@ pub enum Action {
 #[allow(dead_code)] // unused from inside build.rs
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";
 
-
 fn after_help() -> String {
-	return "Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string()
+	return "Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string();
 }

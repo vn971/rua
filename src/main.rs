@@ -20,12 +20,12 @@ mod wrapped;
 
 use crate::print_package_info::info;
 use crate::wrapped::shellcheck;
-use cli_args::{CliArgs, Action};
+use cli_args::Action;
+use cli_args::CliArgs;
 use std::collections::HashSet;
 use std::process::exit;
 
 use clap::Parser;
-
 
 fn main() {
 	let cli_args = CliArgs::parse();

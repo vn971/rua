@@ -17,7 +17,8 @@ mod shell_completions {
 	use std::env;
 
 	use clap::CommandFactory;
-	use clap_complete::aot::{generate_to, Shell};
+	use clap_complete::aot::generate_to;
+	use clap_complete::aot::Shell;
 
 	include!("src/cli_args.rs");
 

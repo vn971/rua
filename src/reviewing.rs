@@ -16,10 +16,10 @@ pub fn review_repo(dir: &Path, pkgbase: &str, rua_paths: &RuaPaths) {
 		)
 	});
 	if dir_contents.next().is_none() {
-		debug!("Directory {:?} is empty, using git clone", &dir);
+		debug!("Directory {:?} is empty, using git clone", dir);
 		git_utils::init_repo(pkgbase, dir, rua_paths);
 	} else {
-		debug!("Directory {:?} is not empty, fetching new version", &dir);
+		debug!("Directory {:?} is not empty, fetching new version", dir);
 		git_utils::fetch(dir, rua_paths);
 	}
 

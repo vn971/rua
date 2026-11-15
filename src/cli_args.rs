@@ -97,5 +97,5 @@ pub enum Action {
 pub const SUDO_ENVIRONMENT_VARIABLE_NAME: &str = "RUA_SUDO_COMMAND";
 
 fn after_help() -> String {
-	return "Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string();
+	"Environment:\n  RUA_SUDO_COMMAND: Sets the alternative command for sudo, such as gosu, doas, runas, suex etc.".to_string()
 }

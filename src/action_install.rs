@@ -134,10 +134,10 @@ fn install_all(
 			let review_dir = rua_paths.review_dir(pkgbase);
 			let build_dir = rua_paths.build_dir(pkgbase);
 			rm_rf::ensure_removed(&build_dir).unwrap_or_else(|err| {
-				panic!("Failed to remove old build dir {:?}, {}", &build_dir, err)
+				panic!("Failed to remove old build dir {:?}, {}", build_dir, err)
 			});
 			std::fs::create_dir_all(&build_dir).unwrap_or_else(|err| {
-				panic!("Failed to create build dir {:?}, {}", &build_dir, err)
+				panic!("Failed to create build dir {:?}, {}", build_dir, err)
 			});
 			fs_extra::copy_items(
 				&[&review_dir],
@@ -147,7 +147,7 @@ fn install_all(
 			.unwrap_or_else(|err| {
 				panic!(
 					"failed to copy reviewed dir {:?} to build dir {:?}, error is {}",
-					&review_dir, rua_paths.global_build_dir, err
+					review_dir, rua_paths.global_build_dir, err
 				)
 			});
 			{
@@ -196,7 +196,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 	let dir_items: ReadDir = build_dir.read_dir().unwrap_or_else(|err| {
 		panic!(
 			"Failed to read directory contents for {:?}, {}",
-			&build_dir, err
+			build_dir, err
 		)
 	});
 	let dir_items = dir_items.map(|f| f.expect("Failed to open file for tar_check analysis"));
@@ -217,7 +217,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 	let common_suffix_length = tar_check::common_suffix_length(&dir_items_names, archive_whitelist);
 	dir_items
 		.retain(|(_, name)| archive_whitelist.contains(&name[..name.len() - common_suffix_length]));
-	trace!("Files filtered for tar checking: {:?}", &dir_items);
+	trace!("Files filtered for tar checking: {:?}", dir_items);
 	for (file, file_name) in dir_items.iter() {
 		tar_check::tar_check_unwrap(&file.path(), file_name);
 	}
@@ -232,7 +232,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 	fs::create_dir_all(&checked_tars_dir).unwrap_or_else(|err| {
 		panic!(
 			"Failed to create checked_tars dir {:?}, {}",
-			&checked_tars_dir, err
+			checked_tars_dir, err
 		);
 	});
 
@@ -267,7 +267,7 @@ pub fn check_tars_and_move(name: &str, rua_paths: &RuaPaths, archive_whitelist: 
 			.unwrap_or_else(|e| {
 				panic!(
 					"Failed to move {:?} (build artifact) to {:?}, {}",
-					&file, &checked_tars_dir, e,
+					file, checked_tars_dir, e,
 				)
 			});
 	}

@@ -232,7 +232,7 @@ fn show_legacy_dir_warnings(dirs: &ProjectDirs, correct_dir: &Path) {
 		let old_dir_str = old_dir.to_str().unwrap_or("~/.cache/rua/checked_tars");
 		eprintln!(
 			"INFO: you have a legacy directory from an older RUA version: {}",
-			&old_dir_str
+			old_dir_str
 		);
 		eprintln!("Please delete it or move all contents to {:?}", correct_dir);
 	};

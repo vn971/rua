@@ -25,10 +25,13 @@ fn pkg_is_devel(name: &str) -> bool {
 	RE.is_match(name)
 }
 
-pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
+pub fn upgrade_printonly(
+	devel: bool,
+	ignored: &HashSet<&str>,
+	only_packages: &HashSet<&str>,
+) -> Result<()> {
 	let alpm = new_alpm_wrapper();
-	let (outdated, nonexistent) =
-		calculate_upgrade(&*alpm, devel, ignored).expect("Calculating upgrade failed");
+	let (outdated, nonexistent) = calculate_upgrade(&*alpm, devel, ignored, only_packages)?;
 
 	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!(
@@ -43,12 +46,17 @@ pub fn upgrade_printonly(devel: bool, ignored: &HashSet<&str>) {
 			println!("{}", pkg);
 		}
 	}
+	Ok(())
 }
 
-pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) {
+pub fn upgrade_real(
+	devel: bool,
+	rua_paths: &RuaPaths,
+	ignored: &HashSet<&str>,
+	only_packages: &HashSet<&str>,
+) -> Result<()> {
 	let alpm = new_alpm_wrapper();
-	let (outdated, nonexistent) =
-		calculate_upgrade(&*alpm, devel, ignored).expect("calculating upgrade failed");
+	let (outdated, nonexistent) = calculate_upgrade(&*alpm, devel, ignored, only_packages)?;
 
 	if outdated.is_empty() && nonexistent.is_empty() {
 		eprintln!(
@@ -77,6 +85,7 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			}
 		}
 	}
+	Ok(())
 }
 
 type OutdatedPkgs = Vec<(String, String, String)>;
@@ -86,6 +95,7 @@ fn calculate_upgrade(
 	alpm: &dyn AlpmWrapper,
 	devel: bool,
 	locally_ignored_packages: &HashSet<&str>,
+	only_packages: &HashSet<&str>,
 ) -> Result<(OutdatedPkgs, ForeignPkgs)> {
 	let system_ignored_packages = pacman::get_ignored_packages().unwrap_or_else(|err| {
 		warn!("Could not get ignored packages, {}", err);
@@ -93,6 +103,15 @@ fn calculate_upgrade(
 	});
 
 	let aur_pkgs = alpm.get_non_pacman_packages()?;
+
+	if !only_packages.is_empty() {
+		let installed: HashSet<&str> = aur_pkgs.iter().map(|(n, _)| n.as_str()).collect();
+		for pkg in only_packages {
+			if !installed.contains(pkg) {
+				anyhow::bail!("Package {} is not installed", pkg);
+			}
+		}
+	}
 
 	let aur_pkgs_string = aur_pkgs
 		.iter()
@@ -111,6 +130,9 @@ fn calculate_upgrade(
 	let info_map = info_map.unwrap_or_else(|err| panic!("Failed to get AUR information: {}", err));
 
 	for (pkg, local_ver) in aur_pkgs {
+		if !only_packages.is_empty() && !only_packages.contains(pkg.as_str()) {
+			continue;
+		}
 		let raur_ver: Option<String> = info_map.get(&pkg).map(|p| p.version.to_string());
 
 		if let Some(raur_ver) = raur_ver {

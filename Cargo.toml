@@ -1,7 +1,7 @@
 [package]
 name = "rua"
 version = "0.19.12"
-rust-version = "1.70"
+rust-version = "1.99.1"
 description = "Secure jailed AUR helper for Arch Linux"
 authors = [
   "Vasili Novikov (maintainer) <vasya.novikov+cm3513git@gmail.com>",
@@ -21,34 +21,34 @@ rustls-tls = ["raur/rusttls-tls"] # build with rustls TLS
 native-tls = ["raur/native-tls"] # build with support for OS native TLS
 
 [build-dependencies]
-clap = { version = "4.4.18", features = ["derive"] }
-clap_complete = "4.4.10"
+clap = { version = "4.6.7", features = ["derive"] }
+clap_complete = "4.6.11"
 libscmp = "0.2.0"
 
 [dependencies]
 alpm = { version = "5.0.2",       default-features = false, features = [], optional = true }
 anyhow = { version = "1.0.104",   default-features = false, features = ["std", "backtrace"] }
 chrono = { version = "0.4.45",    default-features = false, features = ["std", "clock"] }
-clap = { version = "4.4.18", features = ["derive"] }
-colored = "2.2.0"
+clap = { version = "4.6.7", features = ["derive"] }
+colored = "3.1.1"
 directories = "6.0.0"
-env_logger = "0.10.2"
+env_logger = "0.11.11"
 fs2 = "0.4.3"
 fs_extra = "1.3.0"
-indexmap = { version = "2.11.4",   default-features = false }
+indexmap = { version = "2.14.2",   default-features = false }
 itertools = { version = "0.15.0", default-features = false, features = ["use_std"] }
 lazy_static = "1.5.1"
 libc = { version = "0.2.191",     default-features = false }
 libflate = "2.3.2"
-log = { version = "0.4.29",       default-features = false }
+log = { version = "0.4.35",       default-features = false }
 prettytable-rs = "0.10.0"
 raur = { version = "8.0.1",       default-features = false, features = ["blocking", "rusttls-tls"] }
 regex = { version = "1.13.1",      default-features = false, features = ["perf"] }
 rm_rf = "0.6.2"
-ruzstd = "0.8.2"
+ruzstd = "0.9.1"
 srcinfo = "2.1.0"
 tar = { version = "0.4.46",       default-features = false }
-termize = "0.1.1"
+termize = "0.2.1"
 uname = "0.1.1"
 xz2 = "0.1.7"
 

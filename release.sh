@@ -5,6 +5,13 @@
 set -x -euETo pipefail
 
 rustup update
+
+# Require the latest rust release. Fits the role of an ArchLinux AUR helper.
+msrv="$(rustc --version)"
+msrv="${msrv#* }"
+msrv="${msrv%% *}"
+sed -i "s/^rust-version = .*/rust-version = \"$msrv\"/" Cargo.toml
+
 cargo upgrade
 cargo update
 cargo fmt --all -- --check

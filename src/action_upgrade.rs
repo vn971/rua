@@ -70,7 +70,10 @@ pub fn upgrade_real(devel: bool, rua_paths: &RuaPaths, ignored: &HashSet<&str>) 
 			let user_input = terminal_util::read_line_lowercase();
 			if &user_input == "o" {
 				let outdated: Vec<String> = outdated.iter().map(|o| o.0.to_string()).collect();
-				action_install::install(&outdated, rua_paths, false, true);
+				// Using `false` here means we pass neither `--asdeps` nor `--asexplicit`
+				// to pacman, effectively leaving install reasons untouched.
+				let asdeps = false;
+				action_install::install(&outdated, rua_paths, false, asdeps);
 				break;
 			} else if &user_input == "x" {
 				break;
